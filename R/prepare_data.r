@@ -9,9 +9,21 @@
 #' @param sep Character vector containing the separator used if text files are provided.
 #' @param overlap_samples Logical. Whether to ensure only samples with data in all omics are kept.
 #'                      Some JDR methods require this.
+#' @param PCA Logical. Whether PCA should be performed on the omics.
+#' @param thresh NULL or numeric between 0-1. Threshold for the R2_cum to be used for selecting PCs; default 0.85.
+#' Only needed if 'PCA' is TRUE. 
+#' @param noPCs Numeric, indicating the number of principle components to keep. 
+#' If 'thresh' is not NULL, it will ensure at least this many PCs are selected if fewer are needed to reach the threshold. 
+#' @returns A list of omics ready for JDR. 
+#' @examples
 
-prepare_data <- function(omics, names = NULL, sep = NULL, overlap_samples = TRUE){
+prepare_data <- function(omics, names = NULL, sep = NULL, overlap_samples = TRUE, PCA = TRUE, thresh = 0.85, noPCs = 20) {
+  # create omics list
+  omic <- .create_omics_list(omics, names, sep, overlap_samples)
 
+  if (PCA){
+   omic <- lapply(omic, .omic_pca(omic, thresh, noPCs))
+  }
 }
 
 #' Create a list of omic matrices for JDR.
@@ -73,4 +85,47 @@ prepare_data <- function(omics, names = NULL, sep = NULL, overlap_samples = TRUE
     }
   }
   return(omic)
+}
+
+#' Perform PCA on a list of omics.
+#' This function takes a list of omics and performs PCA on them. Expects the output of 
+#' @inheritParams prepare_data
+#' @param omic A matrix of omics data. 
+#' @returns Returns a list of omics PCs that account for a specific variability threshold.
+
+.omics_pca <- function(omic, thresh = 0.85, noPCs = NULL) {
+  # data must be transposed for the PCA
+  dat <- t(as.matrix(omic))
+    
+  # removing any features that are 0 in all samples
+  dat <- dat[, which(colSums(dat[]) !=0)]
+    
+  # scaling data and running pca
+  dat <- scale(dat)
+  dat_pca <- pca(dat, nPcs = nrow(dat))
+    
+    # determine if to use R2_cum threshold or number of PCs 
+    if(is.null(noPCs)){
+      # make sure that each omic has at least 'noPCs' components 
+      PCs <- which(dat_pca@R2cum <= thresh)
+      if(length(PCs) < noPCs) {
+        PCs <- 1:noPCs
+      }
+      omic_pca <- t(dat_pca@scores[, PCs]) 
+      
+    } else {
+      PCs <- 1:noPCs
+      omic_pca <- t(dat_pca@scores[, PCs])
+    }
+    
+    pca_omics[[i]] <- dat_pca
+  
+  
+  names(pca_omics) <- names(omic)
+  names(MOFA_data) <- names(omic)
+  
+  can_pca <- list(pca_omics, MOFA_data)
+  
+  return(can_pca)
+  
 }
