@@ -1,0 +1,8 @@
+Package: JDRnet
+Type: Package
+Title: Joint Dimensionality Reduction with Gene Regulatory Networks
+Version: 0.1.0
+Author: Romana Pop
+Maintainer: romanatp@uio.no
+Description: This package performs joint dimensionality reduction on multi-omics data with sample-specific gene regulatory networks. 
+License: MIT
