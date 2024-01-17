@@ -17,7 +17,7 @@
 #' @param sep Character vector containing the separator used if text
 #' files are provided.
 #' @param overlap_samples Logical. Whether to ensure only samples with data
-#' in all omics are kept.Some JDR methods require this.
+#' in all omics are kept. Some JDR methods require this.
 #' @param pca Logical. Whether PCA should be performed on the omics.
 #' @param thresh NULL or numeric between 0-1. Threshold for the R2_cum
 #' to be used for selecting PCs; Only needed if 'PCA' is TRUE.
