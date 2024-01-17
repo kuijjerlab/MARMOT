@@ -68,7 +68,6 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #'
 #' @inheritParams prepare_data
 #' @return A list of omics matrices for JDR.
-#' @examples
 
 .create_omics_list <- function(omics, names, sep, overlap_samples) {
   #initialise list of omics
@@ -162,7 +161,6 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @param omic_pca PCA results for one omic.
 #' @return A matric of omic principle components filtered based on a
 #' cummulative R2 threshold.
-#' @examples
 
 .filter_pcs <- function(omic_pca, thresh, n_pcs) {
   if (!is.null(thresh)) {
