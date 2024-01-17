@@ -1,28 +1,32 @@
 #' Prepare data for JDR.
 #'
-#' This function prepares omics data for joint dimensionality reduction. 
-#' @param omics A string vector containing filenames for omics matrices; accepts text or .RData files;
-#'               matrices must have samples as columns and rows as features.
-#'               The omics data must come from the same samples.
+#' This function prepares omics data for joint dimensionality reduction.
+#' @param omics A string vector containing filenames for omics matrices;
+#' accepts text or .RData files; matrices must have samples as columns
+#' and rows as features.The omics data must come from the same samples.
 #' @param names Character vector with the names to be used for the omics;
-#'               if left NULL, the omics will just be numbered.
-#' @param sep Character vector containing the separator used if text files are provided.
-#' @param overlap_samples Logical. Whether to ensure only samples with data in all omics are kept.
-#'                      Some JDR methods require this.
-#' @param PCA Logical. Whether PCA should be performed on the omics.
-#' @param thresh NULL or numeric between 0-1. Threshold for the R2_cum to be used for selecting PCs; default 0.85.
-#' Only needed if 'PCA' is TRUE. 
-#' @param noPCs Numeric, indicating the number of principle components to keep. 
-#' If 'thresh' is not NULL, it will ensure at least this many PCs are selected if fewer are needed to reach the threshold. 
-#' @returns A list of omics ready for JDR. 
+#' if left NULL, the omics will just be numbered.
+#' @param sep Character vector containing the separator used if text
+#' files are provided.
+#' @param overlap_samples Logical. Whether to ensure only samples with data
+#' in all omics are kept.Some JDR methods require this.
+#' @param pca Logical. Whether PCA should be performed on the omics.
+#' @param thresh NULL or numeric between 0-1. Threshold for the R2_cum
+#' to be used for selecting PCs; Only needed if 'PCA' is TRUE.
+#' @param n_pcs Numeric, indicating the number of principle components to keep.
+#' If 'thresh' is not NULL, it will ensure at least this many PCs are selected
+#' if fewer are needed to reach the threshold.
+#' @returns A list of omics ready for JDR.
 #' @examples
 
-prepare_data <- function(omics, names = NULL, sep = NULL, overlap_samples = TRUE, PCA = TRUE, thresh = 0.85, noPCs = 20) {
+prepare_data <- function(omics, names = NULL, sep = NULL,
+                         overlap_samples = TRUE, pca = TRUE,
+                         thresh = 0.85, n_pcs = 20) {
   # create omics list
   omic <- .create_omics_list(omics, names, sep, overlap_samples)
 
-  if (PCA){
-   omic <- lapply(omic, .omic_pca(omic, thresh, noPCs))
+  if (pca) {
+    omic <- lapply(omic, .omic_pca(omic, thresh, n_pcs))
   }
 }
 
