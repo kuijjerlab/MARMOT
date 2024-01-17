@@ -2,9 +2,12 @@
 ## Functions to manipulate data and prepare it for JDR with or without PCA ##
 #############################################################################
 
-#' Prepare data for JDR.
+#' @title Prepare data for JDR.
 #'
-#' This function prepares omics data for joint dimensionality reduction.
+#' @name prepare_data
+#'
+#' @description This function prepares omics data for joint dimensionality
+#' reduction.
 #'
 #' @param omics A string vector containing filenames for omics matrices;
 #' accepts text or .RData files; matrices must have samples as columns
@@ -26,7 +29,8 @@
 #' @param file_name Character string specifying the file name for the
 #' unfiltered PCA results. If left NULL, a generic name will be assigned.
 #' @param scale Logical. Whether data should be scaled prior to performing PCA.
-#' @returns A list of omics ready for JDR.
+#'
+#' @return A list of omics ready for JDR.
 #' @examples
 #' @export
 
@@ -55,9 +59,12 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
   }
 }
 
-#' Create a list of omic matrices for JDR.
+#' @title Create a list of omic matrices for JDR.
 #'
-#' Internal function that loads omics data and binds them into a list.
+#' @name .create_omics_list
+#'
+#' @description Internal function that loads omics data and
+#' binds them into a list.
 #'
 #' @inheritParams prepare_data
 #' @return A list of omics matrices for JDR.
@@ -116,13 +123,15 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
   return(omic)
 }
 
-#' Perform PCA on a list of omics.
-#'
-#' Internal function that takes a list of omics and performs PCA on them.
+#' @title Perform PCA on a list of omics.
+#' @name .omics_pca
+#' @description Internal function that takes a list of omics and
+#' performs PCA on them.
 #'
 #' @inheritParams prepare_data
 #' @param omic A matrix of omics data.
-#' @returns PCA results for the omic matrix.
+#' @return PCA results for the omic matrix.
+#' @importFrom pcaMethods pca
 
 .omics_pca <- function(omic, scale) {
   # data must be transposed for the PCA
@@ -141,14 +150,17 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
   return(dat_pca)
 }
 
-#' Filter PCA results based on a R2 threshold.
+#' @title Filter PCA results based on a R2 threshold.
 #'
-#' Internal function that filters a list of omics based on a cummulative R2
-#' threshold; alternatively, it can select a specified number of
-#' principle components.
+#' @name .filter_pcs
+#'
+#' @description Internal function that filters a list of omics
+#' based on a cummulative R2 threshold; alternatively,
+#' it can select a specified number of principle components.
+#'
 #' @inheritParams prepare_data
 #' @param omic_pca PCA results for one omic.
-#' @returns A matric of omic principle components filtered based on a
+#' @return A matric of omic principle components filtered based on a
 #' cummulative R2 threshold.
 #' @examples
 
