@@ -28,6 +28,7 @@
 #' @param scale Logical. Whether data should be scaled prior to performing PCA.
 #' @returns A list of omics ready for JDR.
 #' @examples
+#' @export
 
 prepare_data <- function(omics, names = NULL, sep = NULL,
                          overlap_samples = TRUE, pca = TRUE,
