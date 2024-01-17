@@ -1,6 +1,7 @@
 #' Prepare data for JDR.
 #'
 #' This function prepares omics data for joint dimensionality reduction.
+#'
 #' @param omics A string vector containing filenames for omics matrices;
 #' accepts text or .RData files; matrices must have samples as columns
 #' and rows as features.The omics data must come from the same samples.
@@ -16,29 +17,48 @@
 #' @param n_pcs Numeric, indicating the number of principle components to keep.
 #' If 'thresh' is not NULL, it will ensure at least this many PCs are selected
 #' if fewer are needed to reach the threshold.
+#' @param save_pca Logical. Whether to save a copy of the unfiltered PCA results
+#' as an RData file.
+#' @param file_name Character string specifying the file name for the
+#' unfiltered PCA results. If left NULL, a generic name will be assigned.
+#' @param scale Logical. Whether data should be scaled prior to performing PCA.
 #' @returns A list of omics ready for JDR.
 #' @examples
 
 prepare_data <- function(omics, names = NULL, sep = NULL,
                          overlap_samples = TRUE, pca = TRUE,
-                         thresh = 0.85, n_pcs = 20) {
+                         thresh = 0.85, n_pcs = 20, save_pca = TRUE,
+                         file_name = NULL, scale = TRUE) {
   # create omics list
-  omic <- .create_omics_list(omics, names, sep, overlap_samples)
+  omic_list <- .create_omics_list(omics, names, sep, overlap_samples)
 
   if (pca) {
-    omic <- lapply(omic, .omic_pca(omic, thresh, n_pcs))
+    omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale))
+    if (save_pca) {
+      if (is.null(file_name)) {
+        file_name <- "omics_list_PCA.RData"
+      }
+      save(omics_pca, file = file_name)
+    }
+
+    # filtering PCA results
+    omic_fil <- lapply(omics_pca, function(omic) .filter_pcs(omic, thresh, n_pcs)) #nolint
+
+    return(omic_fil)
+  } else {
+    return(omic_list)
   }
 }
 
 #' Create a list of omic matrices for JDR.
 #'
-#' This function loads omics data and binds them into a list.
+#' Internal function that loads omics data and binds them into a list.
 #'
 #' @inheritParams prepare_data
 #' @return A list of omics matrices for JDR.
-#' @examples 
+#' @examples
 
-.create_omics_list <- function(omics, names = NULL, sep = NULL, overlap_samples = TRUE) {
+.create_omics_list <- function(omics, names, sep, overlap_samples) {
   #initialise list of omics
   omic <- list()
 
@@ -55,14 +75,14 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
         omic[[i]] <- as.matrix(read.table(omics[i], head = TRUE, sep = sep))
       }
     } else {
-      stop("Invalid file format. Please make sure the data is in a text or .RData file format")
+      stop("Invalid file format. Please make sure the data is in a text or .RData file format") #nolint
     }
   }
 
   # check if omics share at least one sample with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames))) > 0
   if (smpl_overlap == FALSE) {
-    stop("No common samples between the omics. Please ensure omics share at least some samples.")
+    stop("No common samples between the omics. Please ensure omics share at least some samples.") #nolint
   }
 
   # get all sample names
@@ -85,51 +105,63 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
     if (length(names) == length(omic)) {
       names(omic) <- names
     } else {
-      stop("Please make sure the length of 'names' is the same as the number of omics")
+      stop("Please make sure the length of 'names' is the same as the number of omics") #nolint
     }
   }
   return(omic)
 }
 
 #' Perform PCA on a list of omics.
-#' This function takes a list of omics and performs PCA on them. Expects the output of 
+#'
+#' Internal function that takes a list of omics and performs PCA on them.
+#'
 #' @inheritParams prepare_data
-#' @param omic A matrix of omics data. 
-#' @returns Returns a list of omics PCs that account for a specific variability threshold.
+#' @param omic A matrix of omics data.
+#' @returns PCA results for the omic matrix.
 
-.omics_pca <- function(omic, thresh = 0.85, noPCs = NULL) {
+.omics_pca <- function(omic, scale) {
   # data must be transposed for the PCA
   dat <- t(as.matrix(omic))
-    
+
   # removing any features that are 0 in all samples
-  dat <- dat[, which(colSums(dat[]) !=0)]
-    
-  # scaling data and running pca
-  dat <- scale(dat)
+  dat <- dat[, which(colSums(dat[]) != 0)]
+
+  # scaling data
+  if (scale) {
+    dat <- scale(dat)
+  }
+  # running pca
   dat_pca <- pca(dat, nPcs = nrow(dat))
-    
-    # determine if to use R2_cum threshold or number of PCs 
-    if(is.null(noPCs)){
-      # make sure that each omic has at least 'noPCs' components 
-      PCs <- which(dat_pca@R2cum <= thresh)
-      if(length(PCs) < noPCs) {
-        PCs <- 1:noPCs
-      }
-      omic_pca <- t(dat_pca@scores[, PCs]) 
-      
-    } else {
-      PCs <- 1:noPCs
-      omic_pca <- t(dat_pca@scores[, PCs])
+
+  return(dat_pca)
+}
+
+#' Filter PCA results based on a R2 threshold.
+#'
+#' Internal function that filters a list of omics based on a cummulative R2
+#' threshold; alternatively, it can select a specified number of
+#' principle components.
+#' @inheritParams prepare_data
+#' @param omic_pca PCA results for one omic.
+#' @returns A matric of omic principle components filtered based on a
+#' cummulative R2 threshold.
+#' @examples
+
+.filter_pcs <- function(omic_pca, thresh, n_pcs) {
+  if (!is.null(thresh)) {
+    # filter by R2 cum threshold
+    PCs <- which(omic_pca@R2cum <= thresh)
+
+    # make sure that each omic has at least 'n_pcs' principle components
+    if (length(PCs) < n_pcs) {
+      PCs <- 1:n_pcs
     }
-    
-    pca_omics[[i]] <- dat_pca
-  
-  
-  names(pca_omics) <- names(omic)
-  names(MOFA_data) <- names(omic)
-  
-  can_pca <- list(pca_omics, MOFA_data)
-  
-  return(can_pca)
-  
+    omic_fil <- t(omic_pca@scores[, PCs])
+
+  } else {
+    PCs <- 1:n_pcs
+    omic_fil <- t(omic_pca@scores[, PCs])
+  }
+
+  return(omic_fil)
 }
