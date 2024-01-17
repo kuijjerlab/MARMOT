@@ -1,3 +1,7 @@
+#############################################################################
+## Functions to manipulate data and prepare it for JDR with or without PCA ##
+#############################################################################
+
 #' Prepare data for JDR.
 #'
 #' This function prepares omics data for joint dimensionality reduction.
