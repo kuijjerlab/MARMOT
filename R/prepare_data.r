@@ -101,11 +101,8 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 
   # ensure only common samples are kept
   if (overlap_samples) {
-    # Find common samples
-    common_samples <- Reduce(intersect, all_samples)
-
     # Subset to only common samples
-    omic <- lapply(omic, function(x) x[, common_samples])
+    omic <- .filter_omics(omic)
   } else {
     # ensure samples are all in the same order
     omic <- lapply(omic, function(x) { x[, all_samples, drop = FALSE]})
@@ -122,8 +119,34 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
   return(omic)
 }
 
+#' @title Filter omics to only overlapping samples.
+#'
+#' @name .filter_omics
+#'
+#' @description Internal function to filter omics to only overlapping samples.
+#' This is required by some JDR methods.
+#'
+#' @param omic_list A list of omic matrices.
+#'
+#' @return A list of omics that are filtered to only common samples.
+
+.filter_omics <- function(omic_list) {
+  # Get all sample names
+  all_samples <- lapply(omic_list, colnames)
+
+  # Find common samples
+  common_samples <- Reduce(intersect, all_samples)
+
+  # Filter to only common samples
+  omic_fil <- lapply(omic_list, function(x) omic_list[, common_samples])
+
+  return(omic_fil)
+}
+
 #' @title Perform PCA on a list of omics.
+#'
 #' @name .omics_pca
+#'
 #' @description Internal function that takes a list of omics and
 #' performs PCA on them.
 #'
