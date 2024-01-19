@@ -15,29 +15,52 @@
 #' This only works with JDR methods that are linear. For details, check [cite my paper] # nolint
 #'
 #' @inheritParams run_jdr
-#' @param fct_list A list of factorissations. Expects output of \code{\link{run_jdr}},
-#' or one of the individual functions.
-#' @param PCA_weights A pcaMethods output corresponding to the data
+#' @param fct_list A list of factorissations. Expects output of
+#' \code{\link{run_jdr}}, or one of the individual functions.
+#' @param pca_weights A pcaMethods output corresponding to the data
 #' imputted for JDR. See \code{\link{prepare_data}}.
 #' @param omics Names of the omics for which this should be done.
 #' If NULL, it will be done on all omics
 #'
-#' @return Returns a MOFA object where the factor loadings have been substituted with the result of the matrix multiplication
+#' @return
 #'
 #' @examples
 #'
 #' @export
 #'
 
-map_weights_to_features <- function(jdr_methods, fct_list, PCA_weights,
+map_weights_to_features <- function(jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
+                                    fct_list, pca_weights,
                                     omics = NULL) {
-  weights <- get_weights(MOFAobject)
-  feat_wts <- list()
+  # get MOFA weights
+  if (is.element("MOFA", jdr_methods)) {
+    mofa_wts <- .map_mofa_wts(fct_list$MOFA, pca_weights, omics)
+  }
+
+}
+
+#' @name .map_mofa_wts
+#'
+#' @description Internal function that extracts factor weights from a trained
+#' MOFA object and multiplies them with PCA loadings.
+#' 
+#' @inheritParams map_weights_to_features
+#' @param mofa_object A MOFA object containing a trained MOFA model.
+#' 
+#' @return 
+#' 
+#' @import MOFA2 #maybe just import specific functions here
+
+.map_mofa_wts <- function(mofa_object, pca_weights, omics) {
+  # get weights
+  weights <- get_weights(mofa_object)
   
+  feat_wts <- list()
+
   if(is.null(omics)){
     omics <- names(weights)
   }
-  
+
   #substituting into the MOFA object
   metadata <- data.frame()
   dimensions <- c()
