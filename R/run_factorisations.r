@@ -48,14 +48,19 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
     omic_fil <- .filter_omics(omic_list)
   }
 
+  # initialise factorisation list
+  fct_list <- list()
+
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
     mofa_model <- .run_mofa2(omic_list, n_fct, ...)
+    fct_list$MOFA <- mofa_model
   }
 
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
     jive_model <- .run_jive(omic_list, n_fct, ...)
+    fct_list$JIVE <- jive_model
   }
 
   # run RGCCA
@@ -63,9 +68,11 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
     if (!samples_overlap) {
       # run with omic_fil
       rgcca_model <- run_rgcca(omic_fil, n_fct, ...)
+      fct_list$RGCCA <- rgcca_model
     } else {
       # run with omic_list
       rgcca_model <- run_rgcca(omic_list, n_fct, ...)
+      fct_list$RGCCA <- rgcca_model
     }
   }
 
@@ -73,10 +80,16 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
   if (is.element("MCIA", jdr_methods)) {
      if (!samples_overlap) {
       # run with omic_fil
+      mcia_model <- run_mcia(omic_fil, n_fct, ...)
+      fct_list$MCIA <- mcia_model
     } else {
-      #run with omic_list
+      # run with omic_list
+      mcia_model <- run_mcia(omic_list, n_fct, ...)
+      fct_list$MCIA <- mcia_model
     }
   }
+
+  return(fct_list)
 }
 
 #' @title Run JDR with MOFA2.
@@ -96,7 +109,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 
 run_mofa2 <- function(omic_list, n_fct, ...) {
   # make MOFA object
-  mofa_object <- create_mofa(omic_list)
+  mofa_object <- create_mofa(omic_list, ...)
 
   # prepare MOFA object
   mofa_object <- prepare_mofa(mofa_object, ...)
@@ -125,7 +138,7 @@ run_jive <- function(omic_list, n_fct, ...) {
   # run jive
   # look a little more into JIVE options and what they mean
   jive_model <- jive(omic_list, rankJ = n_fct, 
-                      rankA = rep(n_fct, length(omic_list)), ...)
+                     rankA = rep(n_fct, length(omic_list)), ...)
 
   return(jive_model)
 }
@@ -151,4 +164,21 @@ run_rgcca <- function(omic_list, n_fct, ...) {
   rgcca_model <- rgcca(omics_t, ncomp = rep(n_fct, length(omics_t)), ...)
 
   return(rgcca_model)
+}
+
+#' @title Run JDR with MCIA.
+#'
+#' @name run_mcia
+#'
+#' @description Performs JDR on a list of omic matrices using MCIA.
+#'
+#' @inheritParam run_jdr
+#'
+#' @return A trained MCIA model.
+#'
+#' @export
+#' @import omicade4
+
+run_mcia <- function(omic_list, n_fct, ...) {
+
 }
