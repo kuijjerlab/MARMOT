@@ -28,6 +28,7 @@
 #' See \code{\link{prepare_data}}.
 #' @param jdr_methods Character vector specifying one more more JDR methods
 #' to be used. Should be from \code{c("MOFA", "JIVE", "RGCCA", "MCIA")}.
+#' @param n_fct Integer. Number of factors for the factorisations. 
 #' @param ... Any other parameters that can be passed to any used functions
 #' from the JDR packages. See respective package documentation for further details. #nolint
 #'
@@ -41,7 +42,7 @@
 
 run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
-                    ...) {
+                    n_fct = 5, ...) {
   # overlap samples if not already done
   if (!samples_overlap) {
     omic_fil <- .filter_omics(omic_list)
@@ -49,12 +50,12 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
-    mofa_model <- .run_mofa2(omic_list, ...)
+    mofa_model <- .run_mofa2(omic_list, n_fct, ...)
   }
 
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
-    jive_model <- .run_jive(omic_list, ...)
+    jive_model <- .run_jive(omic_list, n_fct, ...)
   }
 
   # run RGCCA
@@ -76,7 +77,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
   }
 }
 
-#' @title Run JDR with MOFA2
+#' @title Run JDR with MOFA2.
 #'
 #' @name run_mofa2
 #'
@@ -91,15 +92,36 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #' @export
 #' @import MOFA2
 
-run_mofa2 <- function(omic_list, ...) {
+run_mofa2 <- function(omic_list, n_fct, ...) {
   # make MOFA object
   mofa_object <- create_mofa(omic_list)
 
   # prepare MOFA object
   mofa_object <- prepare_mofa(mofa_object, ...)
+  mofa_object@model # gotta figure out the best way to access the model opts and change the number of fct #nolint
 
   # run mofa
   mofa_model <- run_mofa(mofa_object, ...)
 
   return(mofa_model)
+}
+
+#' @title Run JDR with JIVE
+#'
+#' @name run_jive
+#'
+#' @description
+#'
+#' @inheritParam run_jdr
+#'
+#' @return A trained JIVE model.
+#'
+#' @export
+#' @import r.jive
+
+run_jive <- function(omic_list, n_fct, ...){
+  # run jive
+  jive_model <- jive(omic_list, rankJ = n_fct, rankA = rep(n_fct, length(omic_list)))
+
+  return(jive_model)
 }
