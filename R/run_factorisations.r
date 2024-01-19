@@ -62,8 +62,10 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
   if (is.element("RGCCA", jdr_methods)) {
     if (!samples_overlap) {
       # run with omic_fil
+      rgcca_model <- run_rgcca(omic_fil, n_fct, ...)
     } else {
-      #run with omic_list
+      # run with omic_list
+      rgcca_model <- run_rgcca(omic_list, n_fct, ...)
     }
   }
 
@@ -81,7 +83,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #'
 #' @name run_mofa2
 #'
-#' @description Performs JDR with MOFA2.
+#' @description Performs JDR on a list of omic matrices with MOFA2.
 #'
 #' @inheritParam run_jdr
 #' @param ... Any other parameters that can be passed to MOFA2 functions.
@@ -106,11 +108,11 @@ run_mofa2 <- function(omic_list, n_fct, ...) {
   return(mofa_model)
 }
 
-#' @title Run JDR with JIVE
+#' @title Run JDR with JIVE.
 #'
 #' @name run_jive
 #'
-#' @description
+#' @description Performs JRD on a list of omic matrices with JIVE.
 #'
 #' @inheritParam run_jdr
 #'
@@ -119,9 +121,34 @@ run_mofa2 <- function(omic_list, n_fct, ...) {
 #' @export
 #' @import r.jive
 
-run_jive <- function(omic_list, n_fct, ...){
+run_jive <- function(omic_list, n_fct, ...) {
   # run jive
-  jive_model <- jive(omic_list, rankJ = n_fct, rankA = rep(n_fct, length(omic_list)))
+  # look a little more into JIVE options and what they mean
+  jive_model <- jive(omic_list, rankJ = n_fct, 
+                      rankA = rep(n_fct, length(omic_list)), ...)
 
   return(jive_model)
+}
+
+#' @title Run JDR with RGCCA.
+#'
+#' @name run_rgcca
+#'
+#' @description Performs JDR on a list of omic matrices using RGCCA.
+#'
+#' @inheritParam run_jdr
+#'
+#' @return A trained RGCCA model.
+#'
+#' @export
+#' @import RGCCA
+
+run_rgcca <- function(omic_list, n_fct, ...) {
+  # transpose omics
+  omics_t <- lapply(omic_list, function(x) t(x))
+
+  # run rgcca
+  rgcca_model <- rgcca(omics_t, ncomp = rep(n_fct, length(omics_t)), ...)
+
+  return(rgcca_model)
 }
