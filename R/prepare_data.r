@@ -75,9 +75,9 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 
   #sanity checks and loading input files
   for (i in seq_along(omics)) {
-    if (grepl(x = omics[i], pattern = ".RData" | ".Rda", ignore.case = TRUE)) {
+    if (grepl(x = omics[i], pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) {
       omic[[i]] <- as.matrix(get(load(omics[i])))
-    } else if (grepl(x = omics[i], pattern = ".txt" | ".tsv" | ".csv")) {
+    } else if (grepl(x = omics[i], pattern = "\\.txt$|\\.tsv$|\\.csv$")) {
       if (is.null(sep)) {
         stop("Please provide a separator for your text files.")
       } else if (length(sep) > 1) {
@@ -138,7 +138,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
   common_samples <- Reduce(intersect, all_samples)
 
   # Filter to only common samples
-  omic_fil <- lapply(omic_list, function(x) omic_list[, common_samples])
+  omic_fil <- lapply(omic_list, function(x) x[, common_samples])
 
   return(omic_fil)
 }
