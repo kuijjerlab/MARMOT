@@ -32,6 +32,8 @@
 #' @param seed Seed for factorisation.
 #' @param convergence Only needed if MOFA2 is used. Determines the convergence
 #' mode. Can be one of c("slow", "medium", "fast").
+#' @param use_basilisk Logical. Whether basilisk should be used to automatically
+#' set up conda environment. Only needed when MOFA2 is used. 
 #' @param ... Any other parameters that can be passed to any used functions
 #' from the JDR packages. See respective package documentation for further details. #nolint
 #'
@@ -45,7 +47,8 @@
 
 run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
-                    n_fct = 5, seed = 42, convergence = "slow", ...) {
+                    n_fct = 5, seed = 42, convergence = "slow", 
+                    use_basilisk = TRUE, ...) {
   # overlap samples if not already done
   if (!samples_overlap) {
     omic_fil <- .filter_omics(omic_list)
@@ -110,7 +113,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #' @export
 #' @import MOFA2
 
-run_mofa2 <- function(omic_list, n_fct, seed, convergence, ...) {
+run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk, ...) {
   # make MOFA object
   mofa_object <- create_mofa(omic_list, ...)
 
@@ -121,7 +124,7 @@ run_mofa2 <- function(omic_list, n_fct, seed, convergence, ...) {
   mofa_object@training_options$convergence_mode <- convergence
 
   # run mofa
-  mofa_model <- run_mofa(mofa_object, ...)
+  mofa_model <- run_mofa(mofa_object, use_basilisk = use_basilisk)
 
   return(mofa_model)
 }
