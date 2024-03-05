@@ -43,38 +43,40 @@ map_weights_to_features <- function(jdr_methods = c("MOFA", "JIVE", "RGCCA", "MC
 #'
 #' @description Internal function that extracts factor weights from a trained
 #' MOFA object and multiplies them with PCA loadings.
-#' 
+#'
 #' @inheritParams map_weights_to_features
 #' @param mofa_object A MOFA object containing a trained MOFA model.
-#' 
-#' @return 
-#' 
+#'
+#' @return
+#'
 #' @import MOFA2 #maybe just import specific functions here
 
 .map_mofa_wts <- function(mofa_object, pca_weights, omics) {
   # get weights
   weights <- get_weights(mofa_object)
-  
+
   feat_wts <- list()
 
-  if(is.null(omics)){
+  if (is.null(omics)) {
     omics <- names(weights)
   }
 
   #substituting into the MOFA object
   metadata <- data.frame()
   dimensions <- c()
-  
-  for(j in omics){
+
+  for (j in omics) {
     loadings <- PCA_weights[[j]]@loadings
-    loadings <- loadings[,1:nrow(weights[[j]])] #selecting only the PCs used in the mofa analysis
-    mult <- loadings %*% weights[[j]] # matrix multiplication between the PCA loadings and the factor weights
+    #selecting only the PCs used in the mofa analysis
+    loadings <- loadings[,1:nrow(weights[[j]])]
+    # matrix multiplication between the PCA loadings and the factor weights
+    mult <- loadings %*% weights[[j]]
     feat_wts[[j]] <- mult
-    
-    
+
+
     #change the expectations (i.e. actual weight values)
     MOFAobject@expectations$W[[j]] <- feat_wts[[j]]
-    
+
     #get new feature metadata
     view_metadata <- data.frame(feature = rownames(feat_wts[[j]]), view = rep(j, nrow(feat_wts[[j]])))
     metadata <- rbind(metadata, view_metadata)
