@@ -6,3 +6,6 @@ Author: Romana Pop
 Maintainer: romanatp@uio.no
 Description: This package performs joint dimensionality reduction on multi-omics data with sample-specific gene regulatory networks. 
 License: MIT
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
