@@ -224,14 +224,19 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' second feature. See examples for details. The list must be named as follows:
 #' list(sample_id = "sample_id", vital_status = "vital_status",
 #' time_to_event = "time_to_event")
+#' @param vital_status_values A named vector of length two indicating how vital
+#' status is recorded in the clinical data. This will be converted to logical,
+#' where alive = TRUE and dead = FALSE. Default is c(alive = TRUE, dead = FALSE)
+#' NAs will be preserved.
 #' @param keep_nas Logical. If samples with NA values in any survival feature
-#' should be kept.
+#' should be kept. Not recomended for most downstream analysis.
 #'
 #' @return A data frame containing survival information.
 #' @examples
 #' @export
 
 prepare_surv <- function(clinical, feature_names,
+                         vital_status_values = c(alive = TRUE, dead = FALSE),
                          sep = "\t", keep_nas = FALSE) {
   # load data
   clin <- read.table(clinical, sep = sep, head = TRUE)
@@ -249,70 +254,23 @@ prepare_surv <- function(clinical, feature_names,
   make sure feature names exist in clinical data and are spelled correctly.")
 
   # grab specified features
-  temp <- clin[, unlist(feature_names)]
+  surv <- clin[, unlist(feature_names)]
 
-  # merge columns that were provided for the same feature
-  temp <- lapply()
+  # merge columns that were provided for the same feature and rename columns
+  surv <- purrr::reduce(feature_names, .merge_surv, .init = surv)
 
-  feat <- which(sapply(feature_names, function(x) length(x) > 1))
-  if (length(feat > 0)) {
-    temp <- lapply()
-    temp <- ifelse(is.na(temp$days_to_death) & !is.na(temp$days_to_last_followup),
-                                 temp$days_to_last_followup,
-                                 temp$days_to_death)
-  }
+  #replace vital status with logical
+  surv$vital_status <- ifelse(!is.na(surv$vital_status),
+                              surv$vital_status == vital_status_values[1], NA)
 
-
-  # making sure the relevant columns are all named the same
-  # not elegant, but you work with what you got
-  if (TCGA) {
-    clin <- clin %>%
-      rename(
-        sampleID = colnames(clin)[grep("submitter_id.samples", colnames(clin))],
-        days_to_death = colnames(clin)[grep("days_to_death.diagnoses", colnames(clin))],
-        vital_status = colnames(clin)[grep("vital_status.diagnoses", colnames(clin))],
-        days_to_last_followup = colnames(clin)[grep("days_to_last_follow_up.diagnoses", colnames(clin))],
-        days_to_last_followup = colnames(clin)[grep("days_to_lastfollowup", colnames(clin))]
-      )
-
-    #get the relevant columns
-    temp <- data.frame(cbind(sampleID = clin$sampleID, 
-                             vital_status = clin$vital_status, 
-                             days_to_death = clin$days_to_death, 
-                             days_to_last_followup = clin$days_to_last_followup, 
-                             days_to_event = NA))
-
-    #merge days_to_death & days_to_last_followup
-    temp$days_to_death <- as.numeric(temp$days_to_death)
-    temp$days_to_last_followup <- as.numeric(temp$days_to_last_followup)
-    temp$days_to_event <- ifelse(is.na(temp$days_to_death) & !is.na(temp$days_to_last_followup),
-                                 temp$days_to_last_followup,
-                                 temp$days_to_death)
-
-    #change sample names so they match with those in data
-    temp$sampleID <- gsub("-", "\\.", temp$sampleID)
-
-    #replace vital status with logical
-    temp$vital_status <- gsub("DECEASED", TRUE, temp$vital_status, ignore.case = TRUE)
-    temp$vital_status <- gsub("ALIVE", FALSE, temp$vital_status, ignore.case = TRUE)
-    temp$vital_status <- gsub("dead", TRUE, temp$vital_status, ignore.case = TRUE)
-    temp$vital_status <- gsub("LIVING", FALSE, temp$vital_status, ignore.case = TRUE)
-
-    surv <- data.frame(sampleID = temp$sampleID,
-                       vital_status = temp$vital_status,
-                       days_to_event = temp$days_to_event)
-  }else {
-    surv <- data.frame(sampleID = clin$sampleID,
-                       vital_status = clin$vital_status,
-                       days_to_event = clin$time_to_event)
-  }
-
-  surv$days_to_event <- as.numeric(surv$days_to_event)
+  # make sure time is numeric and vital status is logical
+  surv$days_to_event <- as.numeric(surv$time_to_event)
   surv$vital_status <- as.logical(surv$vital_status)
 
   #remove any remaining NAs
-  surv <- surv[!is.na(surv$days_to_event), ]
-  surv <- surv[!is.na(surv$vital_status), ]
+  if (!keep_nas) {
+    surv <- surv[complete.cases(surv), ]
+  }
 
   return(surv)
 }
