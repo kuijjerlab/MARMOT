@@ -48,8 +48,8 @@ map_weights_to_features <- function(jdr_methods = c("MOFA", "JIVE", "RGCCA", "MC
 #' @param mofa_object A MOFA object containing a trained MOFA model.
 #'
 #' @return
-#'
-#' @import MOFA2 #maybe just import specific functions here
+#' #maybe just import specific functions here
+#' @import MOFA2
 
 .map_mofa_wts <- function(mofa_object, pca_weights, omics) {
   # get weights

@@ -16,4 +16,8 @@ Imports:
     pcaMethods,
 Suggests:
     testthat,
-    ggbeeswarm
+    ggbeeswarm,
+    MOFA2,
+    RGCCA,
+    omicade4,
+    r.jive
