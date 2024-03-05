@@ -12,7 +12,8 @@
 #'
 #' @param omics A string vector containing filenames for omics matrices;
 #' accepts text or .RData files; matrices must have samples as columns
-#' and rows as features.The omics data must come from the same samples.
+#' and rows as features.The omics data must come from the same samples,
+#' but some samples may have some missing values in some omics.
 #' @param names Character vector with the names to be used for the omics;
 #' if left NULL, the omics will just be numbered.
 #' @param sep Character vector containing the separator used if text
@@ -323,16 +324,24 @@ prepare_surv <- function(clinical, feature_names,
 #' @description Merges the columns of a data frame if more than one feature
 #' is provided for a single feature.
 #'
-#' @inheritParams prepare_surv
-#' @param cols Column names
+#' @param cols Character vector containing column names.
 #' @param surv Data frame of extracted survival features.
 #'
 #' @return A data frame with merged columns.
 
 .merge_surv <- function(cols, surv) {
+  # check if column vector has more than one element
   if (length(cols) > 1) {
+    # get feature name
     col <- names(cols)
-    surv[, col] <- ifelse(is.na(surv[, cols[1]]) & !is.na(surv[, cols[2]]),
+    # innitialise data frame
+    temp <- data.frame()
+    # if first feature is NA, replace with value from second
+    temp[, col] <- ifelse(is.na(surv[, cols[1]]) & !is.na(surv[, cols[2]]),
                           surv[, cols[2]], surv[, cols[1]])
+  } else {
+    temp[, col] <- surv[, cols]
   }
+
+  return(temp)
 }
