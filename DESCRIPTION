@@ -1,11 +1,19 @@
-Package: JDRnet
-Type: Package
-Title: Joint Dimensionality Reduction with Gene Regulatory Networks
-Version: 0.1.0
-Author: Romana Pop
-Maintainer: romanatp@uio.no
-Description: This package performs joint dimensionality reduction on multi-omics data with sample-specific gene regulatory networks. 
-License: MIT
-Suggests: 
-    testthat (>= 3.0.0)
-Config/testthat/edition: 3
+Package: MOFAnet
+Title: Running Joint Dimensionality Reduction With Gene Regulatory Networks
+Version: 0.0.0.9000
+Authors@R: 
+    person("Romana", "Pop", , "romanatp@uio.no", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0004-5930-5877"))
+Description: Running joint dimensionality reduction (JDR) on multi-omics data with gene regulatory networks (GRNs). This package is geared towards integration of sample-specific GRNs with multi-omic data in cancers. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    tidyverse,
+    survival,
+    survminer,
+    pcaMethods,
+Suggests:
+    testthat,
+    ggbeeswarm
