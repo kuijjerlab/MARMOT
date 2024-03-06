@@ -2,13 +2,13 @@
 #################### Functions for various custom plots ########################
 ################################################################################
 
-# @name plot_data_dim
-# @description Barplot that shows the dimensionalities for a set of multi-omics data. Expects the output of "create_omics_list" 
-# @param data Expects a character vector containing the path to two .Rda files. The data files are expected to be the output of "create_omics_list"
-# @param data_labels Character label for the data. This will be used for the title of the plot. 
-# @param Optional. Character vector specifying the omics to be plotted. If not specified, all the omics will be plotted. 
-# @cols Optional. Character vector with colour IDs to use for the barplots. If NULL, the "Dark2" pallette from RColorBrewer will be used
-# @returns Returns a ggplot.
+#' @name plot_data_dim
+#' @description Barplot that shows the dimensionalities for a set of multi-omics data. Expects the output of "create_omics_list" 
+#' @param data Expects a character vector containing the path to two .Rda files. The data files are expected to be the output of "create_omics_list"
+#' @param data_labels Character label for the data. This will be used for the title of the plot. 
+#' @param Optional. Character vector specifying the omics to be plotted. If not specified, all the omics will be plotted. 
+#' @cols Optional. Character vector with colour IDs to use for the barplots. If NULL, the "Dark2" pallette from RColorBrewer will be used
+#' @returns Returns a ggplot.
 
 plot_data_dim <- function(data, data_label, which_omics = NULL, cols = NULL){
   #loading data
@@ -48,4 +48,20 @@ plot_data_dim <- function(data, data_label, which_omics = NULL, cols = NULL){
   
   return(p)
   
+}
+
+#' @title 
+#' 
+#' @name plot_variance_bar
+#' 
+#' @description
+
+plot_variance_bar <- function() {
+    ggplot(data = var_df, aes(x = cancer, y = var_perc, fill = omic))+
+      geom_bar(stat="identity")+
+      scale_fill_manual(labels = labels[[j]], values = col[2:6])+
+      ylab("Variance")+ xlab("")+
+      theme_classic()+
+      theme(text = element_text(size=30),
+            axis.text.x = element_text(angle = 45, hjust = 1))
 }
