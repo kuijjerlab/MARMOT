@@ -226,17 +226,17 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' time_to_event = "time_to_event")
 #' @param vital_status_values A named vector of length two indicating how vital
 #' status is recorded in the clinical data. This will be converted to logical,
-#' where alive = TRUE and dead = FALSE. Default is c(alive = TRUE, dead = FALSE)
+#' where alive = FALSE and dead = TRUE. Default is c(alive = FALSE, dead = TRUE)
 #' NAs will be preserved.
 #' @param keep_nas Logical. If samples with NA values in any survival feature
-#' should be kept. Not recomended for most downstream analysis.
+#' should be kept. Not recommended for most downstream analysis.
 #'
 #' @return A data frame containing survival information.
 #' @examples
 #' @export
 
 prepare_surv <- function(clinical, feature_names,
-                         vital_status_values = c(alive = TRUE, dead = FALSE),
+                         vital_status_values = c(alive = FALSE, dead = TRUE),
                          sep = "\t", keep_nas = FALSE) {
   # load data
   clin <- read.table(clinical, sep = sep, head = TRUE)
@@ -259,22 +259,24 @@ prepare_surv <- function(clinical, feature_names,
   surv <- clin[, unlist(feature_names)]
 
   # merge columns that were provided for the same feature and rename columns
-  surv <- purrr::reduce(feature_names, .merge_surv, .init = surv)
+  result_list <- lapply(feature_names, .merge_surv, surv)
+  surv_merged <- do.call(cbind, result_list)
+  colnames(surv_merged) <- names(feature_names)
 
   #replace vital status with logical
-  surv$vital_status <- ifelse(!is.na(surv$vital_status),
-                              surv$vital_status == vital_status_values[1], NA)
+  surv_merged$vital_status <- ifelse(!is.na(surv_merged$vital_status),
+                              surv_merged$vital_status == vital_status_values[2], NA)
 
   # make sure time is numeric and vital status is logical
-  surv$days_to_event <- as.numeric(surv$time_to_event)
-  surv$vital_status <- as.logical(surv$vital_status)
+  surv_merged$time_to_event <- as.numeric(surv_merged$time_to_event)
+  surv_merged$vital_status <- as.logical(surv_merged$vital_status)
 
   #remove any remaining NAs
   if (!keep_nas) {
-    surv <- surv[complete.cases(surv), ]
+    surv_merged <- surv_merged[complete.cases(surv_merged), ]
   }
 
-  return(surv)
+  return(surv_merged)
 }
 
 #' @title Merge multiple columns of surv data frame
@@ -289,7 +291,7 @@ prepare_surv <- function(clinical, feature_names,
 #'
 #' @return A data frame with merged columns.
 
-.merge_surv <- function(surv, cols) {
+.merge_surv <- function(cols, surv) {
   # check if column vector has more than one element
   if (length(cols) > 1) {
     # get feature name
@@ -300,8 +302,7 @@ prepare_surv <- function(clinical, feature_names,
     temp[, col] <- ifelse(is.na(surv[, cols[1]]) & !is.na(surv[, cols[2]]),
                           surv[, cols[2]], surv[, cols[1]])
   } else {
-    temp <- data.frame()
-    temp[, col] <- surv[, cols]
+    temp <- surv[, cols, drop = F]
   }
 
   return(temp)
