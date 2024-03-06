@@ -243,15 +243,17 @@ prepare_surv <- function(clinical, feature_names,
 
   # sanity checks
   # check the features are labelled correctly
-  if (names(feature_names != c("sample_id", "vital_status", "time_to_event"))) {
+  if (!all(names(feature_names) %in% c("sample_id", "vital_status", "time_to_event"))) {
     stop("List element names unknown. Please make sure names(feature_names) are
     as detailed in the documentation and are spelled correctly.")
   }
 
   # check if provided feature names exist in clinical data
   names_exist <- sapply(feature_names, function(x) all(x %in% colnames(clin)))
-  stopifnot(names_exist, message = "Feature names could not be found. Please 
-  make sure feature names exist in clinical data and are spelled correctly.")
+  if (!all(names_exist)){
+    stop("Feature names could not be found. Please make sure feature names exist
+    in the clinical data and are spelled correctly.")
+  }
 
   # grab specified features
   surv <- clin[, unlist(feature_names)]
@@ -287,7 +289,7 @@ prepare_surv <- function(clinical, feature_names,
 #'
 #' @return A data frame with merged columns.
 
-.merge_surv <- function(cols, surv) {
+.merge_surv <- function(surv, cols) {
   # check if column vector has more than one element
   if (length(cols) > 1) {
     # get feature name
@@ -298,6 +300,7 @@ prepare_surv <- function(clinical, feature_names,
     temp[, col] <- ifelse(is.na(surv[, cols[1]]) & !is.na(surv[, cols[2]]),
                           surv[, cols[2]], surv[, cols[1]])
   } else {
+    temp <- data.frame()
     temp[, col] <- surv[, cols]
   }
 
