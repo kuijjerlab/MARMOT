@@ -1,6 +1,6 @@
-##################################
-## Functions to run JDR methods ##
-##################################
+################################################################################
+####################### Functions to run JDR methods ###########################
+################################################################################
 
 #' @title Run joint dimensionality reduction on multi-omics data.
 #'
@@ -33,7 +33,7 @@
 #' @param convergence Only needed if MOFA2 is used. Determines the convergence
 #' mode. Can be one of c("slow", "medium", "fast").
 #' @param use_basilisk Logical. Whether basilisk should be used to automatically
-#' set up conda environment. Only needed when MOFA2 is used. 
+#' set up conda environment. Only needed when MOFA2 is used.
 #' @param ... Any other parameters that can be passed to any used functions
 #' from the JDR packages. See respective package documentation for further details. #nolint
 #'
@@ -47,7 +47,7 @@
 
 run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
-                    n_fct = 5, seed = 42, convergence = "slow", 
+                    n_fct = 5, seed = 42, convergence = "slow",
                     use_basilisk = TRUE, ...) {
   # overlap samples if not already done
   if (!samples_overlap) {
@@ -84,7 +84,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 
   # run MCIA
   if (is.element("MCIA", jdr_methods)) {
-     if (!samples_overlap) {
+    if (!samples_overlap) {
       # run with omic_fil
       mcia_model <- run_mcia(omic_fil, n_fct, ...)
       fct_list$MCIA <- mcia_model
