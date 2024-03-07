@@ -13,9 +13,9 @@ Imports:
     tidyverse,
     survival,
     survminer,
-    pcaMethods,
 Suggests:
     testthat,
+    pcaMethods,
     ggbeeswarm,
     MOFA2,
     RGCCA,
