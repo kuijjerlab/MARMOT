@@ -48,7 +48,7 @@
 run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
                     n_fct = 5, seed = 42, convergence = "slow",
-                    use_basilisk = TRUE, ...) {
+                    use_basilisk = TRUE) {
   # overlap samples if not already done
   if (!samples_overlap) {
     omic_fil <- .filter_omics(omic_list)
@@ -59,13 +59,13 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
-    mofa_model <- .run_mofa2(omic_list, n_fct, ...)
+    mofa_model <- .run_mofa2(omic_list, n_fct)
     fct_list$MOFA <- mofa_model
   }
 
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
-    jive_model <- .run_jive(omic_list, n_fct, ...)
+    jive_model <- .run_jive(omic_list, n_fct)
     fct_list$JIVE <- jive_model
   }
 
@@ -73,11 +73,11 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
   if (is.element("RGCCA", jdr_methods)) {
     if (!samples_overlap) {
       # run with omic_fil
-      rgcca_model <- run_rgcca(omic_fil, n_fct, ...)
+      rgcca_model <- run_rgcca(omic_fil, n_fct)
       fct_list$RGCCA <- rgcca_model
     } else {
       # run with omic_list
-      rgcca_model <- run_rgcca(omic_list, n_fct, ...)
+      rgcca_model <- run_rgcca(omic_list, n_fct)
       fct_list$RGCCA <- rgcca_model
     }
   }
@@ -86,11 +86,11 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
   if (is.element("MCIA", jdr_methods)) {
     if (!samples_overlap) {
       # run with omic_fil
-      mcia_model <- run_mcia(omic_fil, n_fct, ...)
+      mcia_model <- run_mcia(omic_fil, n_fct)
       fct_list$MCIA <- mcia_model
     } else {
       # run with omic_list
-      mcia_model <- run_mcia(omic_list, n_fct, ...)
+      mcia_model <- run_mcia(omic_list, n_fct)
       fct_list$MCIA <- mcia_model
     }
   }
@@ -113,12 +113,12 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #' @export
 #' @import MOFA2
 
-run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk, ...) {
+run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk) {
   # make MOFA object
-  mofa_object <- create_mofa(omic_list, ...)
+  mofa_object <- create_mofa(omic_list)
 
   # prepare MOFA object
-  mofa_object <- prepare_mofa(mofa_object, ...)
+  mofa_object <- prepare_mofa(mofa_object)
   mofa_object@model_options$num_factors <- n_fct
   mofa_object@training_options$seed <- seed
   mofa_object@training_options$convergence_mode <- convergence
@@ -142,11 +142,11 @@ run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk, ...) {
 #' @export
 #' @import r.jive
 
-run_jive <- function(omic_list, n_fct, ...) {
+run_jive <- function(omic_list, n_fct) {
   # run jive
   # look a little more into JIVE options and what they mean
   jive_model <- jive(omic_list, rankJ = n_fct, 
-                     rankA = rep(n_fct, length(omic_list)), ...)
+                     rankA = rep(n_fct, length(omic_list)))
 
   return(jive_model)
 }
@@ -164,12 +164,12 @@ run_jive <- function(omic_list, n_fct, ...) {
 #' @export
 #' @import RGCCA
 
-run_rgcca <- function(omic_list, n_fct, ...) {
+run_rgcca <- function(omic_list, n_fct) {
   # transpose omics
   omics_t <- lapply(omic_list, function(x) t(x))
 
   # run rgcca
-  rgcca_model <- rgcca(omics_t, ncomp = rep(n_fct, length(omics_t)), ...)
+  rgcca_model <- rgcca(omics_t, ncomp = rep(n_fct, length(omics_t)))
 
   return(rgcca_model)
 }
@@ -187,6 +187,6 @@ run_rgcca <- function(omic_list, n_fct, ...) {
 #' @export
 #' @import omicade4
 
-run_mcia <- function(omic_list, n_fct, ...) {
+run_mcia <- function(omic_list, n_fct) {
 
 }
