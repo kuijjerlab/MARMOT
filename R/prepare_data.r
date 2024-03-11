@@ -245,12 +245,12 @@ prepare_surv <- function(clinical, feature_names,
   # check the features are labelled correctly
   .check_names(names(feature_names),
                c("sample_id", "vital_status", "time_to_event"),
-               err_msg = "Please make sure names(feature_names) are
-               as detailed in the documentation and are spelled correctly.")
+               err_msg = "names(feature_names) are as detailed in the 
+               documentation")
 
   # check if provided feature names exist in clinical data
-  .check_names(feature_names, colnames(clin), err_msg = "Please make sure 
-    feature names exist in the clinical data and are spelled correctly.")
+  .check_names(feature_names, colnames(clin), err_msg = "feature names exist in 
+  the clinical data")
 
   # grab specified features
   surv <- clin[, unlist(feature_names)]
