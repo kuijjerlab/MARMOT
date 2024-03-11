@@ -12,6 +12,7 @@
 #' (not "NA" character string). NAs will be excluded.
 #'
 #' @inheritParams surv_association
+#' @inheritParams surv_compare
 #' @param clin Data frame with clinical data where rows are samples and columns
 #' are clinical features.
 #' @param clin_feat A character vector with the names of clinical features to be
@@ -22,29 +23,33 @@
 #' @return Results of the test
 #' @export
 
-clin_associaton <- function(factors, clin_feat, factors = NULL){
+clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
+                            p_adjust = TRUE, method = "BH", logtrans = TRUE) {
+
   # sanity checks
-  clin <- samples_metadata(MOFA_model)
-  stopifnot("Elements in clin_feat do not match the sample metadata. Check if they are spelled correctly." = clin_feat %in% colnames(clin))
-  
-  # extract factors
-  Z <- get_factors(MOFA_model)[[1]]
-  if (!is.null(factors)) {
-    Z <- Z[factors]
+  # check feature names exist
+  .check_names(clin_feat, colnames(clin), err_msg = "feature names exist in the 
+  clinical data")
+
+  # check factor names exist
+  if (!is.null(which_fct)) {
+    .check_names(which_fct, colnames(factors), err_msg = "Please make sure 
+    factor names exist and are spelled correctly")
   }
-  
+
+  # select features of interest
+  clin2 <- clin[, clin_feat]
+
+  # check clinical features of interest are not uniform
+  clin2 <- .check_variance(clin2)
+
   # innitialise results data frame
   results_df <- data.frame()
-  
+
   # perform test
   for (i in clin_feat){
     
-    feat <- factor(clin[,i])
-    if(length(levels(feat)) < 2){
-      print(paste("Feature",i,"will be discarded; All observations are the same."))
-      next
-    }
-    else if(length(levels(feat)) == 2) {
+    if(length(levels(feat)) == 2) {
       test <- "wilcox"
       results <- apply(Z, MARGIN=2, function(x) wilcox.test(x~feat, na.action = "na.exclude"))
     } else {
@@ -65,4 +70,39 @@ clin_associaton <- function(factors, clin_feat, factors = NULL){
   }
   
   return(results_df)
+}
+
+#' @title Perform a wilcoxon rank sum or kruskal-Wallis test on a factor.
+#'
+#' @name .perform_test
+#'
+#' @description
+#'
+#' @inheritParams surv_association
+#' @param feat Vector containing the feature of interest.
+#' @param feat_name Optional. Character string specifying the name of the
+#' feature.
+#'
+#' @return Test results.
+#'
+#' @importFrom dplyr everything summarie across
+
+.perform_test <- function(feat, factors, feat_name = NULL) {
+  # make sure the feature vector is a factor
+  feat <- as.factor(feat)
+
+  # determine the appropriate test
+  if (length(levels(feat)) == 2) {
+    test <- "wilcox"
+    results <- factors %>%
+      summarise(across(everything(), ~ wilcox.test(. ~ feat,
+                                                   na.action = "na.exclude")))
+  } else {
+    test <- "kruskal"
+    results <- factors %>%
+      summarise(across(everything(), ~ kruskal.test(. ~ feat,
+                                                    na.action = "na.exclude")))
+  }
+
+
 }
