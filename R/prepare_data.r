@@ -249,7 +249,8 @@ prepare_surv <- function(clinical, feature_names,
   }
 
   # check if provided feature names exist in clinical data
-  .check_colnames(clin, feature_names)
+  .check_names(feature_names, colnames(clin), err_msg = "Please make sure 
+    feature names exist in the clinical data and are spelled correctly.")
 
   # grab specified features
   surv <- clin[, unlist(feature_names)]

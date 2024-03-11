@@ -2,22 +2,22 @@
 ###################### Various small utility functions #########################
 ################################################################################
 
-#' @title Check if elements of a character vector exist as column names in a
-#' data frame.
+#' @title Check if all elements of a character vector exist as elements in
+#' another character vector.
 #'
 #' @name .check_colnames
 #'
-#' @description Check if elements of a character vector exist as column names
-#' in a data frame.
+#' @description Check if all elements of a character vector exist as elements in
+#' another character vector.
 #'
-#' @param df Dataframe for which column names should be checked.
-#' @param name_vector A character vector containing column names to be checked.
-#'
+#' @param vector_1 Vector to be checked.
+#' @param vector_2 Reference vector.
+#' @param err_msg Optional. A custom error message so I can give some meaningful
+#' error messages depending on the context in which I use this.
 
-.check_colnames <- function(df, name_vector) {
-  names_exist <- sapply(name_vector, function(x) all(x %in% colnames(df)))
+.check_names <- function(vector_1, vector_2, err_msg = NULL) {
+  names_exist <- sapply(vector_1, function(x) all(x %in% vector_2))
   if (!all(names_exist)) {
-    stop("Feature names could not be found. Please make sure the column names 
-    provided exist in your data frame and are spelled correctly")
+    stop(paste("Elements could not be found.", err_msg, sep = " "))
   }
 }
