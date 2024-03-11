@@ -22,6 +22,7 @@
 #'
 #' @return Results of the test
 #' @export
+#' @importFrom magrittr %>%
 
 clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
                             p_adjust = TRUE, method = "BH", logtrans = TRUE) {
@@ -43,31 +44,14 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
   # check clinical features of interest are not uniform
   clin2 <- .check_variance(clin2)
 
-  # innitialise results data frame
-  results_df <- data.frame()
+  # perform tests for each feature
+  # still have to test that this works right
+  result_list <- clin2 %>%
+    purr::map(~ .perform_test(.x, factors,
+                              feat_name = colnames(clin2)[which(clin2 == .x)]))
 
-  # perform test
-  for (i in clin_feat){
-    
-    if(length(levels(feat)) == 2) {
-      test <- "wilcox"
-      results <- apply(Z, MARGIN=2, function(x) wilcox.test(x~feat, na.action = "na.exclude"))
-    } else {
-      test <- "kruskal"
-      results <- apply(Z, MARGIN=2, function(x) kruskal.test(x~feat, na.action = "na.exclude"))
-    }
-    
-    # store all relevant info in a data frame
-    as_df <- as.data.frame(colnames(Z))
-    colnames(as_df) <- "Factor"
-    as_df$feat <- i
-    as_df$test <- test
-    as_df$pvalue <- unlist(lapply(results, function(x) x$p.value))
-    as_df$padj <- p.adjust(as_df$pval, method = "BH")
-    as_df$logp <- -log10(as_df$padj)
-    
-    results_df <- rbind(results_df, as_df)
-  }
+  # convert to a data frame
+  result_df <- dplyr::bind_rows(result_list)
   
   return(results_df)
 }
@@ -104,5 +88,9 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
                                                     na.action = "na.exclude")))
   }
 
+  # add the test that was used
+  results$test <- test
+  results$feat <- feat_name
 
+  return(results)
 }
