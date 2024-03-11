@@ -18,7 +18,9 @@ Imports:
     MOFA2,
     RGCCA,
     omicade4,
-    r.jive
+    r.jive,
+    ClusterProfiler,
+    limma
 Suggests:
     testthat
     
