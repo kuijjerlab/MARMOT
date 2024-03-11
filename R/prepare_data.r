@@ -243,10 +243,10 @@ prepare_surv <- function(clinical, feature_names,
 
   # sanity checks
   # check the features are labelled correctly
-  if (!all(names(feature_names) %in% c("sample_id", "vital_status", "time_to_event"))) {
-    stop("List element names unknown. Please make sure names(feature_names) are
-    as detailed in the documentation and are spelled correctly.")
-  }
+  .check_names(names(feature_names),
+               c("sample_id", "vital_status", "time_to_event"),
+               err_msg = "Please make sure names(feature_names) are
+               as detailed in the documentation and are spelled correctly.")
 
   # check if provided feature names exist in clinical data
   .check_names(feature_names, colnames(clin), err_msg = "Please make sure 
