@@ -13,11 +13,12 @@ Imports:
     tidyverse,
     survival,
     survminer,
-Suggests:
-    testthat,
     pcaMethods,
     ggbeeswarm,
     MOFA2,
     RGCCA,
     omicade4,
     r.jive
+Suggests:
+    testthat
+    
