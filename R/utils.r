@@ -22,3 +22,37 @@
                err_msg, "and are spelled correctly.", sep = " "))
   }
 }
+
+#' @title Check if each column in a df has some variance.
+#'
+#' @name .check_variance
+#'
+#' @description Check if each column in a df has some variance and remove
+#' columns that don't.
+#'
+#' @param df Data frame to check.
+#'
+#' @return A filtered data frame.
+#'
+#' @importFrom dplyr summarise_all pivot_longer filter everything
+#' @importFrom magrittr %>%
+
+.check_variance <- function(df) {
+  result <- df %>%
+    summarise_all(~ if (is.numeric(.)) var(.) else n_distinct(.) > 1) %>%
+    pivot_longer(everything(), names_to = "Column",
+                 values_to = "NonZeroVariance") %>%
+    filter(NonZeroVariance)
+
+  constant_columns <- df %>%
+    summarise_all(~ if(is.numeric(.)) var(.) == 0 else n_distinct(.) == 1) %>%
+    pivot_longer(everything(), names_to = "Column", values_to = "Constant") %>%
+    filter(Constant)
+
+  if (nrow(constant_columns) > 0) {
+    warning("The folowing features have no varaince and have been removed:",
+            paste(constant_columns$Column, collapse = ", "))
+  }
+
+  return(result)
+}
