@@ -18,6 +18,7 @@
 .check_names <- function(vector_1, vector_2, err_msg = NULL) {
   names_exist <- sapply(vector_1, function(x) all(x %in% vector_2))
   if (!all(names_exist)) {
-    stop(paste("Elements could not be found.", err_msg, sep = " "))
+    stop(paste("Elements could not be found. Please make sure",
+               err_msg, "and are spelled correctly.", sep = " "))
   }
 }
