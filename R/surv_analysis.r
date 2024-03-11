@@ -4,7 +4,7 @@
 
 #' @title Calculate factor association with survival.
 #'
-#' @name calculate_surv_association
+#' @name surv_association
 #'
 #' @description This function takes as input computed factorisations from JDR
 #' models (see \code{\link{run_jdr}}) and calculates the association to survival
@@ -23,7 +23,7 @@
 #'
 #' @export
 
-calculate_surv_association <- function(factors, surv, univariate = TRUE) {
+surv_association <- function(factors, surv, univariate = TRUE) {
 
   # make sure samples are the same
   samples <- surv$sample_id
