@@ -19,27 +19,43 @@
 #' tested.
 #' @param which_fct Optional. Character vector indicating which factors to
 #' perform the association for. If NULL, all factors will be tested.
+#' @param sample_label Optional. A character string indicating the name of the
+#' column with sample IDs in the clinical data. If NULL, rownames will be
+#' assumed to be sample IDs.
 #'
 #' @return Results of the test
 #' @export
 #' @importFrom magrittr %>%
 
 clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
-                            p_adjust = TRUE, method = "BH", logtrans = TRUE) {
+                            sample_label = NULL, p_adjust = TRUE, method = "BH",
+                            logtrans = TRUE) {
 
   # sanity checks
   # check feature names exist
-  .check_names(clin_feat, colnames(clin), err_msg = "feature names exist in the 
-  clinical data")
+  .check_names(clin_feat, colnames(clin), err_msg = "feature names exist in the clinical data") # nolint
 
   # check factor names exist
   if (!is.null(which_fct)) {
-    .check_names(which_fct, colnames(factors), err_msg = "Please make sure 
-    factor names exist and are spelled correctly")
+    .check_names(which_fct, colnames(factors), err_msg = "Please make sure factor names exist and are spelled correctly") # nolint
   }
 
+  # check sample label exists
+  .check_names(sample_label, colnames(clin), err_msg = "Please make sure sample_label exists and is spelled correctly.") # nolint
+
+  # make sure samples overlap
+  if (is.null(sample_label)) {
+    smpl <- intersect(rownames(clin), rownames(factors))
+    clin2 <- clin[smpl, ]
+  } else {
+    smpl <- intersect(clin[, sample_label], rownames(factors))
+    clin2 <- clin[which(clin[, sample_label] %in% smpl), ]
+  }
+
+  factors2 <- factors[smpl, ]
+
   # select features of interest
-  clin2 <- clin[, clin_feat]
+  clin2 <- clin2[, clin_feat]
 
   # check clinical features of interest are not uniform
   clin2 <- .check_variance(clin2)
@@ -47,13 +63,12 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
   # perform tests for each feature
   # still have to test that this works right
   result_list <- clin2 %>%
-    purr::map(~ .perform_test(.x, factors,
-                              feat_name = colnames(clin2)[which(clin2 == .x)]))
+    purrr::map2(clin2, clin_feat, ~ .perform_test(.x, factors2, feat_name = .y))
 
   # convert to a data frame
   result_df <- dplyr::bind_rows(result_list)
-  
-  return(results_df)
+
+  return(result_df)
 }
 
 #' @title Perform a wilcoxon rank sum or kruskal-Wallis test on a factor.
@@ -73,7 +88,7 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 
 .perform_test <- function(feat, factors, feat_name = NULL) {
   # make sure the feature vector is a factor
-  feat <- as.factor(feat)
+  #feat <- as.factor(feat)
 
   # determine the appropriate test
   if (length(levels(feat)) == 2) {
