@@ -36,7 +36,7 @@ calculate_surv_association <- function(factors, surv, univariate = TRUE) {
 
   # subset to only samples that have survival data
   factors <- factors[samples, ]
-  surv <- surv[which(surv$sampleID %in% samples), ]
+  surv <- surv[which(surv$sample_id %in% samples), ]
 
   # create survival object
   survival_object <- survival::Surv(surv$time_to_event, surv$vital_status)
