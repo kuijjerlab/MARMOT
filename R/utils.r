@@ -56,3 +56,22 @@
 
   return(result)
 }
+
+# For now, this can live here. 
+#' @name .normalise_indeg
+#' @description This function takes in a list of omic matrices that includes
+#' indegree and quantile normalises the indegree
+#' @param data A list of omic matrices (including indegree)
+#' @param indeg_label Character stings indicating the label of the list item
+#' containing the indegree. Default is "indegree".
+#' @return A list of omic matrices with normalised indegree.
+
+.normalise_indeg <- function(data, indeg_label = "indegree") {
+  indeg <- data[[indeg_label]]
+  indeg_n <- normalize.quantiles(indeg, copy = FALSE)
+
+  data_n <- data
+  data_n[[indeg_label]] <- indeg_n
+
+  return(data_n)
+}
