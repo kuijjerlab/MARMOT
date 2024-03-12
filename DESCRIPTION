@@ -10,14 +10,8 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports:
-    tidyverse,
-    survival,
-    survminer,
+    tidyverse, survival, survminer, pcaMethods, ggbeeswarm, MOFA2, RGCCA, omicade4, r.jive, ClusterProfiler, limma,
+    RColorBrewer
 Suggests:
-    testthat,
-    pcaMethods,
-    ggbeeswarm,
-    MOFA2,
-    RGCCA,
-    omicade4,
-    r.jive
+    testthat
+    

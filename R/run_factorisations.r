@@ -111,7 +111,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #' @return A trained MOFA2 model.
 #'
 #' @export
-#' @import MOFA2
+#' @importFrom MOFA2 run_mofa create_mofa prepare_mofa
 
 run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk) {
   # make MOFA object
@@ -140,7 +140,7 @@ run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk) {
 #' @return A trained JIVE model.
 #'
 #' @export
-#' @import r.jive
+#' @importFrom r.jive jive
 
 run_jive <- function(omic_list, n_fct) {
   # run jive
@@ -162,7 +162,7 @@ run_jive <- function(omic_list, n_fct) {
 #' @return A trained RGCCA model.
 #'
 #' @export
-#' @import RGCCA
+#' @importFrom RGCCA rgcca
 
 run_rgcca <- function(omic_list, n_fct) {
   # transpose omics
