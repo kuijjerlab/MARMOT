@@ -38,12 +38,6 @@
 #' @importFrom magrittr %>%
 
 .check_variance <- function(df) {
-  result <- df %>%
-    summarise_all(~ if (is.numeric(.)) var(.) else n_distinct(.) > 1) %>%
-    pivot_longer(everything(), names_to = "Column",
-                 values_to = "NonZeroVariance") %>%
-    filter(NonZeroVariance)
-
   constant_columns <- df %>%
     summarise_all(~ if(is.numeric(.)) var(.) == 0 else n_distinct(.) == 1) %>%
     pivot_longer(everything(), names_to = "Column", values_to = "Constant") %>%
@@ -53,6 +47,8 @@
     warning("The folowing features have no varaince and have been removed:",
             paste(constant_columns$Column, collapse = ", "))
   }
+
+  result <- df[, setdiff(colnames(df), constant_columns$Column)]
 
   return(result)
 }
