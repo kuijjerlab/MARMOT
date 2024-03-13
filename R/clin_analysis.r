@@ -62,11 +62,25 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 
   # perform tests for each feature
   # still have to test that this works right
-  result_list <- clin2 %>%
-    purrr::map2(clin2, clin_feat, ~ .perform_test(.x, factors2, feat_name = .y))
+  result_list <- purrr::pmap(list(clin2, clin_feat), ~ .perform_test(..1, factors2, feat_name = ..2)) # nolint: line_length_linter.
 
   # convert to a data frame
   result_df <- dplyr::bind_rows(result_list)
+
+  # add column with factor name
+  result_df$Factor <- sub("\\.{3}.*", "", rownames(result_df))
+
+  # remove row names
+  rownames(result_df) <- NULL
+
+  # add logtrans
+  if (logtrans) {
+    if (p_adjust) {
+      result_df$logp <- -log10(result_df$padj)
+    } else {
+      result_df$logp <- -log10(result_df$pval)
+    }
+  }
 
   return(result_df)
 }
@@ -86,26 +100,37 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 #'
 #' @importFrom dplyr everything summarie across
 
-.perform_test <- function(feat, factors, feat_name = NULL) {
-  # make sure the feature vector is a factor
-  #feat <- as.factor(feat)
+.perform_test <- function(feat, factors, feat_name = NULL, p_adjust = TRUE,
+                          method = "BH") {
+  # still need to figure out how to deal with NAs.
 
   # determine the appropriate test
   if (length(levels(feat)) == 2) {
     test <- "wilcox"
-    results <- factors %>%
-      summarise(across(everything(), ~ wilcox.test(. ~ feat,
-                                                   na.action = "na.exclude")))
+    results <- data.frame(
+      test = test,
+      feat_name = feat_name,
+      pval = sapply(names(factors), function(x) wilcox.test(get(x) ~ feat, data = factors, na.action = "na.exclude")$p.value) # nolint: line_length_linter.
+    )
   } else {
     test <- "kruskal"
-    results <- factors %>%
-      summarise(across(everything(), ~ kruskal.test(. ~ feat,
-                                                    na.action = "na.exclude")))
+    results <- data.frame(
+      test = test,
+      feat_name = feat_name,
+      pval = sapply(names(factors), function(x) kruskal.test(get(x) ~ feat, data = factors, na.action = "na.exclude")$p.value) # nolint: line_length_linter.
+    )
   }
 
   # add the test that was used
   results$test <- test
+
+  # add name of tested feature
   results$feat <- feat_name
+
+  # adjust pvals
+  if (p_adjust) {
+    results$padj <- p.adjust(results$pval, method = method)
+  }
 
   return(results)
 }
