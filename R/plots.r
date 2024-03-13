@@ -7,10 +7,13 @@
 #' @param data Expects a character vector containing the path to two .Rda files. The data files are expected to be the output of "create_omics_list"
 #' @param data_labels Character label for the data. This will be used for the title of the plot. 
 #' @param Optional. Character vector specifying the omics to be plotted. If not specified, all the omics will be plotted. 
-#' @cols Optional. Character vector with colour IDs to use for the barplots. If NULL, the "Dark2" pallette from RColorBrewer will be used
+#' @colours Optional. Character vector with colour IDs to use for plotting.
+#' If NULL, the "Dark2" pallette from RColorBrewer will be used. If using custom
+#' colours, please make sure the number of colours specified matches the number
+#' of colours needed.
 #' @returns Returns a ggplot.
 
-plot_data_dim <- function(data, data_label, which_omics = NULL, cols = NULL){
+plot_data_dim <- function(data, data_label, which_omics = NULL, colours = NULL){
   #loading data
   dat <- get(load(data[1]))
   
@@ -64,4 +67,38 @@ plot_variance_bar <- function() {
       theme_classic()+
       theme(text = element_text(size=30),
             axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+#' @name plot_clin_association
+#' @description This takes the output of clin_association and plots a heatmap of
+#' the association of each factor with each clinical feature.
+#'
+#' @inheritParams plot_data_dim
+#' @param clin_assoc A data frame containing the association results.
+#' Expects the output of clin_association
+#'
+#' @return A heatmap.
+#' @export
+
+plot_clin_association <- function(clin_assoc, colours = NULL) {
+  # sanity checks
+  # check that log p value was calculated
+  if (!is.element("logp", colnames(clin_assoc))) {
+    stop("-log10(p-value) required for plotting. Please make sure to run 'clin_asociation' with logtreans = TRUE") # nolint
+  }
+
+  # get colours
+  if (is.null(colours)) {
+    col <- palette("Dark2")
+  } else {
+    col <- colours
+  }
+
+  p <- ggplot(data = clin_assoc, aes(x = Factor, y = feat, fill = logp)) +
+    geom_tile() +
+    scale_fill_gradient(low = "white", high = col[3], name = "-log10(FDR)") +
+    labs(x = NULL, y = "clinical feature")+
+    theme_classic()
+  
+  return(p)
 }
