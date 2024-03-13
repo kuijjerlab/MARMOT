@@ -60,6 +60,12 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
   # check clinical features of interest are not uniform
   clin2 <- .check_variance(clin2)
 
+  # make sure missing values are NAs
+  clin2 <- dplyr::mutate_all(clin2, ~ ifelse(. == "", NA, .))
+
+  # make sure all NAs are true NAs and not NA strings
+  clin2 <- dplyr::mutate_all(clin2, ~ ifelse(. == "NA", NA, .))
+
   # perform tests for each feature
   # still have to test that this works right
   result_list <- purrr::pmap(list(clin2, clin_feat), ~ .perform_test(..1, factors2, feat_name = ..2)) # nolint: line_length_linter.
