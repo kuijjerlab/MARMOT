@@ -108,8 +108,6 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 
 .perform_test <- function(feat, factors, feat_name = NULL, p_adjust = TRUE,
                           method = "BH") {
-  # still need to figure out how to deal with NAs.
-
   # determine the appropriate test
   if (length(levels(feat)) == 2) {
     test <- "wilcox"
