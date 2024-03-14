@@ -61,6 +61,27 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
   }
 }
 
+#' @title Load omic data from file.
+#'
+#' @name .load_data
+#'
+#' @description Load data from file.
+#'
+#' @param file Character string indicating file name.
+#'
+#' @returns An omic matrix
+#' @noRd
+
+.load_data <- function(file) {
+  if (grepl(x = file, pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) {
+    return(as.matrix(get(load(file))))
+  } else if (grepl(x = file, pattern = "\\.txt$|\\.tsv$|\\.csv$")) {
+    return(data.table::fread(file))
+  } else {
+    stop("Invalid file format. Please make sure you provide a text or .RData file.") #nolint
+  }
+}
+
 #' @title Create a list of omic matrices for JDR.
 #'
 #' @name .create_omics_list
@@ -73,25 +94,8 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @noRd
 
 .create_omics_list <- function(omics, names, sep, overlap_samples) {
-  # initialise list of omics
-  omic <- list()
-
-  #sanity checks and loading input files
-  for (i in seq_along(omics)) {
-    if (grepl(x = omics[i], pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) { # nolint: line_length_linter.
-      omic[[i]] <- as.matrix(get(load(omics[i])))
-    } else if (grepl(x = omics[i], pattern = "\\.txt$|\\.tsv$|\\.csv$")) {
-      if (is.null(sep)) {
-        stop("Please provide a separator for your text files.")
-      } else if (length(sep) > 1) {
-        stop("Please only provide one separator for your text files.")
-      } else {
-        omic[[i]] <- as.matrix(read.table(omics[i], head = TRUE, sep = sep))
-      }
-    } else {
-      stop("Invalid file format. Please make sure the data is in a text or .RData file format") #nolint
-    }
-  }
+  # read in omics and create a list
+  omic <- lapply(omics, .load_data)
 
   # test that the data is numeric
 
