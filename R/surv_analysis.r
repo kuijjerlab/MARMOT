@@ -10,13 +10,14 @@
 #' models (see \code{\link{run_jdr}}) and calculates the association to survival
 #' of the factors. There are options for either univariate cox regression for
 #' each factor, or multivariate cox regression for multiple factors.
+#'
 #' @param factors Data frame containing factors to be associated with survival.
 #' Samples should be rows and factors columns.
 #' @param surv A data frame with survival information. Expects output from
 #' \code{\link{prepare_surv}}.
 #' @param univariate Logical, whether to run a univariate coxph for each
 #' factor (TRUE) or a multivariate coxph for all together (FALSE).
-#' Default is FALSE.
+#' Default is TRUE.
 #'
 #' @returns A list with either one multivariate coxph model or multiple
 #' univariate coxph models.
@@ -64,7 +65,7 @@ surv_association <- function(factors, surv, univariate = TRUE) {
 #' data frame that summarises the results and makes them easy to compare across
 #' multiple models.
 #'
-#' @inheritParams calculate_surv_association
+#' @inheritParams surv_association
 #' @param model_labels Laabels for the coxph models input. This should be in the
 #' same order as the models passed to the "models" variable. Will be used to
 #' distinguish between models for comparison.
