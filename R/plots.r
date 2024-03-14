@@ -119,3 +119,70 @@ plot_clin_association <- function(clin_assoc, colours = NULL) {
 
   return(p)
 }
+
+#' @name surv_compare_dotplot
+#'
+#' @description Creates a dotplot that compares factors from two JDR models in
+#' terms of their association with patient survival.
+#'
+#' @inheritParams plot_data_dim
+#' @param surv_df A dataframe. Expects the output of \code{\link{surv_compare}}.
+#' @param models_to_compare A vector with the models to compare. Should be two
+#' of the model labels provided in \code{\link{surv_compare}}.
+#'
+#' @returns A ggplot.
+#' @export
+#' @import ggplot2 ggbeeswarm
+#' @importFrom magrittr %>%
+#' @importFrom dplyr mutate case_when
+
+surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
+                                 add_intercepts) { # implement the intercepts arguments
+  # sanity checks
+  # check that specified models exist
+  .check_names(models_to_compare, surv_df$labels, err_msg = "elements of 'models_to_compare' exist in your data frame ") # nolint
+
+  # check logtrans exists
+  if (!is.element("logp", colnames(surv_df))) {
+    stop("-log10(p-value) required for plotting. Please make sure to run 'surv_compare' with logtrans = TRUE") # nolint
+  }
+
+  # select models to compare
+  surv_df <- surv_df[which(surv_df$label %in% models_to_compare), ]
+
+  # set colour palette
+  if (is.null(colours)) {
+    col <- RColorBrewer::palette("Dark2")
+  } else {
+    col <- colours
+  }
+
+  surv_df <- surv_df %>% mutate(label = case_when(logp < 1.30103 ~ "ns",
+                                label == models_to_compare[1] ~ models_to_compare[1],
+                                label == models_to_compare[2] ~ models_to_compare[2]))
+
+  # setting colours
+  if (is.null(colours)) {
+    cols <- c(col[6], col[8], "grey")
+  } else {
+    cols <- col
+  }
+
+
+  p <- ggplot(surv_df, aes(x = cancer, y = logp, fill = label)) +
+    geom_beeswarm(shape = 21, cex = 0.7, size = 7) +
+    scale_y_continuous(breaks = seq(0, 10, 1), limits = c(0, 10)) +
+    scale_fill_manual(values = cols) +
+    geom_hline(yintercept = 2, linetype = "dashed", col = "red") +
+    geom_hline(yintercept = 1.30103, linetype = "dashed", col = "blue") +
+    labs(x = NULL, y = expression("-log"[10]*"(FDR)")) +
+    theme_classic() +
+    theme(legend.position = c(0.9, 0.85),
+          legend.background = element_rect(color = "black"),
+          legend.title = element_blank(),
+          text = element_text(size = 20),
+          axis.text.x = element_text(angle = 45, hjust = 1))
+
+  return(p)
+
+}
