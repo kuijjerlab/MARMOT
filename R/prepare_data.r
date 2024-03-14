@@ -73,7 +73,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @noRd
 
 .create_omics_list <- function(omics, names, sep, overlap_samples) {
-  #initialise list of omics
+  # initialise list of omics
   omic <- list()
 
   #sanity checks and loading input files
@@ -92,6 +92,8 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
       stop("Invalid file format. Please make sure the data is in a text or .RData file format") #nolint
     }
   }
+
+  # test that the data is numeric
 
   # check if omics share at least one sample with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames))) > 0
