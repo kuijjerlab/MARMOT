@@ -157,7 +157,6 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @inheritParams prepare_data
 #' @param omic A matrix of omics data.
 #' @returns PCA results for the omic matrix.
-#' @importFrom pcaMethods pca
 #' @noRd
 
 .omics_pca <- function(omic, scale) {
@@ -172,7 +171,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
     dat <- scale(dat)
   }
   # running pca
-  dat_pca <- pca(dat, nPcs = nrow(dat))
+  dat_pca <- pcaMethods::pca(dat, nPcs = nrow(dat))
 
   return(dat_pca)
 }

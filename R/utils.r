@@ -70,7 +70,7 @@
 
 .normalise_indeg <- function(data, indeg_label = "indegree") {
   indeg <- data[[indeg_label]]
-  indeg_n <- normalize.quantiles(indeg, copy = FALSE)
+  indeg_n <- preprocessCore::normalize.quantiles(indeg, copy = FALSE)
 
   data_n <- data
   data_n[[indeg_label]] <- indeg_n
