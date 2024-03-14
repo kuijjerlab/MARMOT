@@ -132,7 +132,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @param omic_list A list of omic matrices.
 #'
 #' @returns A list of omics that are filtered to only common samples.
-#' @noRd 
+#' @noRd
 
 .filter_omics <- function(omic_list) {
   # Get all sample names
@@ -158,7 +158,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @param omic A matrix of omics data.
 #' @returns PCA results for the omic matrix.
 #' @importFrom pcaMethods pca
-#' @noRd 
+#' @noRd
 
 .omics_pca <- function(omic, scale) {
   # data must be transposed for the PCA

@@ -4,7 +4,7 @@
 \alias{run_mofa2}
 \title{Run JDR with MOFA2.}
 \usage{
-run_mofa2(omic_list, n_fct, seed, convergence, use_basilisk, ...)
+run_mofa2(omic_list, n_fct, seed, convergence, use_basilisk)
 }
 \arguments{
 \item{...}{Any other parameters that can be passed to MOFA2 functions.

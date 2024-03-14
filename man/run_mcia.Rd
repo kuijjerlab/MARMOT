@@ -4,7 +4,7 @@
 \alias{run_mcia}
 \title{Run JDR with MCIA.}
 \usage{
-run_mcia(omic_list, n_fct, ...)
+run_mcia(omic_list, n_fct)
 }
 \value{
 A trained MCIA model.

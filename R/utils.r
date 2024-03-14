@@ -14,6 +14,8 @@
 #' @param vector_2 Reference vector.
 #' @param err_msg Optional. A custom error message so I can give some meaningful
 #' error messages depending on the context in which I use this.
+#'
+#' @noRd
 
 .check_names <- function(vector_1, vector_2, err_msg = NULL) {
   names_exist <- sapply(vector_1, function(x) all(x %in% vector_2))
@@ -32,10 +34,13 @@
 #'
 #' @param df Data frame to check.
 #'
-#' @return A filtered data frame.
+#' @returns A filtered data frame.
 #'
-#' @importFrom dplyr summarise_all pivot_longer filter everything
+#' @importFrom dplyr summarise_all filter everything
+#' @importFrom tidyr pivot_longer
 #' @importFrom magrittr %>%
+#'
+#' @noRd
 
 .check_variance <- function(df) {
   constant_columns <- df %>%
@@ -53,14 +58,15 @@
   return(result)
 }
 
-# For now, this can live here. 
+# For now, this can live here.
 #' @name .normalise_indeg
 #' @description This function takes in a list of omic matrices that includes
 #' indegree and quantile normalises the indegree
 #' @param data A list of omic matrices (including indegree)
 #' @param indeg_label Character stings indicating the label of the list item
 #' containing the indegree. Default is "indegree".
-#' @return A list of omic matrices with normalised indegree.
+#' @returns A list of omic matrices with normalised indegree.
+#' @noRd
 
 .normalise_indeg <- function(data, indeg_label = "indegree") {
   indeg <- data[[indeg_label]]

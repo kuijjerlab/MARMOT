@@ -4,7 +4,7 @@
 \alias{run_rgcca}
 \title{Run JDR with RGCCA.}
 \usage{
-run_rgcca(omic_list, n_fct, ...)
+run_rgcca(omic_list, n_fct)
 }
 \value{
 A trained RGCCA model.

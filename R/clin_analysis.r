@@ -23,7 +23,7 @@
 #' column with sample IDs in the clinical data. If NULL, rownames will be
 #' assumed to be sample IDs.
 #'
-#' @return Results of the test
+#' @returns Results of the test
 #' @export
 #' @importFrom magrittr %>%
 
@@ -102,9 +102,10 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 #' @param feat_name Optional. Character string specifying the name of the
 #' feature.
 #'
-#' @return Test results.
+#' @returns Test results.
 #'
-#' @importFrom dplyr everything summarie across
+#' @importFrom dplyr everything summarise across
+#' @noRd
 
 .perform_test <- function(feat, factors, feat_name = NULL, p_adjust = TRUE,
                           method = "BH") {

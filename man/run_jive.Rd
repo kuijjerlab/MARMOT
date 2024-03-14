@@ -4,7 +4,7 @@
 \alias{run_jive}
 \title{Run JDR with JIVE.}
 \usage{
-run_jive(omic_list, n_fct, ...)
+run_jive(omic_list, n_fct)
 }
 \value{
 A trained JIVE model.

@@ -12,8 +12,7 @@ run_jdr(
   n_fct = 5,
   seed = 42,
   convergence = "slow",
-  use_basilisk = TRUE,
-  ...
+  use_basilisk = TRUE
 )
 }
 \arguments{

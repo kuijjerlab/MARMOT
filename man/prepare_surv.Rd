@@ -7,7 +7,7 @@
 prepare_surv(
   clinical,
   feature_names,
-  vital_status_values = c(alive = TRUE, dead = FALSE),
+  vital_status_values = c(alive = FALSE, dead = TRUE),
   sep = "\\t",
   keep_nas = FALSE
 )
@@ -27,11 +27,11 @@ time_to_event = "time_to_event")}
 
 \item{vital_status_values}{A named vector of length two indicating how vital
 status is recorded in the clinical data. This will be converted to logical,
-where alive = TRUE and dead = FALSE. Default is c(alive = TRUE, dead = FALSE)
+where alive = FALSE and dead = TRUE. Default is c(alive = FALSE, dead = TRUE)
 NAs will be preserved.}
 
 \item{keep_nas}{Logical. If samples with NA values in any survival feature
-should be kept. Not recomended for most downstream analysis.}
+should be kept. Not recommended for most downstream analysis.}
 }
 \value{
 A data frame containing survival information.

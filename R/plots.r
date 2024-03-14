@@ -77,7 +77,7 @@ plot_variance_bar <- function() {
 #' @param clin_assoc A data frame containing the association results.
 #' Expects the output of clin_association
 #'
-#' @return A heatmap.
+#' @returns A heatmap.
 #' @export
 
 plot_clin_association <- function(clin_assoc, colours = NULL) {
