@@ -32,7 +32,7 @@
 #' unfiltered PCA results. If left NULL, a generic name will be assigned.
 #' @param scale Logical. Whether data should be scaled prior to performing PCA.
 #'
-#' @return A list of omics ready for JDR.
+#' @returns A list of omics ready for JDR.
 #' @examples
 #' @export
 
@@ -69,7 +69,8 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' binds them into a list.
 #'
 #' @inheritParams prepare_data
-#' @return A list of omics matrices for JDR.
+#' @returns A list of omics matrices for JDR.
+#' @noRd
 
 .create_omics_list <- function(omics, names, sep, overlap_samples) {
   #initialise list of omics
@@ -77,7 +78,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 
   #sanity checks and loading input files
   for (i in seq_along(omics)) {
-    if (grepl(x = omics[i], pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) {
+    if (grepl(x = omics[i], pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) { # nolint: line_length_linter.
       omic[[i]] <- as.matrix(get(load(omics[i])))
     } else if (grepl(x = omics[i], pattern = "\\.txt$|\\.tsv$|\\.csv$")) {
       if (is.null(sep)) {
@@ -130,7 +131,8 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #'
 #' @param omic_list A list of omic matrices.
 #'
-#' @return A list of omics that are filtered to only common samples.
+#' @returns A list of omics that are filtered to only common samples.
+#' @noRd 
 
 .filter_omics <- function(omic_list) {
   # Get all sample names
@@ -154,8 +156,9 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #'
 #' @inheritParams prepare_data
 #' @param omic A matrix of omics data.
-#' @return PCA results for the omic matrix.
+#' @returns PCA results for the omic matrix.
 #' @importFrom pcaMethods pca
+#' @noRd 
 
 .omics_pca <- function(omic, scale) {
   # data must be transposed for the PCA
@@ -184,8 +187,10 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #'
 #' @inheritParams prepare_data
 #' @param omic_pca PCA results for one omic.
-#' @return A matric of omic principle components filtered based on a
+#'
+#' @returns A matric of omic principle components filtered based on a
 #' cummulative R2 threshold.
+#' @noRd
 
 .filter_pcs <- function(omic_pca, thresh, n_pcs) {
   if (!is.null(thresh)) {
@@ -231,7 +236,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @param keep_nas Logical. If samples with NA values in any survival feature
 #' should be kept. Not recommended for most downstream analysis.
 #'
-#' @return A data frame containing survival information.
+#' @returns A data frame containing survival information.
 #' @examples
 #' @export
 
@@ -262,7 +267,7 @@ prepare_surv <- function(clinical, feature_names,
 
   #replace vital status with logical
   surv_merged$vital_status <- ifelse(!is.na(surv_merged$vital_status),
-                              surv_merged$vital_status == vital_status_values[2], NA)
+                                     surv_merged$vital_status == vital_status_values[2], NA) # nolint: line_length_linter.
 
   # make sure time is numeric and vital status is logical
   surv_merged$time_to_event <- as.numeric(surv_merged$time_to_event)
@@ -286,7 +291,8 @@ prepare_surv <- function(clinical, feature_names,
 #' @param cols Character vector containing column names.
 #' @param surv Data frame of extracted survival features.
 #'
-#' @return A data frame with merged columns.
+#' @returns A data frame with merged columns.
+#' @noRd
 
 .merge_surv <- function(cols, surv) {
   # check if column vector has more than one element
