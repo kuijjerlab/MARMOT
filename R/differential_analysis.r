@@ -22,30 +22,36 @@
 #' If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.
 #' @param survival Logical. Whether the feature of interest is survival. This
 #' will determine how the groups are divided.
+#' @param minprop Numeric between c(0,1), indicating the minimum proportion of
+#' samples per group. Only used for survival data.
 #'
 #' @export
 
 differential_analysis <- function(omic, factor, clin, feat, covariates = NULL,
-                                  limma = TRUE, survival = TRUE) {
+                                  limma = TRUE, survival = TRUE,
+                                  minprop = 0.1) {
   # sanity checks
   # check that feature name exists in clin data frame
   .check_names(feat, colnames(clin), err_msg = "feature name exists in the clinical data") # nolint
 
   # check that covariates exist
   if (!is.null(covariates)) {
-    .check_names(covariates, colnames(clin). err_msg = "covariate names exist in the clinical data") # nolint
+    .check_names(covariates, colnames(clin), err_msg = "covariate names exist in the clinical data") # nolint
   }
+
+
 }
 
 #' @name .fct_cutpoint
 #' @description Uses maxstat to find the optimal survival cutpoint or the median
 #' for non-survival clinical features based on a given JDR factor.
+#'
+#' @inheritParams differential_analysis
 #' @param factor Factor based on which to split the cohort. Expects a matrix.
 #' @param surv Data frame containing the survival data
-#' @param minprop Numeric between c(0,1), indicating the minimum proportion of samples per group.
 #' @returns Data frame containing the information about the two survival groups.
 
-.fct_cutpoint <- function(factor, surv, minprop = 0.1) {
+.fct_cutpoint <- function(factor, surv, minprop = 0.1, survival = TRUE) {
 
   # only take samples for which there is survival info
   samples <- surv$sample_id
