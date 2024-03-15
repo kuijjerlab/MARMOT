@@ -8,11 +8,11 @@
 differential_analysis(
   omic,
   factor,
-  clin,
-  feat,
+  surv,
+  clin = NULL,
   covariates = NULL,
   limma = TRUE,
-  survival = TRUE
+  minprop = 0.1
 )
 }
 \arguments{
@@ -21,10 +21,11 @@ should be rows.}
 
 \item{factor}{A dataframe with the factor based on which to determine groups.}
 
-\item{clin}{A dataframe of clinical data.}
+\item{surv}{A data frame with survival information. Expects output from
+\code{\link{prepare_surv}}.}
 
-\item{feat}{Character string with the clinical feature with which the factor
-of interest is associated. Must be a column name in \code{clin}.}
+\item{clin}{Optional. A dataframe with clinical features for which to correct
+if using limma.}
 
 \item{covariates}{Optional. A character vector with names of covariates for
 which to correct. Only applies if limma is used.}
@@ -32,8 +33,8 @@ which to correct. Only applies if limma is used.}
 \item{limma}{Whether limma should be used for the differential analysis.
 If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.}
 
-\item{survival}{Logical. Whether the feature of interest is survival. This
-will determine how the groups are divided.}
+\item{minprop}{Numeric between c(0,1), indicating the minimum proportion of
+samples per group.}
 }
 \description{
 This function performs differential analysis on omics data. It
