@@ -1,7 +1,7 @@
-#############################################################################
-## Functions to manipulate omics  and clinical data and prepare it for JDR ##
-################# and further analysis with or without PCA ##################
-#############################################################################
+################################################################################
+#### Functions to manipulate omics  and clinical data and prepare it for JDR ###
+################# and further analysis with or without PCA #####################
+################################################################################
 
 #' @title Prepare data for JDR.
 #'
@@ -11,13 +11,12 @@
 #' reduction.
 #'
 #' @param omics A string vector containing filenames for omics matrices;
-#' accepts text or .RData files; matrices must have samples as columns
-#' and rows as features.The omics data must come from the same samples,
-#' but some samples may have some missing values in some omics.
+#' accepts .RData files or any format accepted by fread; matrices must have
+#' samples as columns and rows as features. The omics data must come from
+#' the same samples, but some samples may have some missing values in some
+#' omics.
 #' @param names Character vector with the names to be used for the omics;
 #' if left NULL, the omics will just be numbered.
-#' @param sep Character vector containing the separator used if text
-#' files are provided.
 #' @param overlap_samples Logical. Whether to ensure only samples with data
 #' in all omics are kept. Some JDR methods require this.
 #' @param pca Logical. Whether PCA should be performed on the omics.
@@ -36,12 +35,11 @@
 #' @examples
 #' @export
 
-prepare_data <- function(omics, names = NULL, sep = NULL,
-                         overlap_samples = TRUE, pca = TRUE,
-                         thresh = 0.85, n_pcs = 20, save_pca = TRUE,
+prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
+                         pca = TRUE, thresh = 0.85, n_pcs = 20, save_pca = TRUE,
                          file_name = NULL, scale = TRUE) {
   # create omics list
-  omic_list <- .create_omics_list(omics, names, sep, overlap_samples)
+  omic_list <- .create_omics_list(omics, names, overlap_samples)
 
   if (pca) {
     omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale))
@@ -73,12 +71,17 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @noRd
 
 .load_data <- function(file) {
+  # check and load file
   if (grepl(x = file, pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) {
     return(as.matrix(get(load(file))))
-  } else if (grepl(x = file, pattern = "\\.txt$|\\.tsv$|\\.csv$")) {
-    return(data.table::fread(file))
+  } else if (grepl(x = file, pattern = "\\.txt$|\\.tsv$|\\.csv$",
+                   ignore.case = TRUE)) {
+    dat <- as.matrix(data.table::fread(file, drop = 1))
+    rows <- data.table::fread(file, select = 1, colClasses = "character")$V1
+    rownames(dat) <- rows
+    return(dat)
   } else {
-    stop("Invalid file format. Please make sure you provide a text or .RData file.") #nolint
+    stop("Invalid file format. Please make sure you provide a supported file format.") # nolint
   }
 }
 
@@ -93,20 +96,26 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #' @returns A list of omics matrices for JDR.
 #' @noRd
 
-.create_omics_list <- function(omics, names, sep, overlap_samples) {
+.create_omics_list <- function(omics, names = NULL, overlap_samples) {
   # read in omics and create a list
   omic <- lapply(omics, .load_data)
 
-  # test that the data is numeric
+  # set omic names
+  if (is.null(names)) {
+    names <- paste0(rep("omic_", length(omic)), seq_along(length(omic)))
+  }
+
+  # test that the data is numeric or coercible to numeric
+  
 
   # check if omics share at least one sample with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames))) > 0
-  if (smpl_overlap == FALSE) {
+  if (!smpl_overlap) {
     stop("No common samples between the omics. Please ensure omics share at least some samples.") #nolint
   }
 
   # get all sample names
-  all_samples <- lapply(omic, colnames)
+  all_samples <- colnames(omic[[1]])
 
   # ensure only common samples are kept
   if (overlap_samples) {
@@ -132,7 +141,7 @@ prepare_data <- function(omics, names = NULL, sep = NULL,
 #'
 #' @name .filter_omics
 #'
-#' @description Internal function to filter omics to only overlapping samples.
+#' @description Function to filter omics to only overlapping samples.
 #' This is required by some JDR methods.
 #'
 #' @param omic_list A list of omic matrices.
