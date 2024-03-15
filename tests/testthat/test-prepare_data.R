@@ -1,20 +1,19 @@
-context("Data manipulation")
 library(JDRnet)
 
 test_that("incorrect file format throws error", {
   test_files <- c("test_file.fastq")
-  expect_error(.load_data(test_files),
-    "Invalid file format. Please make sure you provide a text or .RData file.")
+  expect_error(suppressWarnings(.load_data(test_files)),
+    "Invalid file format. Please make sure you provide a supported file format.")
 })
 
 test_that("list of correct length is made", {
   test_files <- c("test_file1.Rda", "test_file2.tsv", "test_file3.txt")
-  expect_equal(class(.create_omics_list(test_files, sep = )), "list")
-  expect_equal(length(.create_omics_list(test_files)), length(test_files))
+  expect_equal(class(suppressWarnings(.create_omics_list(test_files, overlap_samples = FALSE))), "list")
+  expect_equal(length(suppressWarnings(.create_omics_list(test_files, overlap_samples = FALSE))), length(test_files))
 })
 
-test_that("non-overlapping samples throws an error", {
+test_that("no overlapping samples throws an error", {
   test_files <- c("test_file2.tsv", "test_file4.txt")
-  expect_error(.create_omics_list(test_files),
+  expect_error(suppressWarnings(.create_omics_list(test_files)),
     "No common samples between the omics. Please ensure omics share at least some samples.")
 })
