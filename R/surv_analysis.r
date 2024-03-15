@@ -71,12 +71,8 @@ surv_association <- function(factors, surv, univariate = TRUE) {
 #' distinguish between models for comparison.
 #' @param models Trained JDR models. Must be one of the supported JDR methods.
 #' See \code{link{run_jdr}}.
-#' @param p_adjust Whether the pvalues should be corrected for multiple testing.
 #' @param method Method for pvalue correction. Can be c("holm", "hochberg",
 #' "hommel", "bonferroni", "BH", "BY", "fdr", "none").
-#' @param logtrans Logical. Whether to include a -log10() transformation of the
-#' p-values. Recommended for plotting. If p_adjust = TRUE, the adjusted p-values
-#' will be transformed, otherwise, the raw p-values will be used.
 #'
 #' @returns A dataframe with a summary of the information obtained from
 #' \code{\link{calculate_surv_association}} for one or multiple JDR models.
@@ -84,7 +80,7 @@ surv_association <- function(factors, surv, univariate = TRUE) {
 #' @export
 
 surv_compare <- function(models, model_labels, univariate = TRUE,
-                         p_adjust = TRUE, method = "BH", logtrans = TRUE) {
+                         method = "BH") {
   #initialise surv data frame
   surv_df <- data.frame(factor = character(),
                         hazard_ratio = numeric(),
@@ -122,11 +118,7 @@ surv_compare <- function(models, model_labels, univariate = TRUE,
       })
 
       df <- dplyr::bind_rows(model_data)
-
-      if (p_adjust) {
-        df$padj <- p.adjust(df$pval)
-      }
-
+      df$padj <- p.adjust(df$pval)
       surv_df <- rbind(surv_df, df)
     } else {
       s <- summary(cox)
@@ -148,38 +140,22 @@ surv_compare <- function(models, model_labels, univariate = TRUE,
       #get model label
       lbl <- rep(model_labels[i], length(fct))
 
-      # get pvalues for all factors for later adjustment
-      if (p_adjust) {
-        padj <- p.adjust(pvals)
-        temp <- cbind(factor = fct,
-                      hazard_ratio = as.numeric(hr),
-                      pval = as.numeric(pvals),
-                      padj = padj,
-                      upper = as.numeric(u),
-                      lower = as.numeric(l),
-                      label = lbl)
-      } else {
-        # combine them in a df
-        temp <- cbind(factor = fct, 
-                      hazard_ratio = as.numeric(hr),
-                      pval = as.numeric(pvals),
-                      upper = as.numeric(u),
-                      lower = as.numeric(l),
-                      label = lbl)
-      }
+      # adjust pvals
+      padj <- p.adjust(pvals)
+      temp <- cbind(factor = fct,
+                    hazard_ratio = as.numeric(hr),
+                    pval = as.numeric(pvals),
+                    padj = padj,
+                    upper = as.numeric(u),
+                    lower = as.numeric(l),
+                    label = lbl)
 
       surv_df <- rbind(surv_df, temp)
     }
   }
 
   # log transform p values
-  if (logtrans) {
-    if (p_adjust) {
-      surv_df$logp <- -log10(surv_df$padj)
-    } else {
-      surv_df$logp <- -log10(surv_df$pval)
-    }
-  }
+  surv_df$logp <- -log10(surv_df$padj)
 
   return(surv_df)
 }
