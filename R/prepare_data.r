@@ -89,7 +89,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 
     return(dat)
   } else {
-    stop("Invalid file format. Please make sure you provide a supported file format.") # nolint
+    stop(paste0("Invalid file format: ", print(file),
+                ". Please make sure you provide a supported file format."))
   }
 }
 
