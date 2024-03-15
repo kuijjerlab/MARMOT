@@ -3,7 +3,7 @@ library(JDRnet)
 
 test_that("incorrect file format throws error", {
   test_files <- c("test_file.fastq")
-  expect_error(.load_data(test_files), 
+  expect_error(.load_data(test_files),
     "Invalid file format. Please make sure you provide a text or .RData file.")
 })
 
