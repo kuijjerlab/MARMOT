@@ -29,7 +29,8 @@
 #' as an RData file.
 #' @param file_name Character string specifying the file name for the
 #' unfiltered PCA results. If left NULL, a generic name will be assigned.
-#' @param scale Logical. Whether data should be scaled prior to performing PCA.
+#' @param scale_data Logical. Whether data should be scaled prior to performing
+#' PCA.
 #'
 #' @returns A list of omics ready for JDR.
 #' @examples
@@ -37,7 +38,7 @@
 
 prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
                          pca = TRUE, thresh = 0.85, n_pcs = 20, save_pca = TRUE,
-                         file_name = NULL, scale = TRUE) {
+                         file_name = NULL, scale_data = TRUE) {
   # create omics list
   omic_list <- .create_omics_list(omics, names, overlap_samples)
 
