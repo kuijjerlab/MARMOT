@@ -41,6 +41,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # create omics list
   omic_list <- .create_omics_list(omics, names, overlap_samples)
 
+  # log file that prints the inputs
+
   if (pca) {
     omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale))
     if (save_pca) {
@@ -112,6 +114,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 
   # test that the data is numeric or coercible to numeric
 
+  # set everything to lowercase
+  # test if sample names are unique after lowercase
 
   # check if omics share at least one sample with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames))) > 0
@@ -177,18 +181,20 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns PCA results for the omic matrix.
 #' @noRd
 
-.omics_pca <- function(omic, scale) {
+.omics_pca <- function(omic, scale_data) {
   # data must be transposed for the PCA
   dat <- t(as.matrix(omic))
 
   # removing any features that are 0 in all samples
+  # change to the .check_variance function
   dat <- dat[, which(colSums(dat[]) != 0)]
 
   # scaling data
-  if (scale) {
+  if (scale_data) {
     dat <- scale(dat)
   }
   # running pca
+
   dat_pca <- pcaMethods::pca(dat, nPcs = nrow(dat))
 
   return(dat_pca)
@@ -235,7 +241,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @description Function that extracts survival information from a larger
 #' dataframe of clinical features and formats it for downstream analysis.
 #'
-#' @inbheritParams prepare_data
+#' @inheritParams prepare_data
 #' @param clinical Character string containing path to a file with clinical
 #' information.The expected format of clinical data is with rows as samples
 #' and columns as features.
