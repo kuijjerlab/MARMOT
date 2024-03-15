@@ -44,8 +44,19 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     }
   }
 
+  # check that sample names for survival and clinical are the same
+  
+
+  # only take samples for which there is clin info
+  samples <- surv[, 1]
+  samples <- intersect(samples, rownames(factor))
+  factor <- factor[samples, ]
+  surv <- surv[which(surv[, 1] %in% samples), ]
+  clin <- clin[which(clin[, 1] %in% samples), ]
+
   # define groups
   df <- .fct_cutpoint(factor = factor, surv)
+
 
 
 }
@@ -59,13 +70,6 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 #' @returns Data frame containing the information about the two survival groups.
 
 .fct_cutpoint <- function(factor, surv, minprop = 0.1) {
-
-  # only take samples for which there is clin info
-  samples <- surv[, 1]
-  samples <- intersect(samples, rownames(factor))
-  factor <- factor[samples, ]
-  surv <- surv[which(surv[, 1] %in% samples), ]
-
   # cut the data
   time <- surv$time_to_event
   event <- surv$vital_status
