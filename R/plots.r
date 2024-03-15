@@ -99,10 +99,6 @@ plot_variance_bar <- function() {
 
 plot_clin_association <- function(clin_assoc, colours = NULL) {
   # sanity checks
-  # check that log p value was calculated
-  if (!is.element("logp", colnames(clin_assoc))) {
-    stop("-log10(p-value) required for plotting. Please make sure to run 'clin_asociation' with logtrans = TRUE") # nolint
-  }
 
   # get colours
   if (is.null(colours)) {
@@ -141,11 +137,6 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
   # sanity checks
   # check that specified models exist
   .check_names(models_to_compare, surv_df$labels, err_msg = "elements of 'models_to_compare' exist in your data frame ") # nolint
-
-  # check logtrans exists
-  if (!is.element("logp", colnames(surv_df))) {
-    stop("-log10(p-value) required for plotting. Please make sure to run 'surv_compare' with logtrans = TRUE") # nolint
-  }
 
   # select models to compare
   surv_df <- surv_df[which(surv_df$label %in% models_to_compare), ]
