@@ -28,8 +28,7 @@
 #' @importFrom magrittr %>%
 
 clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
-                            sample_label = NULL, p_adjust = TRUE, method = "BH",
-                            logtrans = TRUE) {
+                            sample_label = NULL, method = "BH") {
 
   # sanity checks
   # check feature names exist
@@ -80,13 +79,7 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
   rownames(result_df) <- NULL
 
   # add logtrans
-  if (logtrans) {
-    if (p_adjust) {
-      result_df$logp <- -log10(result_df$padj)
-    } else {
-      result_df$logp <- -log10(result_df$pval)
-    }
-  }
+  result_df$logp <- -log10(result_df$padj)
 
   return(result_df)
 }
@@ -107,8 +100,8 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 #' @importFrom dplyr everything summarise across
 #' @noRd
 
-.perform_test <- function(feat, factors, feat_name = NULL, p_adjust = TRUE,
-                          method = "BH") {
+.perform_test <- function(feat, factors, feat_name = NULL, method = "BH") {
+  
   # determine the appropriate test
   if (length(levels(feat)) == 2) {
     test <- "wilcox"
@@ -133,9 +126,7 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
   results$feat <- feat_name
 
   # adjust pvals
-  if (p_adjust) {
-    results$padj <- p.adjust(results$pval, method = method)
-  }
+  results$padj <- p.adjust(results$pval, method = method)
 
   return(results)
 }
