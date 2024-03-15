@@ -76,9 +76,14 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     return(as.matrix(get(load(file))))
   } else if (grepl(x = file, pattern = "\\.txt$|\\.tsv$|\\.csv$",
                    ignore.case = TRUE)) {
+
+    # reading the data without the first column
     dat <- as.matrix(data.table::fread(file, drop = 1))
+
+    # reading the first column separately and setting as row names
     rows <- data.table::fread(file, select = 1, colClasses = "character")$V1
     rownames(dat) <- rows
+
     return(dat)
   } else {
     stop("Invalid file format. Please make sure you provide a supported file format.") # nolint
@@ -96,7 +101,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics matrices for JDR.
 #' @noRd
 
-.create_omics_list <- function(omics, names = NULL, overlap_samples) {
+.create_omics_list <- function(omics, names = NULL, overlap_samples = TRUE) {
   # read in omics and create a list
   omic <- lapply(omics, .load_data)
 
@@ -106,7 +111,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   }
 
   # test that the data is numeric or coercible to numeric
-  
+
 
   # check if omics share at least one sample with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames))) > 0
@@ -127,12 +132,10 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   }
 
   # name the omics
-  if (!is.null(names)) {
-    if (length(names) == length(omic)) {
-      names(omic) <- names
-    } else {
-      stop("Please make sure the length of 'names' is the same as the number of omics") #nolint
-    }
+  if (length(names) == length(omic)) {
+    names(omic) <- names
+  } else {
+    stop("Please make sure the length of 'names' is the same as the number of omics") # nolint
   }
   return(omic)
 }
@@ -256,9 +259,9 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 
 prepare_surv <- function(clinical, feature_names,
                          vital_status_values = c(alive = FALSE, dead = TRUE),
-                         sep = "\t", keep_nas = FALSE) {
+                         keep_nas = FALSE) {
   # load data
-  clin <- read.table(clinical, sep = sep, head = TRUE)
+  clin <- data.table::fread(clinical)
 
   # sanity checks
   # check the features are labelled correctly
