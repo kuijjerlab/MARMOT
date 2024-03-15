@@ -8,7 +8,6 @@ prepare_surv(
   clinical,
   feature_names,
   vital_status_values = c(alive = FALSE, dead = TRUE),
-  sep = "\\t",
   keep_nas = FALSE
 )
 }

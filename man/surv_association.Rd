@@ -15,7 +15,7 @@ Samples should be rows and factors columns.}
 
 \item{univariate}{Logical, whether to run a univariate coxph for each
 factor (TRUE) or a multivariate coxph for all together (FALSE).
-Default is FALSE.}
+Default is TRUE.}
 }
 \value{
 A list with either one multivariate coxph model or multiple

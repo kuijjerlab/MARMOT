@@ -7,7 +7,6 @@
 prepare_data(
   omics,
   names = NULL,
-  sep = NULL,
   overlap_samples = TRUE,
   pca = TRUE,
   thresh = 0.85,
@@ -19,15 +18,13 @@ prepare_data(
 }
 \arguments{
 \item{omics}{A string vector containing filenames for omics matrices;
-accepts text or .RData files; matrices must have samples as columns
-and rows as features.The omics data must come from the same samples,
-but some samples may have some missing values in some omics.}
+accepts .RData files or any format accepted by fread; matrices must have
+samples as columns and rows as features. The omics data must come from
+the same samples, but some samples may have some missing values in some
+omics.}
 
 \item{names}{Character vector with the names to be used for the omics;
 if left NULL, the omics will just be numbered.}
-
-\item{sep}{Character vector containing the separator used if text
-files are provided.}
 
 \item{overlap_samples}{Logical. Whether to ensure only samples with data
 in all omics are kept. Some JDR methods require this.}
