@@ -13,15 +13,23 @@
 #' @param vector_1 Vector to be checked.
 #' @param vector_2 Reference vector.
 #' @param err_msg Optional. A custom error message so I can give some meaningful
+#' @param partial Logical, if to look for a fill match or only partial.
 #' error messages depending on the context in which I use this.
 #'
 #' @noRd
 
-.check_names <- function(vector_1, vector_2, err_msg = NULL) {
+.check_names <- function(vector_1, vector_2, err_msg = NULL, partial = FALSE) {
   names_exist <- sapply(vector_1, function(x) all(x %in% vector_2))
-  if (!all(names_exist)) {
-    stop(paste("Elements could not be found. Please make sure",
-               err_msg, "and are spelled correctly.", sep = " "))
+  if (!partial) {
+    if (!all(names_exist)) {
+      stop(paste("Elements could not be found. Please make sure",
+                 err_msg, "and are spelled correctly.", sep = " "))
+    }
+  } else {
+    if (any(!names_exist)) {
+      stop(paste("Elements could not be found. Please make sure",
+                 err_msg, "and are spelled correctly.", sep = " "))
+    }
   }
 }
 
