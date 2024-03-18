@@ -32,7 +32,8 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 
   # sanity checks
   # check feature names exist
-  .check_names(clin_feat, colnames(clin), err_msg = "feature names exist in the clinical data") # nolint
+  .check_names(clin_feat, colnames(clin),
+               err_msg = "feature names exist in the clinical data")
 
   # check factor names exist
   if (!is.null(which_fct)) {
