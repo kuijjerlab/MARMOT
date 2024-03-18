@@ -206,6 +206,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   # add to result
   wilcox$FC <- FC
   wilcox$logFC <- logFC
+  wilcox$gene <- rownames(omic)
 
   return(wilcox)
 }
