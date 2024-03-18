@@ -24,12 +24,16 @@
 #' If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.
 #' @param minprop Numeric between c(0,1), indicating the minimum proportion of
 #' samples per group.
+#' @param save_file Logical. Whether to save the output as an RData file.
+#' @param file_name Optional. Character string with a file name. Only used if
+#' \code{save_file = TRUE}. If not provided, a generic name will be used.
 #'
 #' @export
 
 differential_analysis <- function(omic, factor, surv, clin = NULL,
                                   covariates = NULL, limma = TRUE,
-                                  minprop = 0.1, sample_label = NULL) {
+                                  minprop = 0.1, sample_label = NULL,
+                                  save_file = TRUE, file_name = NULL) {
   # sanity checks
   if (!is.null(covariates)) {
     # check that clinical data is provided if covariates are provided
@@ -98,6 +102,13 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     results <- .run_limma(omic, df, covariates)
   } else {
     results <- .run_wilcox(omic, df)
+  }
+
+  if (save_file) {
+    if (is.null(file_name)) {
+      file_name <- "differential_analysis_results.RData"
+    }
+    save(results, file = file_name)
   }
 
   return(results)
