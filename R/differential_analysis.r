@@ -18,7 +18,8 @@
 #' if using limma.
 #' @param factor A dataframe with the factor based on which to determine groups.
 #' @param covariates Optional. A character vector with names of covariates for
-#' which to correct. Only applies if limma is used.
+#' which to correct. Must be specified if clin is specified.
+#' Only applies if limma is used.
 #' @param limma Whether limma should be used for the differential analysis.
 #' If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.
 #' @param minprop Numeric between c(0,1), indicating the minimum proportion of
@@ -33,7 +34,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   if (!is.null(covariates)) {
     # check that clinical data is provided if covariates are provided
     if (is.null(clin)) {
-      stop("Please provide clinical data for covariate correction.")
+      stop("Clin is NULL. Please provide clinical data for covariate correction.") # nolint
     }
     # check that covariates exist
     .check_names(covariates, colnames(clin),
@@ -46,6 +47,12 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     # check that limma is selected as the method
     if (!limma) {
       stop("Limma must be used for covariate correction.")
+    }
+  }
+
+  if (!is.null(clin)) {
+    if (is.null(covariates)) {
+      stop("Covariates is NULL. Please provide the names of covariates you wish to correct for.") # nolint
     }
   }
 
@@ -74,23 +81,26 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   # define groups
   df <- .fct_cutpoint(factor = factor, surv)
 
-  # grab covariates
-  cov <- clin[, covariates]
+  if (!is.null(covariates)) {
+    # grab covariates
+    cov <- clin[, covariates]
+    cov <- cov[order(match(cov[, sample_label], df$sample)),]
 
-  cov <- cov[order(match(cov[, sample_label], df$sample)),]
-
-  # add to df
-  df <- cbind(df, cov)
+    # add to df
+    df <- cbind(df, cov)
+  }
 
   # remove any rows that contain NAs
   df <- na.omit(df)
 
-  # create design matrix
+  # run tests
   if (limma) {
-    toptable <- .run_limma(omic, df, covariates)
+    results <- .run_limma(omic, df, covariates)
+  } else {
+    results <- .run_wilcox(omic, df)
   }
 
-  
+  return(results)
 }
 
 #' @name .fct_cutpoint
@@ -133,8 +143,6 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   return(df2)
 }
 
-#' @title Run limma on omic.
-#'
 #' @name .run_limma
 #'
 #' @description Run limma on an omic using groups defined by a JRD factor.
@@ -161,4 +169,43 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     toptable <- toptable[order(row.names(toptable)), ]
 
     return(toptable)
+}
+
+#' @name .run_wilcox
+#'
+#' @description Runs a wilcoxon signed rank test between two groups
+#' defined by a JDR factor.
+#'
+#' @inheritParams differential_analysis
+#' @inheritParams .run_limma
+#'
+#' @returns results of wilcoxon
+#' @noRd
+
+.run_wilcoxon <- function(omic, df) {
+  res_list <- lapply(1:nrow(omic), function(x) {
+      data <- data.frame(gene = as.numeric(t(omic[x,])), group = df$group)
+      wilc <- wilcox.test(gene ~ group, data, paired = TRUE)
+      return(c(W = wilc$statistic, pval = wilc$p.value))
+      })
+
+  # Bind the results into a data frame
+  wilcox <- data.frame(do.call(rbind, res_list))
+  colnames(wilcox) <- c("W", "pval")
+  wilcox$padj <- p.adjust(wilcox$pval ,method = "BH")
+  wilcox$logp <- -log10(wilcox$padj)
+
+  # calculate logFC
+  # taking absolute value here because of negative values in indegrees...
+  # not sure if this is the best. but for now.
+  long <- omic[, which(df$group == "long")]
+  short <- omic[, which(df$group == "short")]
+  FC <- apply(short, 1, median)/apply(long, 1, median)
+  logFC <- log2(abs(FC))
+
+  # add to result
+  wilcox$FC <- FC
+  wilcox$logFC <- logFC
+
+  return(wilcox)
 }
