@@ -16,7 +16,8 @@
 #' should be rows.
 #' @param clin Optional. A dataframe with clinical features for which to correct
 #' if using limma.
-#' @param factor A dataframe with the factor based on which to determine groups.
+#' @param factor A named vector with the factor based on which to determine
+#' groups. The names of the vector whould be the sample IDs.
 #' @param covariates Optional. A character vector with names of covariates for
 #' which to correct. Must be specified if clin is specified.
 #' Only applies if limma is used.
@@ -68,7 +69,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   # Define the sets
   sets <- list(
     surv_samples = surv$sample_id,
-    factor_samples = rownames(factor),
+    factor_samples = names(factor),
     clin_samples = clin[, sample_label],
     omic_samples = colnames(omic)
   )
