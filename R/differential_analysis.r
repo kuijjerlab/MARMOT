@@ -61,7 +61,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   }
 
   # check that sample names for survival and clinical are the same
-  .check_names(rownames(clin), colnames(surv), partial = TRUE
+  .check_names(rownames(clin), colnames(surv), partial = TRUE,
                err_msg = "sample names are the same in clinical and survival data") # nolint
 
   # overlap samples
