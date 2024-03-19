@@ -172,8 +172,13 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 
 .run_limma <- function(omic, df, covariates) {
     # create formula with covariates
-    formula <- as.formula(paste("~ 0 + group +", paste(covariates,
-                                                       collapse = " + ")))
+    if (!is.null(covariates)) {
+      formula <- as.formula(paste("~ 0 + group +", paste(covariates,
+                                                         collapse = " + ")))
+    } else {
+      formula <- as.formula(paste("~ 0 + group"))
+    }
+    
     design <- limma::model.matrix(formula, data = df)
     
     # specify contrasts
