@@ -107,7 +107,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   if (limma) {
     results <- .run_limma(omic, df, covariates)
   } else {
-    results <- .run_wilcox(omic, df)
+    results <- .run_wilcoxon(omic, df)
   }
 
   if (save_file) {
