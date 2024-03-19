@@ -178,8 +178,8 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     } else {
       formula <- as.formula(paste("~ 0 + group"))
     }
-    
-    design <- limma::model.matrix(formula, data = df)
+
+    design <- model.matrix(formula, data = df)
     
     # specify contrasts
     contrasts <- limma::makeContrasts(short_vs_long = groupshort - grouplong,
