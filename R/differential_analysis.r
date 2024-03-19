@@ -73,8 +73,13 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     omic_samples = colnames(omic)
   )
 
+  # remove clin if not provided
+  if (is.null(clin)) {
+    sets <- sets[setdiff(names(sets), "clin_samples")]
+  }
+
   # Compute the intersection of sets
-  samples <- Reduce(intersect, sets)
+  samples <- .overlap_sets(sets)
 
   # subset data frames
   factor <- factor[samples, ]

@@ -13,8 +13,8 @@
 #' @param vector_1 Vector to be checked.
 #' @param vector_2 Reference vector.
 #' @param err_msg Optional. A custom error message so I can give some meaningful
-#' @param partial Logical, if to look for a fill match or only partial.
-#' error messages depending on the context in which I use this.
+#' errors.
+#' @param partial Logical, if to look for a full match or only partial.
 #'
 #' @noRd
 
@@ -64,6 +64,41 @@
   result <- df[, setdiff(colnames(df), constant_columns$Column)]
 
   return(result)
+}
+
+#' @title reduces a set of vectors to common elements
+#'
+#' @name .overlap_sets
+#'
+#' @param sets A list of vectors to overlap.
+#'
+#' @returns A vector with all the common elements.
+#' @noRd
+
+.overlap_sets <- function(sets) {
+  # check that at least some elements are common to all vectors
+
+  result <- Reduce(intersect, sets)
+  return(result)
+}
+
+#' @name .check_overlaps
+#'
+#' @description Function to check that a list of vectors have at least some
+#' overlapping elements.
+#'
+#' @inheritParams .overlap_sets
+#' @inheritParams .check_names
+#'
+#' @noRD
+
+.check_overlaps <- function(sets, err_msg) {
+  overlap <- Reduce(intersect, sets)
+
+  if (length(overlap) == 0) {
+    # have to come up with a better error message at some point
+    stop("No elements common to all vectors.")
+  }
 }
 
 # For now, this can live here.
