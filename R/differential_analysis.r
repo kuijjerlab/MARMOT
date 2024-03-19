@@ -130,7 +130,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 
 .fct_cutpoint <- function(factor, surv, minprop = 0.1) {
   # get samples
-  samples <- surv[, 1]
+  samples <- surv$sample_id
 
   # cut the data
   time <- surv$time_to_event
