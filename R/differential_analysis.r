@@ -138,7 +138,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   df <- data.frame(sample = samples, time = time, event = event,
                    factor = factor)
   cut <- survminer::surv_cutpoint(df, variables = "factor", minprop = minprop)
-  df$FactorValue <- survminer::surv_categorize(cut)$Z
+  df$FactorValue <- survminer::surv_categorize(cut)$factor
   df$FactorCluster <- df$Z > cut$cutpoint$cutpoint
 
   # determine which is the good survival group and which
