@@ -205,9 +205,9 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 #' @noRd
 
 .run_wilcoxon <- function(omic, df) {
-  res_list <- lapply(1:nrow(omic), function(x) {
-      data <- data.frame(gene = as.numeric(t(omic[x,])), group = df$group)
-      wilc <- wilcox.test(gene ~ group, data, paired = TRUE)
+  res_list <- lapply(seq_len(nrow(omic)), function(x) {
+      data <- data.frame(gene = as.numeric(omic[x, ]), group = df$group)
+      wilc <- wilcox.test(gene ~ group, data)
       return(c(W = wilc$statistic, pval = wilc$p.value))
       })
 
