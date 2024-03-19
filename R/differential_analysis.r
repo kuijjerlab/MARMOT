@@ -180,14 +180,14 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     }
 
     design <- model.matrix(formula, data = df)
-    
+
     # specify contrasts
     contrasts <- limma::makeContrasts(short_vs_long = groupshort - grouplong,
-                                levels = design)
-    fit <- limma::eBayes(lmFit(omic, design))
+                                      levels = design)
+    fit <- limma::eBayes(limma::lmFit(omic, design))
     fit2 <- limma::contrasts.fit(fit, contrasts)
     fit2 <- limma::eBayes(fit2)
-    toptable <- limma::topTable(fit2, coef="short_vs_long", number=Inf)
+    toptable <- limma::topTable(fit2, coef = "short_vs_long", number = Inf)
     toptable <- toptable[order(row.names(toptable)), ]
 
     return(toptable)
