@@ -83,7 +83,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   samples <- .overlap_sets(sets)
 
   # subset data frames
-  factor <- factor[samples, ]
+  factor <- factor[samples]
   surv <- surv[which(surv$sample_id %in% samples), ]
   clin <- clin[which(clin[, sample_label] %in% samples), ]
   omic <- omic[, samples]
