@@ -27,8 +27,7 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
   rnk <- .create_rank(diff_results, limma)
 
   # get gene set
-  gmt <- grepl(".gmt", gene_set, ignore.case = TRUE)
-  if (gmt) {
+  if (is.character(gene_set)) {
     gset <- fgsea::gmtPathways(gene_set)
     gsea_res <- fgsea::fgsea(pathways = gset, rnk, ...)
   } else {
