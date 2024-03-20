@@ -171,26 +171,26 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 #' @noRd
 
 .run_limma <- function(omic, df, covariates) {
-    # create formula with covariates
-    if (!is.null(covariates)) {
-      formula <- as.formula(paste("~ 0 + group +", paste(covariates,
-                                                         collapse = " + ")))
-    } else {
-      formula <- as.formula(paste("~ 0 + group"))
-    }
+  # create formula with covariates
+  if (!is.null(covariates)) {
+    formula <- as.formula(paste("~ 0 + group +", paste(covariates,
+                                                        collapse = " + ")))
+  } else {
+    formula <- as.formula(paste("~ 0 + group"))
+  }
 
-    design <- model.matrix(formula, data = df)
+  design <- model.matrix(formula, data = df)
 
-    # specify contrasts
-    contrasts <- limma::makeContrasts(short_vs_long = groupshort - grouplong,
-                                      levels = design)
-    fit <- limma::eBayes(limma::lmFit(omic, design))
-    fit2 <- limma::contrasts.fit(fit, contrasts)
-    fit2 <- limma::eBayes(fit2)
-    toptable <- limma::topTable(fit2, coef = "short_vs_long", number = Inf)
-    toptable <- toptable[order(row.names(toptable)), ]
+  # specify contrasts
+  contrasts <- limma::makeContrasts(short_vs_long = groupshort - grouplong,
+                                    levels = design)
+  fit <- limma::eBayes(limma::lmFit(omic, design))
+  fit2 <- limma::contrasts.fit(fit, contrasts)
+  fit2 <- limma::eBayes(fit2)
+  toptable <- limma::topTable(fit2, coef = "short_vs_long", number = Inf)
+  toptable <- toptable[order(row.names(toptable)), ]
 
-    return(toptable)
+  return(toptable)
 }
 
 #' @name .run_wilcox
@@ -206,10 +206,10 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 
 .run_wilcoxon <- function(omic, df) {
   res_list <- lapply(seq_len(nrow(omic)), function(x) {
-      data <- data.frame(gene = as.numeric(omic[x, ]), group = df$group)
-      wilc <- wilcox.test(gene ~ group, data)
-      return(c(W = wilc$statistic, pval = wilc$p.value))
-      })
+    data <- data.frame(gene = as.numeric(omic[x, ]), group = df$group)
+    wilc <- wilcox.test(gene ~ group, data)
+    return(c(W = wilc$statistic, pval = wilc$p.value))
+  })
 
   # Bind the results into a data frame
   wilcox <- data.frame(do.call(rbind, res_list))
@@ -222,7 +222,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   # not sure if this is the best. but for now.
   long <- omic[, which(df$group == "long")]
   short <- omic[, which(df$group == "short")]
-  FC <- apply(short, 1, median)/apply(long, 1, median)
+  FC <- apply(short, 1, median) / apply(long, 1, median)
   logFC <- log2(abs(FC))
 
   # add to result
