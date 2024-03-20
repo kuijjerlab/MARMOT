@@ -38,7 +38,7 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
     if (is.null(file_name)) {
       file_name <- "gsea_analysis_results.RData"
     }
-    save(list = list(rnk, gsea_res), file = file_name)
+    save(c(rnk, gsea_res), file = file_name)
   }
   return(gsea_res)
 }
