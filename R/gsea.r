@@ -62,7 +62,7 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
   } else {
     diff_results <- diff_results[order(abs(diff_results$logFC),
                                        decreasing = TRUE), ]
-    rnk <- -log10(diff_results$pval) * diff_results$logFC
+    rnk <- diff_results$W * diff_results$logFC
   }
 
   # name rnk
