@@ -60,8 +60,13 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
                                        decreasing = TRUE), ]
     rnk <- diff_results$t
   } else {
+    diff_results <- diff_results[order(abs(diff_results$logFC),
+                                       decreasing = TRUE), ]
     rnk <- diff_results$logp * diff_results$logFC
   }
+
+  # name rnk
+  names(rnk) <- rownames(diff_results)
 
   return(rnk)
 }
