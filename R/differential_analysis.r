@@ -114,7 +114,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     if (is.null(file_name)) {
       file_name <- "differential_analysis_results.RData"
     }
-    save(results, file = file_name)
+    save(results, df, file = file_name)
   }
 
   return(results)
