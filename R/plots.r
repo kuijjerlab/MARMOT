@@ -177,3 +177,106 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
   return(p)
 
 }
+
+#' @name gsea_dotplots
+#' @description Takes as input gsea results on surv associated MOFA factors
+#' and the survival association pvalues for the factors and creates a dotplot.
+#'
+#' @inheritParams plot_data_dim
+#' @param gsea_results Results of fgsea analysis. Can be a list with multiple
+#' fgsea runs or a single data frame with the fgsea format. - not implemented
+#' for now cos lazy. Just works with the lists now.
+#' @param surv_df Output of surv_compare. Should be filtered beforehand for
+#' significant factors if required.
+#' @param gene_set What gene set was used for the gsea. For labelling.
+#' @param net_metric What net metric was included in the model.
+#' @param title Additional string to be added to the start of the plot title.
+#' Optional.
+#' @param n_path Number of pathways to plot. Will select the top nPath pathways
+#' sorted by pvalue. If NULL, all pathways will be plotted.
+#' @param thresh Pvalue (in -log10 scale) based on which to select pathways for
+#' plotting. If NULL, all pathways will be plotted. Only use if nPath is not
+#' used.
+#' @param ... Any other ggplot2 parameters.
+#'
+#' @returns A ggplot object.
+#' @export
+
+gsea_dotplots <- function(gsea_results, surv_df, gene_set, net_metric,
+                          title = NULL, n_path = 20, thresh = NULL,
+                          colours = NULL, ...) {
+  # set colours
+  if (is.null(colours)) {
+    col <- palette("Dark2")
+    col <- col[c(3, 4)]
+  } else {
+    col <- colours
+  }
+
+
+  #df <- data_frame(pathway = character(), pval = numeric(), padj = numeric(),
+  #                 log2err = numeric, factor = character(), pathway_db = character(),
+  #                net_metric = character(), logp = numeric(),
+  #                 logp_surv = numeric())
+  
+  #surv <- surv_df[which(surv_df$label == net_metric),]
+  
+  
+  fct <- names(gsea_results)
+    #surv_fct <- surv[which(surv$factor == fct),]
+    #df <- gsea_results[[i]] #if using fgsea package
+    df <- gsea_results[[i]]@result
+    df$factor <- fct
+    df$gene_set <- gene_set
+    df$net_metric <- net_metric
+    #df$logp <- as.numeric(-log10(df$padj)) #if using fgsea package
+    df$logp <- as.numeric(-log10(df$p.adjust))
+    #df$logp_surv <- as.numeric(surv_fct$logp)
+    
+    #order pathway fct by the gsea signif
+    # df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)])) #if using fgsea package
+    df$ID <- factor(df$ID, levels = unique(df$ID[order(df$logp)])) 
+    if(!is.null(n_path)){
+      df <- df[order(df$logp, decreasing = T),]
+      df <- df[1:n_path,]
+    }else if(!is.null(thresh)){
+      df <- df[which(df$logp >= thresh),]
+    }
+    
+    #p <- ggplot(data = df, aes(x = logp, y = pathway, color=logp))+ #if using fgsea package
+    p <- ggplot(data = df, aes(x = logp, y = ID, color = NES)) +  
+      geom_point(data=df, aes(size = abs(NES)*25))+
+      scale_size(range = c(20, 150),name = "abs(NES)", guide = "none") +
+      scale_color_gradientn(colours = col, name = "NES") +
+      labs(y = NULL, x = expression("-log"[10]*"(FDR)"), title = paste(title, gene_set, net_metric, fct, sep = " ")) +
+      theme_bw()+
+      theme(text = element_text(size = 100),
+            legend.key.size = unit(5, 'cm'),
+            legend.text = element_text(size = 100),
+            axis.text.y = element_text(size = 120),
+            axis.text.x = element_text(size = 100),
+            panel.grid.major = element_line(color = "black"))
+    
+    if(i == 1){
+      q <- p
+    }else{
+      q <- plot_grid(q, p)
+    }
+    
+    # temp2 <- temp[[j]]
+    # temp2 <- temp2[,1:4]
+    # temp2$factor <- fct
+    # temp2$pathway_db <- name[1]
+    # temp2$net_metric <- name[2]
+    # temp2$logp <- -log10(temp2$padj)
+    # temp2$logp_surv <- surv$logp
+    # df <- rbind(df, temp2)
+  
+  
+  
+  #legend scale
+  #max_surv <- max(df$logp_surv, na.rm = T)
+  #max_gsea <- max(df$logp, na.rm = T)
+  
+  return(q)
+}
