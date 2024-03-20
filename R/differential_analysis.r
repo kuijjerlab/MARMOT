@@ -214,7 +214,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   # Bind the results into a data frame
   wilcox <- data.frame(do.call(rbind, res_list))
   colnames(wilcox) <- c("W", "pval")
-  wilcox$padj <- p.adjust(wilcox$pval ,method = "BH")
+  wilcox$padj <- p.adjust(wilcox$pval, method = "BH")
   wilcox$logp <- -log10(wilcox$padj)
 
   # calculate logFC
@@ -228,7 +228,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   # add to result
   wilcox$FC <- FC
   wilcox$logFC <- logFC
-  wilcox$gene <- rownames(omic)
+  rownames(wilcox) <- rownames(omic)
 
   return(wilcox)
 }
