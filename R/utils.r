@@ -26,7 +26,7 @@
                  err_msg, "and are spelled correctly.", sep = " "))
     }
   } else {
-    if (any(!names_exist)) {
+    if (!any(names_exist)) {
       stop(paste("Elements could not be found. Please make sure",
                  err_msg, "and are spelled correctly.", sep = " "))
     }
