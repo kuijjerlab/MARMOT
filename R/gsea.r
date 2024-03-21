@@ -23,16 +23,28 @@
 
 perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
                          file_name = NULL, ...) {
+  # get gene set
+  if (is.character(gene_set)) {
+    gene_set <- fgsea::gmtPathways(gene_set)
+  }
+
+  # sanity checks
+  # check that omic and gene_set use the same annotation
+  gs_names <- unlist(unique(gene_set))
+  omic_names <- rownames(diff_results)
+  .check_names(omic_names, gs_names, partial = TRUE,
+               err_msg = "the gene sets and the omic data use the same annotation") # nolint
+
   # create rank
   rnk <- .create_rank(diff_results, limma)
 
   # get gene set
   if (is.character(gene_set)) {
-    gset <- fgsea::gmtPathways(gene_set)
-    gsea_res <- fgsea::fgsea(pathways = gset, rnk, ...)
-  } else {
-    gsea_res <- fgsea::fgsea(pathways = gene_set, rnk, ...)
+    gene_set <- fgsea::gmtPathways(gene_set)
   }
+
+  gsea_res <- fgsea::fgsea(pathways = gene_set, rnk, ...)
+
 
   if (save_file) {
     if (is.null(file_name)) {
