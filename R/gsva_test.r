@@ -21,4 +21,6 @@ run_gsva <- function(omic, gene_set) {
 
   gsva_res <- GSVA::gsva(GSVA::zscoreParam(omic, gene_set))
 
+  return(gsva_res)
+
 }
