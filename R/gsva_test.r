@@ -19,7 +19,7 @@ run_gsva <- function(omic, gene_set) {
   .check_names(omic_names, gs_names, partial = TRUE,
                err_msg = "the gene sets and the omic data use the same annotation") # nolint
 
-  gsva_res <- GSVA::gsva(GSVA::zscoreParam(omic, gene_set))
+  gsva_res <- GSVA::gsva(omic, gene_set)
 
   return(gsva_res)
 
