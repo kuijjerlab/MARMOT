@@ -82,3 +82,18 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
 
   return(rnk)
 }
+
+#' @name .get_leading_edge
+#'
+#' @function to extract the leading edge from GSEA results and output it in a
+#' readable format
+#'
+#' @param gsea_res A list of GSEA results.
+
+.get_gsea <- function(gsea_res) {
+  
+
+  genes <- unlist(strsplit(str, "/"))
+  genes <- gsub("/", "", genes)  # Remove "/"
+  return(genes)
+}
