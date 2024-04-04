@@ -292,7 +292,7 @@ prepare_surv <- function(clinical, feature_names,
 
   #replace vital status with logical
   surv_merged$vital_status <- ifelse(!is.na(surv_merged$vital_status),
-                                     surv_merged$vital_status == vital_status_values[2], NA) # nolint: line_length_linter.
+                                     surv_merged$vital_status != vital_status_values[2], NA) # nolint: line_length_linter.
 
   # make sure time is numeric and vital status is logical
   surv_merged$time_to_event <- as.numeric(surv_merged$time_to_event)
