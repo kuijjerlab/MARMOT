@@ -6,7 +6,7 @@
 #'
 #' @inheritParam run_gsea
 
-run_gsva <- function(omic, gene_set) {
+run_gsva <- function(omic, gene_set, method = "zscore") {
   # get gene set
   if (is.character(gene_set)) {
     gene_set <- fgsea::gmtPathways(gene_set)
@@ -19,6 +19,8 @@ run_gsva <- function(omic, gene_set) {
   .check_names(omic_names, gs_names, partial = TRUE,
                err_msg = "the gene sets and the omic data use the same annotation") # nolint
 
-  gsva_res <- GSVA::gsva(GSVA::zscoreParam(omic, gene_set))
+  gsva_res <- GSVA::gsva(omic, gene_set, method = method)
+
+  return(gsva_res)
 
 }
