@@ -143,7 +143,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 
   # set colour palette
   if (is.null(colours)) {
-    col <- RColorBrewer::brewer.pal("Dark2")
+    col <- RColorBrewer::brewer.pal(name = "Dark2")
   } else {
     col <- colours
   }
