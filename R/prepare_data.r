@@ -254,10 +254,11 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' second feature. See examples for details. The list must be named as follows:
 #' list(sample_id = "sample_id", vital_status = "vital_status",
 #' time_to_event = "time_to_event")
-#' @param vital_status_values A named vector of length two indicating how vital
+#' @param vital_status_values A named list of length two indicating how vital
 #' status is recorded in the clinical data. This will be converted to logical,
-#' where alive = FALSE and dead = TRUE. Default is c(alive = FALSE, dead = TRUE)
-#' NAs will be preserved.
+#' where alive = FALSE and dead = TRUE. Each element of the list can have
+#' multiple entries. Default is list(alive = c(FALSE, "alive", "living", 0),
+#' dead = c(TRUE, "dead", "deceased", 1))
 #' @param keep_nas Logical. If samples with NA values in any survival feature
 #' should be kept. Not recommended for most downstream analysis.
 #'
@@ -266,7 +267,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @export
 
 prepare_surv <- function(clinical, feature_names,
-                         vital_status_values = c(alive = FALSE, dead = TRUE),
+                         vital_status_values = list(alive = c(FALSE, "alive", "living", 0), # nolint
+                                                    dead = c(TRUE, "dead", "deceased", 1)), # nolint
                          keep_nas = FALSE) {
   # load data
   clin <- data.table::fread(clinical)
@@ -292,7 +294,9 @@ prepare_surv <- function(clinical, feature_names,
 
   #replace vital status with logical
   surv_merged$vital_status <- ifelse(!is.na(surv_merged$vital_status),
-                                     surv_merged$vital_status != vital_status_values[2], NA) # nolint: line_length_linter.
+                                     toupper(surv_merged$vital_status) %in%
+                                       toupper(vital_status_values[[2]]), NA)
+ # nolint: line_length_linter.
 
   # make sure time is numeric and vital status is logical
   surv_merged$time_to_event <- as.numeric(surv_merged$time_to_event)
