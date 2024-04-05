@@ -26,7 +26,7 @@
                  err_msg, "and are spelled correctly.", sep = " "))
     }
   } else {
-    if (!any(names_exist)) {
+    if (any(!names_exist)) {
       stop(paste("Elements could not be found. Please make sure",
                  err_msg, "and are spelled correctly.", sep = " "))
     }
@@ -70,14 +70,17 @@
 #'
 #' @name .overlap_sets
 #'
+#' @inheritParams .check_names # not sure yet if to implement err_msg here
 #' @param sets A list of vectors to overlap.
 #'
 #' @returns A vector with all the common elements.
 #' @noRd
 
-.overlap_sets <- function(sets) {
+.overlap_sets <- function(sets, err_msg = NULL) {
   # check that at least some elements are common to all vectors
+  .check_overlaps(sets, err_msg)
 
+  # overlap vectors
   result <- Reduce(intersect, sets)
   return(result)
 }
@@ -92,12 +95,13 @@
 #'
 #' @noRD
 
-.check_overlaps <- function(sets, err_msg) {
+.check_overlaps <- function(sets, err_msg = NULL) {
   overlap <- Reduce(intersect, sets)
 
   if (length(overlap) == 0) {
     # have to come up with a better error message at some point
-    stop("No elements common to all vectors.")
+    # and maybe implement the custom err_msg
+    stop(err_msg)
   }
 }
 
