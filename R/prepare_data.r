@@ -296,7 +296,6 @@ prepare_surv <- function(clinical, feature_names,
   surv_merged$vital_status <- ifelse(!is.na(surv_merged$vital_status),
                                      toupper(surv_merged$vital_status) %in%
                                        toupper(vital_status_values[[2]]), NA)
- # nolint: line_length_linter.
 
   # make sure time is numeric and vital status is logical
   surv_merged$time_to_event <- as.numeric(surv_merged$time_to_event)
@@ -331,8 +330,9 @@ prepare_surv <- function(clinical, feature_names,
     # innitialise data frame
     temp <- data.frame()
     # if first feature is NA, replace with value from second
-    temp[, col] <- ifelse(is.na(surv[, cols[1]]) & !is.na(surv[, cols[2]]),
-                          surv[, cols[2]], surv[, cols[1]])
+    temp <- ifelse(is.na(surv[, cols[1]]) & !is.na(surv[, cols[2]]),
+                   surv[, cols[2]], surv[, cols[1]])
+    colnames(temp) <- col
   } else {
     temp <- surv[, cols, drop = F]
   }
