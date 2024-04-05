@@ -27,7 +27,7 @@
 surv_association <- function(factors, surv, univariate = TRUE) {
   # make sure samples are the same
   samples <- surv$sample_id
-  samples <- .overlap_sets(samples, rownames(factors))
+  samples <- .overlap_sets(list(samples, rownames(factors)))
 
   # make sure factors are named
   if (is.null(colnames(factors))) {
