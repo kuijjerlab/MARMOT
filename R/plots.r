@@ -136,7 +136,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
                                  add_intercepts) { # implement the intercepts arguments
   # sanity checks
   # check that specified models exist
-  .check_names(models_to_compare, surv_df$labels, err_msg = "elements of 'models_to_compare' exist in your data frame ") # nolint
+  .check_names(models_to_compare, surv_df$label, err_msg = "elements of 'models_to_compare' exist in your data frame ") # nolint
 
   # select models to compare
   surv_df <- surv_df[which(surv_df$label %in% models_to_compare), ]
