@@ -89,7 +89,7 @@ clin_associaton <- function(factors, clin, clin_feat, which_fct = NULL,
 #'
 #' @name .perform_test
 #'
-#' @description
+#' @description Perform a wilcoxon rank sum or kruskal-Wallis test on a factor.
 #'
 #' @inheritParams surv_association
 #' @param feat Vector containing the feature of interest.

@@ -29,6 +29,8 @@
 #' @param file_name Optional. Character string with a file name. Only used if
 #' \code{save_file = TRUE}. If not provided, a generic name will be used.
 #'
+#' @returns A data frame with results of differential analysis.
+#'
 #' @export
 
 differential_analysis <- function(omic, factor, surv, clin = NULL,

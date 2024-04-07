@@ -6,7 +6,7 @@
 #'
 #' @name run_jdr
 #'
-#' @descripton Function for performing joint dimensionality reduction (JDR)
+#' @description Function for performing joint dimensionality reduction (JDR)
 #' on omics data using one or more linear JDR methods.
 #' Note: If only one JRD method is used, it is prefered to use the
 #' individual functions:
@@ -104,7 +104,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #'
 #' @description Performs JDR on a list of omic matrices with MOFA2.
 #'
-#' @inheritParam run_jdr
+#' @inheritParams run_jdr
 #' @param ... Any other parameters that can be passed to MOFA2 functions.
 #' See documentation of the MOFA2 package for details.
 #'
@@ -135,7 +135,7 @@ run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk) {
 #'
 #' @description Performs JRD on a list of omic matrices with JIVE.
 #'
-#' @inheritParam run_jdr
+#' @inheritParams run_jdr
 #'
 #' @return A trained JIVE model.
 #'
@@ -157,7 +157,7 @@ run_jive <- function(omic_list, n_fct) {
 #'
 #' @description Performs JDR on a list of omic matrices using RGCCA.
 #'
-#' @inheritParam run_jdr
+#' @inheritParams run_jdr
 #'
 #' @return A trained RGCCA model.
 #'
@@ -180,7 +180,7 @@ run_rgcca <- function(omic_list, n_fct) {
 #'
 #' @description Performs JDR on a list of omic matrices using MCIA.
 #'
-#' @inheritParam run_jdr
+#' @inheritParams run_jdr
 #'
 #' @return A trained MCIA model.
 #'
