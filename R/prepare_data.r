@@ -120,9 +120,14 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # test if sample names are unique after lowercase
 
   # check if omics share at least one sample with each-other
-  smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames))) > 0
-  if (!smpl_overlap) {
+  smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames)))
+  if (smpl_overlap == 0) {
     stop("No common samples between the omics. Please ensure omics share at least some samples.") #nolint
+  }
+
+  # warning if too few samples
+  if (smpl_overlap < 15) {
+    warning("Fewer than 15 samples common to all omics. This may cause unpredictable results.") # nolint
   }
 
   # get all sample names
