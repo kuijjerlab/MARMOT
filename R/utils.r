@@ -93,7 +93,7 @@
 #' @inheritParams .overlap_sets
 #' @inheritParams .check_names
 #'
-#' @noRD
+#' @noRd
 
 .check_overlaps <- function(sets, err_msg = NULL) {
   overlap <- Reduce(intersect, sets)
@@ -123,4 +123,16 @@
   data_n[[indeg_label]] <- indeg_n
 
   return(data_n)
+}
+
+#' @name .numeric_mat
+#' @description Function to check if a matrix is numeric.
+#' @param A matrix to test.
+#' @noRd
+#'
+.numeric_mat <- function(mat) {
+  all(sapply(as.vector(mat), function(elem) {
+    is.numeric(elem) || (is.character(elem) && !is.na(as.numeric(elem))) ||
+      is.na(elem)
+  }))
 }
