@@ -31,6 +31,8 @@
 #' unfiltered PCA results. If left NULL, a generic name will be assigned.
 #' @param scale_data Logical. Whether data should be scaled prior to performing
 #' PCA.
+#' @param logs Logical. Whether a log file containing information about the
+#' input parameters should be saved.
 #'
 #' @returns A list of omics ready for JDR.
 #' @examples
@@ -38,11 +40,38 @@
 
 prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
                          pca = TRUE, thresh = 0.85, n_pcs = 20, save_pca = TRUE,
-                         file_name = NULL, scale_data = TRUE) {
+                         file_name = NULL, scale_data = TRUE, logs = FALSE) {
+  # create log file
+  if (logs) {
+    log_file <- file("prepare_data_log.txt", open = "a")
+    timestamp <- format(Sys.time, "%d-%m-%Y %H:%M:%S")
+
+    # Get the function's environment
+    env <- environment()
+
+    # Get the names and values of the function's arguments
+    args <- as.list(env)[-1]
+    arg_names <- names(args)
+    arg_values <- lapply(args, function(arg) {
+      if (is.character(arg) || is.numeric(arg) || is.logical(arg)) {
+        as.character(arg)
+      } else {
+        paste("<", class(arg), "object>")
+     }
+    })
+
+    # Write the timestamp and input parameters to the log file
+    writeLines(c(paste("Timestamp:", timestamp),
+                 "Input parameters:",
+                 paste(paste(arg_names, arg_values, sep = ": "),
+                       collapse = "\n"), ""), con = log_file)
+
+    # Close the log file
+    close(log_file)
+  }
+
   # create omics list
   omic_list <- .create_omics_list(omics, names, overlap_samples)
-
-  # log file that prints the inputs
 
   if (pca) {
     omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale))
