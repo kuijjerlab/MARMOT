@@ -49,5 +49,14 @@ A list of factorisations. Each element is the factorisation
 based on one JDR method.
 }
 \description{
-Run joint dimensionality reduction on multi-omics data.
+Function for performing joint dimensionality reduction (JDR)
+on omics data using one or more linear JDR methods.
+Note: If only one JRD method is used, it is prefered to use the
+individual functions:
+\itemize{
+\item{\code{\link{run_mofa2}}}
+\item{\code{\link{run_jive}}}
+\item{\code{\link{run_rgcca}}}
+\item{\code{\link{run_mcia}}}
+}
 }

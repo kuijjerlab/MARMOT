@@ -2,7 +2,9 @@
 
 export(clin_associaton)
 export(differential_analysis)
+export(gsea_dotplots)
 export(map_weights_to_features)
+export(perform_gsea)
 export(plot_clin_association)
 export(plot_data_dim)
 export(plot_variance_bar)

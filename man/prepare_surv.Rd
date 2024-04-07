@@ -7,8 +7,10 @@
 prepare_surv(
   clinical,
   feature_names,
-  vital_status_values = c(alive = FALSE, dead = TRUE),
-  keep_nas = FALSE
+  vital_status_values = list(alive = c(FALSE, "alive", "living", 0), dead = c(TRUE,
+    "dead", "deceased", 1)),
+  keep_nas = FALSE,
+  logs = FALSE
 )
 }
 \arguments{
@@ -24,13 +26,17 @@ second feature. See examples for details. The list must be named as follows:
 list(sample_id = "sample_id", vital_status = "vital_status",
 time_to_event = "time_to_event")}
 
-\item{vital_status_values}{A named vector of length two indicating how vital
+\item{vital_status_values}{A named list of length two indicating how vital
 status is recorded in the clinical data. This will be converted to logical,
-where alive = FALSE and dead = TRUE. Default is c(alive = FALSE, dead = TRUE)
-NAs will be preserved.}
+where alive = FALSE and dead = TRUE. Each element of the list can have
+multiple entries. Default is list(alive = c(FALSE, "alive", "living", 0),
+dead = c(TRUE, "dead", "deceased", 1))}
 
 \item{keep_nas}{Logical. If samples with NA values in any survival feature
 should be kept. Not recommended for most downstream analysis.}
+
+\item{logs}{Logical. Whether a log file containing information about the
+input parameters should be saved.}
 }
 \value{
 A data frame containing survival information.

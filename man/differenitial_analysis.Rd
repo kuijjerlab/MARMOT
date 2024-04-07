@@ -12,14 +12,18 @@ differential_analysis(
   clin = NULL,
   covariates = NULL,
   limma = TRUE,
-  minprop = 0.1
+  minprop = 0.1,
+  sample_label = NULL,
+  save_file = TRUE,
+  file_name = NULL
 )
 }
 \arguments{
 \item{omic}{A matrix of omics data. Columns should be samples and features
 should be rows.}
 
-\item{factor}{A dataframe with the factor based on which to determine groups.}
+\item{factor}{A named vector with the factor based on which to determine
+groups. The names of the vector whould be the sample IDs.}
 
 \item{surv}{A data frame with survival information. Expects output from
 \code{\link{prepare_surv}}.}
@@ -28,13 +32,26 @@ should be rows.}
 if using limma.}
 
 \item{covariates}{Optional. A character vector with names of covariates for
-which to correct. Only applies if limma is used.}
+which to correct. Must be specified if clin is specified.
+Only applies if limma is used.}
 
 \item{limma}{Whether limma should be used for the differential analysis.
 If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.}
 
 \item{minprop}{Numeric between c(0,1), indicating the minimum proportion of
 samples per group.}
+
+\item{sample_label}{Optional. A character string indicating the name of the
+column with sample IDs in the clinical data. If NULL, rownames will be
+assumed to be sample IDs.}
+
+\item{save_file}{Logical. Whether to save the output as an RData file.}
+
+\item{file_name}{Optional. Character string with a file name. Only used if
+\code{save_file = TRUE}. If not provided, a generic name will be used.}
+}
+\value{
+A data frame with results of differential analysis.
 }
 \description{
 This function performs differential analysis on omics data. It

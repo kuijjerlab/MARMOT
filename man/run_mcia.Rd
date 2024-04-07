@@ -6,6 +6,12 @@
 \usage{
 run_mcia(omic_list, n_fct)
 }
+\arguments{
+\item{omic_list}{A list of omic matrices.
+Should be output of \code{link{prepare_data}}.}
+
+\item{n_fct}{Integer. Number of factors for the factorisations.}
+}
 \value{
 A trained MCIA model.
 }

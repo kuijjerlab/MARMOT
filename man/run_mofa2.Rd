@@ -7,6 +7,19 @@
 run_mofa2(omic_list, n_fct, seed, convergence, use_basilisk)
 }
 \arguments{
+\item{omic_list}{A list of omic matrices.
+Should be output of \code{link{prepare_data}}.}
+
+\item{n_fct}{Integer. Number of factors for the factorisations.}
+
+\item{seed}{Seed for factorisation.}
+
+\item{convergence}{Only needed if MOFA2 is used. Determines the convergence
+mode. Can be one of c("slow", "medium", "fast").}
+
+\item{use_basilisk}{Logical. Whether basilisk should be used to automatically
+set up conda environment. Only needed when MOFA2 is used.}
+
 \item{...}{Any other parameters that can be passed to MOFA2 functions.
 See documentation of the MOFA2 package for details.}
 }

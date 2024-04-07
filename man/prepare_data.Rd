@@ -13,7 +13,8 @@ prepare_data(
   n_pcs = 20,
   save_pca = TRUE,
   file_name = NULL,
-  scale = TRUE
+  scale_data = TRUE,
+  logs = FALSE
 )
 }
 \arguments{
@@ -44,7 +45,11 @@ as an RData file.}
 \item{file_name}{Character string specifying the file name for the
 unfiltered PCA results. If left NULL, a generic name will be assigned.}
 
-\item{scale}{Logical. Whether data should be scaled prior to performing PCA.}
+\item{scale_data}{Logical. Whether data should be scaled prior to performing
+PCA.}
+
+\item{logs}{Logical. Whether a log file containing information about the
+input parameters should be saved.}
 }
 \value{
 A list of omics ready for JDR.
