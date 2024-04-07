@@ -57,7 +57,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
         as.character(arg)
       } else {
         paste("<", class(arg), "object>")
-     }
+      }
     })
 
     # Write the timestamp and input parameters to the log file
@@ -144,6 +144,10 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   }
 
   # test that the data is numeric or coercible to numeric
+  is_num <- all(sapply(omic, .numeric_mat))
+  if (!is_num) {
+    stop("Data is not numeric. Please make sure all your omics are numeric.")
+  }
 
   # set everything to lowercase
   # test if sample names are unique after lowercase
@@ -303,7 +307,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 prepare_surv <- function(clinical, feature_names,
                          vital_status_values = list(alive = c(FALSE, "alive", "living", 0), # nolint
                                                     dead = c(TRUE, "dead", "deceased", 1)), # nolint
-                         keep_nas = FALSE) {
+                         keep_nas = FALSE, logs = FALSE) {
   # load data
   clin <- data.table::fread(clinical)
 
