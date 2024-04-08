@@ -183,28 +183,27 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 #' and the survival association pvalues for the factors and creates a dotplot.
 #'
 #' @inheritParams plot_data_dim
-#' @param gsea_results Results of fgsea analysis. Can be a list with multiple
-#' fgsea runs or a single data frame with the fgsea format. - not implemented
-#' for now cos lazy. Just works with the lists now.
+#' @param gsea_results Results of GSEA analysis. Expects a data frame where each
+#' row is a pathway. See \code{\link{fgsea::fgsea}} for more details. 
 #' @param surv_df Output of surv_compare. Should be filtered beforehand for
 #' significant factors if required.
-#' @param gene_set What gene set was used for the gsea. For labelling.
-#' @param net_metric What net metric was included in the model.
 #' @param title Additional string to be added to the start of the plot title.
 #' Optional.
 #' @param n_path Number of pathways to plot. Will select the top nPath pathways
 #' sorted by pvalue. If NULL, all pathways will be plotted.
 #' @param thresh Pvalue (in -log10 scale) based on which to select pathways for
-#' plotting. If NULL, all pathways will be plotted. Only use if nPath is not
-#' used.
+#' plotting. If NULL, all pathways will be plotted. Only use if \code{n_path}
+#' is not used.
 #' @param ... Any other ggplot2 parameters.
 #'
 #' @returns A ggplot object.
 #' @export
 
-gsea_dotplots <- function(gsea_results, surv_df, gene_set, net_metric,
+gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, net_metric,
                           title = NULL, n_path = 20, thresh = NULL,
                           colours = NULL, ...) {
+  # sanity checks
+
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -213,22 +212,9 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set, net_metric,
     col <- colours
   }
 
-
-  #df <- data_frame(pathway = character(), pval = numeric(), padj = numeric(),
-  #                 log2err = numeric, factor = character(), pathway_db = character(),
-  #                net_metric = character(), logp = numeric(),
-  #                 logp_surv = numeric())
   
-  #surv <- surv_df[which(surv_df$label == net_metric),]
-  
-  
-  fct <- names(gsea_results)
-    #surv_fct <- surv[which(surv$factor == fct),]
-    #df <- gsea_results[[i]] #if using fgsea package
-    df <- gsea_results[[i]]@result
-    df$factor <- fct
-    df$gene_set <- gene_set
-    df$net_metric <- net_metric
+  df$gene_set <- gene_set
+  df$net_metric <- net_metric
     #df$logp <- as.numeric(-log10(df$padj)) #if using fgsea package
     df$logp <- as.numeric(-log10(df$p.adjust))
     #df$logp_surv <- as.numeric(surv_fct$logp)
@@ -244,7 +230,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set, net_metric,
     }
     
     #p <- ggplot(data = df, aes(x = logp, y = pathway, color=logp))+ #if using fgsea package
-    p <- ggplot(data = df, aes(x = logp, y = ID, color = NES)) +  
+    p <- ggplot(data = df, aes(x = logp, y = ID, color = NES)) +
       geom_point(data=df, aes(size = abs(NES)*25))+
       scale_size(range = c(20, 150),name = "abs(NES)", guide = "none") +
       scale_color_gradientn(colours = col, name = "NES") +
