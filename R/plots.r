@@ -28,7 +28,7 @@ plot_data_dim <- function(data, data_label = NULL, which_omics = NULL,
 
   #setting colours
   if (is.null(colours)) {
-    col <- RColorBrewer::palette("Dark2")
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
     col <- col[-1]
   } else {
     col <- colours
@@ -102,7 +102,7 @@ plot_clin_association <- function(clin_assoc, colours = NULL) {
 
   # get colours
   if (is.null(colours)) {
-    col <- RColorBrewer::palette("Dark2")
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
   } else {
     col <- colours
   }
@@ -207,7 +207,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set, net_metric,
                           colours = NULL, ...) {
   # set colours
   if (is.null(colours)) {
-    col <- palette("Dark2")
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
     col <- col[c(3, 4)]
   } else {
     col <- colours
