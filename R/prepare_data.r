@@ -74,7 +74,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   omic_list <- .create_omics_list(omics, names, overlap_samples)
 
   if (pca) {
-    omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale))
+    omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale_data))
     if (save_pca) {
       if (is.null(file_name)) {
         file_name <- "omics_list_PCA.RData"
