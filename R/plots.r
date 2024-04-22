@@ -196,6 +196,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 #' is not used.
 #' @param ... Any other ggplot2 parameters.
 #'
+#' @import ggplot2
 #' @returns A ggplot object.
 #' @export
 
@@ -212,14 +213,15 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, net_metric,
     col <- colours
   }
 
-  gsea_results$net_metric <- net_metric
-  gsea_results$logp <- -log10(gsea_results$padj)
+  df <- data.frame(gsea_res)
+  df$net_metric <- net_metric
+  df$logp <- -log10(gsea_results$padj)
 
    #order pathway fct by the gsea signif
-   gsea_res$pathway <- factor(gsea_res$pathway, levels = unique(gsea_res$pathway[order(gsea_res$logp)])) #if using fgsea package
+   df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)])) #if using fgsea package
 
-  p <- ggplot(data = gsea_res, aes(x = logp, y = pathway, color = NES)) +
-   geom_point(data = gsea_res, aes(size = abs(NES) * 25)) +
+  p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES)) +
+   geom_point(data = df, aes(size = abs(NES) * 25)) +
    scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
    scale_color_gradientn(colours = col, name = "NES") +
    labs(y = NULL, x = expression("-log"[10]*"(FDR)"), title = paste(title, gene_set, net_metric, fct, sep = " ")) +
