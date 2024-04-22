@@ -95,8 +95,8 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 
   if (!is.null(covariates)) {
     # grab covariates
-    cov <- clin[, covariates]
-    cov <- cov[order(match(cov[, sample_label], df$sample)),]
+    cov <- clin[, c(sample_label, covariates)]
+    cov <- cov[order(match(cov[, sample_label], df$sample)), ]
 
     # add to df
     df <- cbind(df, cov)
