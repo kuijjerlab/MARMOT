@@ -213,7 +213,6 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   }
 
   df <- data.frame(gsea_res)
-  df$net_metric <- net_metric
   df$logp <- -log10(gsea_results$padj)
 
    #order pathway fct by the gsea signif
