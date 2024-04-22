@@ -203,6 +203,10 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
                           n_path = 20, thresh = NULL, colours = NULL, ...) {
   # sanity checks
+  # check that either n_path or thresh are set
+  if(!is.null(n_path) && !is.null(thresh)) {
+    stop("Both 'n_path' and 'thresh' have value. Please set one or the other to NULL.")
+  }
 
   # set colours
   if (is.null(colours)) {
@@ -215,8 +219,15 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   df <- data.frame(gsea_res)
   df$logp <- -log10(gsea_results$padj)
 
-   #order pathway fct by the gsea signif
-   df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)])) #if using fgsea package
+  #order pathway fct by the gsea signif
+  df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)]))
+
+  # only keep top 20 or ones above threshhold
+  if (!is.null(n_path)) {
+    df <- df[1:n_path, ]
+  } else {
+    df <- df[which(df$logp <= thresh), ]
+  }
 
   p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES)) +
    geom_point(data = df, aes(size = abs(NES) * 25)) +
