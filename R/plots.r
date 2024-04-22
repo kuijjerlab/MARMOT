@@ -216,7 +216,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, net_metric,
   gsea_results$logp <- -log10(gsea_results$padj)
 
    #order pathway fct by the gsea signif
-   df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)])) #if using fgsea package
+   gsea_res$pathway <- factor(gsea_res$pathway, levels = unique(gsea_res$pathway[order(gsea_res$logp)])) #if using fgsea package
 
   p <- ggplot(data = gsea_res, aes(x = logp, y = pathway, color = NES)) +
    geom_point(data = gsea_res, aes(size = abs(NES) * 25)) +
