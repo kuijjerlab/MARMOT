@@ -344,6 +344,9 @@ prepare_surv <- function(clinical, feature_names,
     surv_merged <- surv_merged[complete.cases(surv_merged), ]
   }
 
+  # make sure it's a data frame and not data table
+  surv_merged <- data.frame(surv_merged)
+
   return(surv_merged)
 }
 
