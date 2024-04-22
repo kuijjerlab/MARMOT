@@ -184,25 +184,24 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 #'
 #' @inheritParams plot_data_dim
 #' @param gsea_results Results of GSEA analysis. Expects a data frame where each
-#' row is a pathway. See \code{\link{fgsea::fgsea}} for more details. 
+#' row is a pathway. See \code{\link{fgsea::fgsea}} for more details.
 #' @param surv_df Output of surv_compare. Should be filtered beforehand for
 #' significant factors if required.
-#' @param title Additional string to be added to the start of the plot title.
-#' Optional.
+#' @param title Optional. Character string to be used as plot title.
 #' @param n_path Number of pathways to plot. Will select the top nPath pathways
 #' sorted by pvalue. If NULL, all pathways will be plotted.
 #' @param thresh Pvalue (in -log10 scale) based on which to select pathways for
 #' plotting. If NULL, all pathways will be plotted. Only use if \code{n_path}
 #' is not used.
+#'
 #' @param ... Any other ggplot2 parameters.
 #'
 #' @import ggplot2
 #' @returns A ggplot object.
 #' @export
 
-gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, net_metric,
-                          title = NULL, n_path = 20, thresh = NULL,
-                          colours = NULL, ...) {
+gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
+                          n_path = 20, thresh = NULL, colours = NULL, ...) {
   # sanity checks
 
   # set colours
@@ -224,14 +223,14 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, net_metric,
    geom_point(data = df, aes(size = abs(NES) * 25)) +
    scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
    scale_color_gradientn(colours = col, name = "NES") +
-   labs(y = NULL, x = expression("-log"[10]*"(FDR)"), title = paste(title, gene_set, net_metric, fct, sep = " ")) +
+   labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
    theme_bw() +
    theme(text = element_text(size = 100),
-       legend.key.size = unit(5, 'cm'),
-       legend.text = element_text(size = 100),
-       axis.text.y = element_text(size = 120),
-       axis.text.x = element_text(size = 100),
-       panel.grid.major = element_line(color = "black"))
+        legend.key.size = unit(5, "cm"),
+        legend.text = element_text(size = 100),
+        axis.text.y = element_text(size = 120),
+        axis.text.x = element_text(size = 100),
+        panel.grid.major = element_line(color = "black"))
 
   return(p)
 }
