@@ -212,57 +212,24 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, net_metric,
     col <- colours
   }
 
-  
-  df$gene_set <- gene_set
-  df$net_metric <- net_metric
-    #df$logp <- as.numeric(-log10(df$padj)) #if using fgsea package
-    df$logp <- as.numeric(-log10(df$p.adjust))
-    #df$logp_surv <- as.numeric(surv_fct$logp)
-    
-    #order pathway fct by the gsea signif
-    # df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)])) #if using fgsea package
-    df$ID <- factor(df$ID, levels = unique(df$ID[order(df$logp)])) 
-    if(!is.null(n_path)){
-      df <- df[order(df$logp, decreasing = T),]
-      df <- df[1:n_path,]
-    }else if(!is.null(thresh)){
-      df <- df[which(df$logp >= thresh),]
-    }
-    
-    #p <- ggplot(data = df, aes(x = logp, y = pathway, color=logp))+ #if using fgsea package
-    p <- ggplot(data = df, aes(x = logp, y = ID, color = NES)) +
-      geom_point(data=df, aes(size = abs(NES)*25))+
-      scale_size(range = c(20, 150),name = "abs(NES)", guide = "none") +
-      scale_color_gradientn(colours = col, name = "NES") +
-      labs(y = NULL, x = expression("-log"[10]*"(FDR)"), title = paste(title, gene_set, net_metric, fct, sep = " ")) +
-      theme_bw()+
-      theme(text = element_text(size = 100),
-            legend.key.size = unit(5, 'cm'),
-            legend.text = element_text(size = 100),
-            axis.text.y = element_text(size = 120),
-            axis.text.x = element_text(size = 100),
-            panel.grid.major = element_line(color = "black"))
-    
-    if(i == 1){
-      q <- p
-    }else{
-      q <- plot_grid(q, p)
-    }
-    
-    # temp2 <- temp[[j]]
-    # temp2 <- temp2[,1:4]
-    # temp2$factor <- fct
-    # temp2$pathway_db <- name[1]
-    # temp2$net_metric <- name[2]
-    # temp2$logp <- -log10(temp2$padj)
-    # temp2$logp_surv <- surv$logp
-    # df <- rbind(df, temp2)
-  
-  
-  
-  #legend scale
-  #max_surv <- max(df$logp_surv, na.rm = T)
-  #max_gsea <- max(df$logp, na.rm = T)
-  
-  return(q)
+  gsea_results$net_metric <- net_metric
+  gsea_results$logp <- -log10(gsea_results$padj)
+
+   #order pathway fct by the gsea signif
+   df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)])) #if using fgsea package
+
+  p <- ggplot(data = gsea_res, aes(x = logp, y = pathway, color = NES)) +
+   geom_point(data = gsea_res, aes(size = abs(NES) * 25)) +
+   scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
+   scale_color_gradientn(colours = col, name = "NES") +
+   labs(y = NULL, x = expression("-log"[10]*"(FDR)"), title = paste(title, gene_set, net_metric, fct, sep = " ")) +
+   theme_bw() +
+   theme(text = element_text(size = 100),
+       legend.key.size = unit(5, 'cm'),
+       legend.text = element_text(size = 100),
+       axis.text.y = element_text(size = 120),
+       axis.text.x = element_text(size = 100),
+       panel.grid.major = element_line(color = "black"))
+
+  return(p)
 }
