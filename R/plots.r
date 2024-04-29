@@ -145,6 +145,10 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
   } else {
+    if (length(colours) != 3) {
+      stop(paste0(length(colours), " colours were specified, when 3 were expected. ",
+      "Please make sure you specify the correct number of colours."))
+    }
     col <- colours
   }
 
@@ -213,6 +217,10 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
     col <- col[c(3, 4)]
   } else {
+       if (length(colours) != 2) {
+      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+      "Please make sure you specify the correct number of colours."))
+    }
     col <- colours
   }
 
