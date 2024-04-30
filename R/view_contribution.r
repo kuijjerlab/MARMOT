@@ -91,7 +91,7 @@ p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   labs(title = "Pearson", x = NULL, y = NULL) +
   theme_bw()
   
-  s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
+s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
   geom_tile() +
   geom_text(color = "black") +
   scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
@@ -99,11 +99,7 @@ p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   theme_bw()
 
   if (grid) {
-    q <- cowplot::plot_grid(cowplot::ggdraw(p) +
-                              cowplot::draw_plot_label(size = 15),
-                            cowplot::ggdraw(s) +
-                              cowplot::draw_plot_label(size = 15),
-                            nrow = 1)
+    q <- cowplot::plot_grid(p,s, width =20)
   } else {
     q <- list(pearson = p, spearman = s)
     names(q) <- c("pearson", "spearman")
