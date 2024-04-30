@@ -99,11 +99,11 @@ p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   theme_bw()
 
   if (grid) {
-   q <- cowplot::ggdraw(p) +
-        cowplot::draw_plot_label(label = "Plot 1", size = 15),
-        cowplot::ggdraw(s) +
-        draw_plot_label(label = "Plot 2", size = 15),
-  nrow = 1
+    q <- cowplot::plot_grid(cowplot::ggdraw(p) +
+                              cowplot::draw_plot_label(size = 15),
+                            cowplot::ggdraw(s) +
+                              cowplot::draw_plot_label(size = 15),
+                            nrow = 1)
   } else {
     q <- list(pearson = p, spearman = s)
     names(q) <- c("pearson", "spearman")
