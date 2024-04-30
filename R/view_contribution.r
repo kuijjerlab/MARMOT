@@ -62,12 +62,13 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @returns A list of two ggplots. One for pearson and one for spearman.
 #'
 #' @export
+#' @import ggplot2
 
 plot_fct_corr <- function(corr_list, title, colours = NULL, ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
-    col <- col[c(3, 5)]
+    col <- col[c(3, 4)]
   } else {
     if (length(colours) != 1) {
       stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
@@ -81,9 +82,11 @@ pears <- reshape2::melt(corr_list[["pearson"]])
 spear <- reshape2::melt(corr_list[["spearman"]])
 
 # Plot heatmap
-p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value)) +
+p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
   geom_tile() +
+  geom_text(color = "black") +
   scale_fill_gradient(low = col[1], high = col[2]) +
-  labs(x = "Column", y = "Row", title = "Heatmap")
+  labs(title = title) +
+  theme_bw()
   
 }
