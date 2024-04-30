@@ -56,7 +56,6 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @inheritParams plot_data_dim
 #' @param corr_list A list with the correlation values. Expects output
 #' of \code{\link{fct_corr}}.
-#' @param title Character string indicating a title for the plot.
 #' @param grid Logical. If true one  grid plt will be output with a panel for
 #' spearman and one for pearson. If FALSE, a list will be output with each
 #' element being one of the plots.
@@ -67,7 +66,7 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @export
 #' @import ggplot2
 
-plot_fct_corr <- function(corr_list, title, grid = FALSE, colours = NULL, ...) {
+plot_fct_corr <- function(corr_list, grid = TRUE, colours = NULL, ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -89,7 +88,21 @@ p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   geom_tile() +
   geom_text(color = "black") +
   scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-  labs(title = title) +
+  labs(title = "Pearson", x = NULL, y = NULL) +
   theme_bw()
   
+  s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
+  geom_tile() +
+  geom_text(color = "black") +
+  scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
+  labs(title = "Spearman", x = NULL, y = NULL) +
+  theme_bw()
+
+  if (grid) {
+    q <- cowplot::plot_grid(p, s)
+  } else {
+    q <- list(pearson = p, spearman = s)
+  }
+
+  return(q)
 }
