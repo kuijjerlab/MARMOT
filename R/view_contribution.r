@@ -59,6 +59,8 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @param grid Logical. If true one  grid plt will be output with a panel for
 #' spearman and one for pearson. If FALSE, a list will be output with each
 #' element being one of the plots.
+#' @param title Optional. Character string indicating title for the grid.
+#' Only used if grid = TRUE.
 #' @param ... Any other ggplot parameters.
 #'
 #' @returns A list of two ggplots. One for pearson and one for spearman.
@@ -66,7 +68,7 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @export
 #' @import ggplot2
 
-plot_fct_corr <- function(corr_list, grid = TRUE, colours = NULL, ...) {
+plot_fct_corr <- function(corr_list, grid = TRUE, colours = NULL, title = NULL, ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -99,7 +101,7 @@ s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   theme_bw()
 
   if (grid) {
-    q <- cowplot::plot_grid(p, s)
+    q <- cowplot::plot_grid(p, s, labels = title)
   } else {
     q <- list(pearson = p, spearman = s)
     names(q) <- c("pearson", "spearman")
