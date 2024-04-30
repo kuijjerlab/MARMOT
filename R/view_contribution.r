@@ -90,14 +90,14 @@ p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   geom_tile() +
   geom_text(color = "black") +
   scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-  labs(title = "Pearson", x = NULL, y = NULL) +
+  labs(title = "Pearson", x = NULL, y = NULL, fill = "r") +
   theme_bw()
   
 s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
   geom_tile() +
   geom_text(color = "black") +
   scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-  labs(title = "Spearman", x = NULL, y = NULL) +
+  labs(title = "Spearman", x = NULL, y = NULL, fill = "r") +
   theme_bw()
 
   if (grid) {
