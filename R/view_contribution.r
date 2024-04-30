@@ -99,7 +99,7 @@ p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   theme_bw()
 
   if (grid) {
-    q <- cowplot::plot_grid(p, s)
+    q <- cowplot::plot_grid(p, s, height = 5, width = 10)
   } else {
     q <- list(pearson = p, spearman = s)
   }
