@@ -57,6 +57,9 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @param corr_list A list with the correlation values. Expects output
 #' of \code{\link{fct_corr}}.
 #' @param title Character string indicating a title for the plot.
+#' @param grid Logical. If true one  grid plt will be output with a panel for
+#' spearman and one for pearson. If FALSE, a list will be output with each
+#' element being one of the plots.
 #' @param ... Any other ggplot parameters.
 #'
 #' @returns A list of two ggplots. One for pearson and one for spearman.
@@ -64,7 +67,7 @@ fct_corr <- function(set1, set2, labels = NULL) {
 #' @export
 #' @import ggplot2
 
-plot_fct_corr <- function(corr_list, title, colours = NULL, ...) {
+plot_fct_corr <- function(corr_list, title, grid = FALSE, colours = NULL, ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -85,7 +88,7 @@ spear <- reshape2::melt(corr_list[["spearman"]])
 p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
   geom_tile() +
   geom_text(color = "black") +
-  scale_fill_gradient(low = col[1], high = col[2]) +
+  scale_fill_gradient(low = col[1], mid = "white", high = col[2]) +
   labs(title = title) +
   theme_bw()
   
