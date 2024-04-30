@@ -88,7 +88,7 @@ spear <- reshape2::melt(corr_list[["spearman"]])
 p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
   geom_tile() +
   geom_text(color = "black") +
-  scale_fill_gradient(low = col[1], mid = "white", high = col[2]) +
+  scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
   labs(title = title) +
   theme_bw()
   
