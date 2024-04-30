@@ -99,7 +99,7 @@ s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   theme_bw()
 
   if (grid) {
-    q <- cowplot::plot_grid(p,s, width =20)
+    q <- cowplot::plot_grid(p, s, width = c(20, "cm"))
   } else {
     q <- list(pearson = p, spearman = s)
     names(q) <- c("pearson", "spearman")
