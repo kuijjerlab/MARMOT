@@ -84,6 +84,7 @@ pears <- reshape2::melt(corr_list[["pearson"]])
 spear <- reshape2::melt(corr_list[["spearman"]])
 
 # Plot heatmap
+options(repr.plot.width = 10)
 p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
   geom_tile() +
   geom_text(color = "black") +
@@ -99,7 +100,7 @@ s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2)
   theme_bw()
 
   if (grid) {
-    q <- cowplot::plot_grid(p, s, width = c(20, "cm"))
+    q <- cowplot::plot_grid(p, s, width = 20)
   } else {
     q <- list(pearson = p, spearman = s)
     names(q) <- c("pearson", "spearman")
