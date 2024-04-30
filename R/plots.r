@@ -234,7 +234,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   if (!is.null(n_path)) {
     df <- df[1:n_path, ]
   } else {
-    df <- df[which(df$logp => thresh), ]
+    df <- df[which(df$logp >= thresh), ]
   }
 
   p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES)) +
