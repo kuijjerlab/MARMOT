@@ -48,9 +48,8 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
   if (as_data_frame) {
     corr_pears <- reshape2::melt(corr_pears)
     corr_spear <- reshape2::melt(corr_spear)
-    corr_pears$method <- "pearson"
-    corr_spear$method <- "spearman"
-    corr_res <- rbind(corr_pears, corr_spear)
+    corr_res <- cbind(corr_pears, corr_spear$value)
+    colnames(corr_res)[4:5] <- c("pearson", "spearman")
   } else {
     corr_res <- list(corr_pears, corr_spear)
     names(corr_res) <- c("pearson", "spearman")
@@ -91,22 +90,24 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
     col <- colours
   }
 
-  if (class(corr_res) == list) {
+  if (is.list(corr_res)) {
     # Convert matrix to a data frame
     pears <- reshape2::melt(corr_res[["pearson"]])
     spear <- reshape2::melt(corr_res[["spearman"]])
+    corr <- cbind(pears, spear$value)
+    colnames(corr_res)[4:5] <- c("pearson", "spearman")
   }
 
 
   # Plot heatmap
-  p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
+  p <- ggplot(corr, aes(x = Var2, y = Var1, fill = pearson, label = round(value, 2))) +
     geom_tile() +
     geom_text(color = "black") +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
     labs(title = "Pearson", x = NULL, y = NULL, fill = "r") +
     theme_bw()
 
-  s <- ggplot(spear, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
+  s <- ggplot(corr, aes(x = Var2, y = Var1, fill = spearman, label = round(value, 2))) +
     geom_tile() +
     geom_text(color = "black") +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
