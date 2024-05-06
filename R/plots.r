@@ -13,9 +13,9 @@
 #' @param which_omics Optional. Character vector specifying the omics to be
 #' plotted. If not specified, all the omics will be plotted.
 #' @param colours Optional. Character vector with colour IDs to use for plotting.
-#' If NULL, the "Dark2" pallette from RColorBrewer will be used. If using custom
-#' colours, please make sure the number of colours specified matches the number
-#' of colours needed.
+#' If NULL, the "Dark2" pallette from RColorBrewer will be used (recommended).
+#' If using custom colours, please make sure the number of colours specified
+#' matches the number of colours needed.
 #'
 #' @returns Returns a ggplot.
 #' @import ggplot2
@@ -177,6 +177,70 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
           legend.title = element_blank(),
           text = element_text(size = 20),
           axis.text.x = element_text(angle = 45, hjust = 1))
+
+  return(p)
+
+}
+
+#' @name surv_compare_heat
+#'
+#' @description Creates a heatmap that compares factors from two JDR models in
+#' terms of their association with patient survival.
+#'
+#' @inheritParams surv_compare_dotplot
+#'
+#' @returns A ggplot.
+#' @export
+#' @import ggplot2 ggbeeswarm
+#' @importFrom magrittr %>%
+#' @importFrom dplyr mutate case_when
+
+surv_compare_heat <- function(surv_df, models_to_compare, colours = NULL,
+                                 add_intercepts) { # implement the intercepts arguments
+  # sanity checks
+  # check that specified models exist
+  .check_names(models_to_compare, surv_df$label, err_msg = "elements of 'models_to_compare' exist in your data frame ") # nolint
+
+  # select models to compare
+  surv_df <- surv_df[which(surv_df$label %in% models_to_compare), ]
+
+  # set colour palette
+  if (is.null(colours)) {
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
+    col <- col[c(3, 4)]
+  } else {
+    if (length(colours) != 2) {
+      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+      "Please make sure you specify the correct number of colours."))
+    }
+    col <- colours
+  }
+
+  # setting colours
+  if (is.null(colours)) {
+    cols <- c(col[1], col[2])
+  } else {
+    cols <- col
+  }
+
+  # Calculate maximum logp value for each factor group
+  max_logp <- aggregate(logp ~ factor, data = surv_df, FUN = max)
+
+  # Merge maximum logp values back into the dataframe
+  surv_df <- merge(surv_df, max_logp, by = "factor", suffixes = c("", "_max"))
+
+  # Create a column to specify color based on whether logp matches
+  # the maximum within its factor group
+  surv_df$color <- ifelse(surv_df$logp == surv_df$logp_max, col[1], col[2])
+
+  # Plot heatmap with logp values annotated
+  p <- ggplot(surv_df, aes(x = label, y = factor, fill = color)) +
+    geom_tile() +
+    geom_text(aes(label = round(logp, 2)), color = "black") +
+    scale_fill_manual(values = c(col[1], col[2]), guide = FALSE) +
+    facet_wrap(~cancer, ncol = 3) +
+    labs(x = NULL, y = "Factor") +
+    theme_classic()
 
   return(p)
 
