@@ -49,7 +49,7 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
     corr_pears <- reshape2::melt(corr_pears)
     corr_spear <- reshape2::melt(corr_spear)
     corr_res <- cbind(corr_pears, corr_spear$value)
-    colnames(corr_res)[4:5] <- c("pearson", "spearman")
+    colnames(corr_res)[3:4] <- c("pearson", "spearman")
   } else {
     corr_res <- list(corr_pears, corr_spear)
     names(corr_res) <- c("pearson", "spearman")
@@ -95,7 +95,7 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
     pears <- reshape2::melt(corr_res[["pearson"]])
     spear <- reshape2::melt(corr_res[["spearman"]])
     corr <- cbind(pears, spear$value)
-    colnames(corr_res)[4:5] <- c("pearson", "spearman")
+    colnames(corr_res)[3:4] <- c("pearson", "spearman")
   }
 
 
