@@ -102,14 +102,14 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
 
 
   # Plot heatmap
-  p <- ggplot(corr, aes(x = Var2, y = Var1, fill = pearson, label = round(value, 2))) +
+  p <- ggplot(corr, aes(x = Var2, y = Var1, fill = pearson, label = round(pearson, 2))) +
     geom_tile() +
     geom_text(color = "black") +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
     labs(title = "Pearson", x = NULL, y = NULL, fill = "r") +
     theme_bw()
 
-  s <- ggplot(corr, aes(x = Var2, y = Var1, fill = spearman, label = round(value, 2))) +
+  s <- ggplot(corr, aes(x = Var2, y = Var1, fill = spearman, label = round(spearman, 2))) +
     geom_tile() +
     geom_text(color = "black") +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
