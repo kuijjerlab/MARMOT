@@ -237,9 +237,9 @@ surv_compare_heat <- function(surv_df, models_to_compare, colours = NULL,
   p <- ggplot(surv_df, aes(x = label, y = factor, fill = color)) +
     geom_tile() +
     geom_text(aes(label = round(logp, 2)), color = "black") +
-    scale_fill_manual(values = c(col[1], col[2]), guide = FALSE) +
+    scale_fill_manual(values = c(col[1], col[2]), guide = "none") +
     facet_wrap(~cancer, ncol = 3) +
-    labs(x = NULL, y = "Factor") +
+    labs(x = NULL, y = NULL) +
     theme_classic()
 
   return(p)
