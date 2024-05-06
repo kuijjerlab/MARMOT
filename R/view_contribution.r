@@ -96,6 +96,8 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
     spear <- reshape2::melt(corr_res[["spearman"]])
     corr <- cbind(pears, spear$value)
     colnames(corr_res)[3:4] <- c("pearson", "spearman")
+  } else {
+    corr  <- corr_res
   }
 
 
