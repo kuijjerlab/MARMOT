@@ -90,7 +90,7 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
     col <- colours
   }
 
-  if (is.list(corr_res)) {
+  if (!is.data.frame(corr_res)) {
     # Convert matrix to a data frame
     pears <- reshape2::melt(corr_res[["pearson"]])
     spear <- reshape2::melt(corr_res[["spearman"]])
