@@ -12,14 +12,12 @@
 #' @param set1 A matrix with the first set of factors.
 #' @param set2 A matrix with the second set of factors.
 #' @param labels Option character vector with labels for the two sets of factors.
-#' @param as_data_frame Logical, indicating whether the output should be a long
-#' data frame instead of a list of matrices.
 #'
 #' @returns A list containing the factor correlation matrices.
 #'
 #' @export
 
-fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
+fct_corr <- function(set1, set2, labels = NULL) {
   # sanity checks
   # check that the number of features is the same in the two sets
   if (nrow(set1) != nrow(set2)) {
@@ -45,16 +43,9 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
     })
   })
 
-  if (as_data_frame) {
-    corr_pears <- reshape2::melt(corr_pears)
-    corr_spear <- reshape2::melt(corr_spear)
-    corr_pears$method <- "pearson"
-    corr_spear$method <- "spearman"
-    corr_res <- rbind(corr_pears, corr_spear)
-  } else {
-    corr_res <- list(corr_pears, corr_spear)
-    names(corr_res) <- c("pearson", "spearman")
-  }
+  corr_res <- list(corr_pears, corr_spear)
+  names(corr_res) <- c("pearson", "spearman")
+
 
   return(corr_res)
 }
@@ -91,12 +82,9 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
     col <- colours
   }
 
-  if (class(corr_res) == list) {
-    # Convert matrix to a data frame
-    pears <- reshape2::melt(corr_res[["pearson"]])
-    spear <- reshape2::melt(corr_res[["spearman"]])
-  }
-
+  # Convert matrix to a data frame
+  pears <- reshape2::melt(corr_res[["pearson"]])
+  spear <- reshape2::melt(corr_res[["spearman"]])
 
   # Plot heatmap
   p <- ggplot(pears, aes(x = Var2, y = Var1, fill = value, label = round(value, 2))) +
