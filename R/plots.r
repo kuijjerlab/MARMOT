@@ -182,10 +182,10 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 
 }
 
-#' @name surv_compare_heat
+#' @name surv_compare_tile
 #'
 #' @description Creates a heatmap that compares factors from two JDR models in
-#' terms of their association with patient survival.
+#' terms of their association with patient survival. The 
 #'
 #' @inheritParams surv_compare_dotplot
 #'
@@ -195,7 +195,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 #' @importFrom magrittr %>%
 #' @importFrom dplyr mutate case_when
 
-surv_compare_heat <- function(surv_df, models_to_compare, colours = NULL,
+surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
                                  add_intercepts) { # implement the intercepts arguments
   # sanity checks
   # check that specified models exist
@@ -231,7 +231,7 @@ surv_compare_heat <- function(surv_df, models_to_compare, colours = NULL,
 
   # Create a column to specify color based on whether logp matches
   # the maximum within its factor group
-  surv_df$color <- ifelse(surv_df$logp == surv_df$logp_max, col[2], col[1])
+  surv_df$color <- ifelse(surv_df$logp == surv_df$logp_max, "high", "low")
 
   # Plot heatmap with logp values annotated
   p <- ggplot(surv_df, aes(x = label, y = factor, fill = color)) +
