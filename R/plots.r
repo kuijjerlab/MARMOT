@@ -224,12 +224,12 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
   }
 
   # Calculate maximum logp value for each factor group within each cancer group
-  max_logp <- df %>%
+  max_logp <- surv_df %>%
   group_by(cancer, factor) %>%
   summarise(max_logp = max(logp))
 
   # Merge maximum logp values back into the dataframe
-  surv_df <- merge(df, max_logp, by = c("factor", "cancer"),
+  surv_df <- merge(surv_df, max_logp, by = c("factor", "cancer"),
                    suffixes = c("", "_max"))
 
   # Create a column to specify color based on whether logp matches
