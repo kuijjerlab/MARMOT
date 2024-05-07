@@ -241,7 +241,7 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
     geom_tile(width = 0.95, height = 0.95,) +
     geom_text(aes(label = round(logp, 2)), color = "black") +
     scale_fill_manual(values = c(col[2], col[1]), guide = "legend") +
-    facet_wrap(~cancer, ncol = 3) +
+    facet_wrap(~cancer, nrow = 3) +
     labs(x = NULL, y = NULL) +
     coord_equal() +
     theme_classic()
