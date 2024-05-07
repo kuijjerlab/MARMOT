@@ -193,7 +193,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 #' @export
 #' @import ggplot2 ggbeeswarm
 #' @importFrom magrittr %>%
-#' @importFrom dplyr mutate case_when
+#' @importFrom dplyr group_by summarise
 
 surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
                                  add_intercepts) { # implement the intercepts arguments
@@ -229,7 +229,7 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
   summarise(max_logp = max(logp))
 
   # Merge maximum logp values back into the dataframe
-  surv_df <- merge(df, max_logp, by = c("factor", "cancer"), 
+  surv_df <- merge(df, max_logp, by = c("factor", "cancer"),
                    suffixes = c("", "_max"))
 
   # Create a column to specify color based on whether logp matches
