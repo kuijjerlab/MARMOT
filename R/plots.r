@@ -234,7 +234,7 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
 
   # Create a column to specify color based on whether logp matches
   # the maximum within its factor group
-  surv_df$color <- ifelse(surv_df$logp == surv_df$logp_max, "high", "low")
+  surv_df$color <- ifelse(surv_df$logp == surv_df$max_logp, "high", "low")
 
   # Plot heatmap with logp values annotated
   p <- ggplot(surv_df, aes(x = label, y = factor, fill = color)) +
