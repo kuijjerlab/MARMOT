@@ -63,8 +63,8 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
 #' @description Plots heatmaps of factor correlations.
 #'
 #' @inheritParams plot_data_dim
-#' @param corr_res A list or data frame with the correlation values.
-#' Expects output of \code{\link{fct_corr}}.
+#' @param corr_res A data frame with the correlation values.
+#' Expects output of \code{\link{fct_corr}} with \code{as_dat_frame = TRUE}.
 #' @param grid Logical. If true one  grid plt will be output with a panel for
 #' spearman and one for pearson. If FALSE, a list will be output with each
 #' element being one of the plots.
@@ -77,7 +77,8 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
 #' @export
 #' @import ggplot2
 
-plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, ...) {
+plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL,
+                          title = NULL, ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -90,22 +91,14 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL, title = NULL, .
     col <- colours
   }
 
-  if (!is.data.frame(corr_res)) {
-    # Convert matrix to a data frame
-    pears <- reshape2::melt(corr_res[["pearson"]])
-    spear <- reshape2::melt(corr_res[["spearman"]])
-    corr <- cbind(pears, spear$value)
-    colnames(corr_res)[3:4] <- c("pearson", "spearman")
-  } else {
-    corr  <- corr_res
-  }
-
+  corr  <- corr_res
 
   # Plot heatmap
   p <- ggplot(corr, aes(x = Var2, y = Var1, fill = pearson, label = round(pearson, 2))) +
     geom_tile() +
     geom_text(color = "black") +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
+    facet_wrap(~cancer, nrow = 3) +
     labs(title = "Pearson", x = NULL, y = NULL, fill = "r") +
     theme_bw()
 
