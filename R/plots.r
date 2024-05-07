@@ -237,7 +237,7 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
   surv_df$logp_value <- ifelse(surv_df$logp == surv_df$max_logp, "high", "low")
 
   # Plot heatmap with logp values annotated
-  p <- ggplot(surv_df, aes(x = label, y = factor, fill = color)) +
+  p <- ggplot(surv_df, aes(x = label, y = factor, fill = logp_value)) +
     geom_tile(width = 0.95, height = 0.95,) +
     geom_text(aes(label = round(logp, 2)), color = "black") +
     scale_fill_manual(values = c(col[2], col[1]), guide = "legend") +
