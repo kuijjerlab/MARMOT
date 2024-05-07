@@ -185,7 +185,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 #' @name surv_compare_tile
 #'
 #' @description Creates a heatmap that compares factors from two JDR models in
-#' terms of their association with patient survival. The 
+#' terms of their association with patient survival.
 #'
 #' @inheritParams surv_compare_dotplot
 #'
@@ -223,11 +223,14 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
     cols <- col
   }
 
-  # Calculate maximum logp value for each factor group
-  max_logp <- aggregate(logp ~ factor, data = surv_df, FUN = max)
+  # Calculate maximum logp value for each factor group within each cancer group
+  max_logp <- df %>%
+  group_by(cancer, factor) %>%
+  summarise(max_logp = max(logp))
 
   # Merge maximum logp values back into the dataframe
-  surv_df <- merge(surv_df, max_logp, by = "factor", suffixes = c("", "_max"))
+  surv_df <- merge(df, max_logp, by = c("factor", "cancer"), 
+                   suffixes = c("", "_max"))
 
   # Create a column to specify color based on whether logp matches
   # the maximum within its factor group
