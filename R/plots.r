@@ -231,15 +231,16 @@ surv_compare_heat <- function(surv_df, models_to_compare, colours = NULL,
 
   # Create a column to specify color based on whether logp matches
   # the maximum within its factor group
-  surv_df$color <- ifelse(surv_df$logp == surv_df$logp_max, col[1], col[2])
+  surv_df$color <- ifelse(surv_df$logp == surv_df$logp_max, col[2], col[1])
 
   # Plot heatmap with logp values annotated
   p <- ggplot(surv_df, aes(x = label, y = factor, fill = color)) +
-    geom_tile() +
+    geom_tile(width = 0.95, height = 0.95,) +
     geom_text(aes(label = round(logp, 2)), color = "black") +
-    scale_fill_manual(values = c(col[1], col[2]), guide = "none") +
+    scale_fill_manual(values = c(col[2], col[1]), guide = "none") +
     facet_wrap(~cancer, ncol = 3) +
     labs(x = NULL, y = NULL) +
+    coord_equal() +
     theme_classic()
 
   return(p)
