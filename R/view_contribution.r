@@ -45,18 +45,25 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
     })
   })
 
-  if (as_data_frame) {
-    corr_pears <- reshape2::melt(corr_pears)
-    corr_spear <- reshape2::melt(corr_spear)
-    corr_res <- cbind(corr_pears, corr_spear$value)
-    colnames(corr_res)[3:4] <- c("pearson", "spearman")
-  } else {
-    corr_res <- list(corr_pears, corr_spear)
-    names(corr_res) <- c("pearson", "spearman")
-  }
-
+  corr_res <- list(corr_pears, corr_spear)
+  names(corr_res) <- c("pearson", "spearman")
+  
   return(corr_res)
 }
+
+#' @name format_fct_corr
+#'
+#' @description Function to format the factor correlations results for plotting.
+#'
+#' @inheritParams fct_corr
+#' @param corr_res A list of correlation matrices. Expects output of 
+#' \code{\link{fct_corr}}.
+#'
+#' @returns A long data frame ready for plotting.
+#'
+#' @export
+#' 
+#' format_fct_corr
 
 #' @name plot_fct_corr
 #'
