@@ -45,9 +45,10 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
     })
   })
 
+  # concatenate the two matrices into a list
   corr_res <- list(corr_pears, corr_spear)
   names(corr_res) <- c("pearson", "spearman")
-  
+
   return(corr_res)
 }
 
@@ -56,14 +57,31 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
 #' @description Function to format the factor correlations results for plotting.
 #'
 #' @inheritParams fct_corr
-#' @param corr_res A list of correlation matrices. Expects output of 
+#' @param corr_res A list of correlation matrices. Expects output of
 #' \code{\link{fct_corr}}.
 #'
 #' @returns A long data frame ready for plotting.
 #'
 #' @export
-#' 
-#' format_fct_corr
+#'
+format_fct_corr <- function(corr_res) {
+  # sanity checks
+  # check that input is a list
+  if (!is.list(corr_res)) {
+    stop("Invalid input format. This function expects a list of two matrices as input.") # nolint
+  }
+
+  # format matrices as data frames
+  corr1 <- reshape2::melt(corr_res[[1]])
+  corr1$method <- names(corr_res)[1]
+  corr2 <- reshape2::melt(corr_res[[2]])
+  corr2$method <- names(corr_res)[2]
+
+  # concatenate the two methods
+  corr <- rbind(corr1, corr2)
+
+  return(corr)
+}
 
 #' @name plot_fct_corr
 #'
