@@ -88,13 +88,10 @@ format_fct_corr <- function(corr_res) {
 #' @description Plots heatmaps of factor correlations.
 #'
 #' @inheritParams plot_data_dim
-#' @param corr_res A data frame with the correlation values.
-#' Expects output of \code{\link{fct_corr}} with \code{as_dat_frame = TRUE}.
-#' @param grid Logical. If true one  grid plt will be output with a panel for
-#' spearman and one for pearson. If FALSE, a list will be output with each
-#' element being one of the plots.
-#' @param title Optional. Character string indicating title for the grid.
-#' Only used if grid = TRUE.
+#' @param corr_df A data frame with the correlation values.
+#' Expects output of \code{\link{format_fct_corr}}.
+#' @param method One of c("pearson", "spearman") indicating which correlation
+#' method should be plotted.
 #' @param ... Any other ggplot parameters.
 #'
 #' @returns A list of two ggplots. One for pearson and one for spearman.
@@ -102,8 +99,7 @@ format_fct_corr <- function(corr_res) {
 #' @export
 #' @import ggplot2
 
-plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL,
-                          title = NULL, ...) {
+plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -111,35 +107,24 @@ plot_fct_corr <- function(corr_res, grid = TRUE, colours = NULL,
   } else {
     if (length(colours) != 1) {
       stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
-      "Please make sure you specify the correct number of colours."))
+                  "Please make sure you specify the correct number of colours."))
     }
     col <- colours
   }
 
-  corr  <- corr_res
+  corr_df <- corr_df[which(corr_df$method == method),]
 
   # Plot heatmap
-  p <- ggplot(corr, aes(x = Var2, y = Var1, fill = pearson, label = round(pearson, 2))) +
+ p <- ggplot(data = corr_df, aes(x = Var1, y = Var2, fill = value, label = round(value, 2))) +
     geom_tile() +
+    #facet_grid(cancer ~ method) +
     geom_text(color = "black") +
-    scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
     facet_wrap(~cancer, nrow = 3) +
-    labs(title = "Pearson", x = NULL, y = NULL, fill = "r") +
-    theme_bw()
-
-  s <- ggplot(corr, aes(x = Var2, y = Var1, fill = spearman, label = round(spearman, 2))) +
-    geom_tile() +
-    geom_text(color = "black") +
+    labs(x = "Var1", y = "Var2", fill = "Value") +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-    labs(title = "Spearman", x = NULL, y = NULL, fill = "r") +
-    theme_bw()
+    labs(x = NULL, y = NULL, fill = paste0(method, " r")) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-  if (grid) {
-    q <- cowplot::plot_grid(p, s, labels = title)
-  } else {
-    q <- list(pearson = p, spearman = s)
-    names(q) <- c("pearson", "spearman")
-  }
-
-  return(q)
+  return(p)
 }
