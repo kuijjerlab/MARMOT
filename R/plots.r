@@ -334,7 +334,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
 #' @export
 #' @import ggplot2
 
-volcano_plot <- function(limma, labels = FALSE, round_to=10, signif_thresh = 0.05){
+volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0.05) {
   #set axis parameters (breaks & labels)
   breaks <- c(seq(plyr::round_any(min(limma$logFC),round_to), plyr::round_any(max(limma$logFC), round_to), 
                   plyr::round_any(max(abs(limma$logFC)),round_to)/4))
@@ -380,7 +380,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to=10, signif_thresh = 0.0
     sig_genes <- limma %>%
       filter(genes %in% top_feat$genes)
 
-    p <- p + geom_label_repel(data = sig_genes, # Add labels last to appear as the top layer  
+    p <- p + ggrepel::geom_label_repel(data = sig_genes, # Add labels last to appear as the top layer  
                        aes(label = genes),
                        force = 2,
                        nudge_y = 0.25)
