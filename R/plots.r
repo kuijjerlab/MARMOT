@@ -320,3 +320,71 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
 
   return(p)
 }
+
+#' @name volcano_plot
+#' @description Plots a volcano plot from a limma model
+#' @param limma TopTable of limma output
+#' @param labels If true, the significant features will be labeled. Not
+#' recommended if there are a lot of significant features
+#' @param round_to Integer. What should the x axis be rounded to. e.g. 
+#' nearest 5s, 10s, 100s etc. Default rounds to the nearest 10s.
+#' @param signif_thresh P-value threshold for significance. Default 0.05.
+#'
+#' @returns A volcano plot
+#' @export
+#' @import ggplot2
+
+volcano_plot <- function(limma, labels = FALSE, round_to=10, signif_thresh = 0.05){
+  #set axis parameters (breaks & labels)
+  breaks <- c(seq(plyr::round_any(min(limma$logFC),round_to), plyr::round_any(max(limma$logFC), round_to), 
+                  plyr::round_any(max(abs(limma$logFC)),round_to)/4))
+  limits <- c(plyr::round_any(min(limma$logFC),round_to), 
+              plyr::round_any(max(limma$logFC),round_to))
+
+  #set fold change limits
+  #set to be 1/10 of the max FC value
+  FClimit <- plyr::round_any(max(abs(limma$logFC)),round_to)/10
+
+  col <- palette("Dark2")
+  #setting rules for colouring & shading
+  limma <- limma %>% dplyr::mutate(gene_type = case_when(logFC >= FClimit & adj.P.Val <= signif_thresh ~ "up",
+                                                  logFC <= -FClimit & adj.P.Val <= signif_thresh ~ "down",
+                                                  TRUE ~ "ns"))
+
+  cols <- c("up" = col[4], "down" = col[3], "ns" = "grey") 
+  sizes <- c("up" = 2, "down" = 2, "ns" = 1) 
+  alphas <- c("up" = 1, "down" = 1, "ns" = 0.5)
+
+  #pdf(file="volcano_test.pdf")
+  p <- ggplot(data=limma, aes(x = logFC,y = -log10(adj.P.Val), fill = gene_type,    
+                         size = gene_type, alpha = gene_type)) + 
+    geom_point(shape = 21, colour = "black")+
+    geom_hline(yintercept = -log10(signif_thresh),
+               linetype = "dashed") + 
+    geom_vline(xintercept = c(-FClimit, FClimit),
+               linetype = "dashed") +
+    scale_x_continuous(breaks = breaks, # Modify x-axis tick intervals    
+                      limits = limits)+
+    theme_classic()+
+    scale_fill_manual(values = cols) + # Modify point colour
+    scale_size_manual(values = sizes) + # Modify point size
+    scale_alpha_manual(values = alphas)
+  #dev.off()
+
+  #determining features to be labeled
+  if(labels){
+    limma$genes <- rownames(limma)
+    top_feat<- limma[which(limma$adj.P.Val <= signif_thresh),]
+    top_feat <- top_feat[which(abs(top_feat$logFC) >= FClimit),]
+
+    sig_genes <- limma %>%
+      filter(genes %in% top_feat$genes)
+
+    p <- p + geom_label_repel(data = sig_genes, # Add labels last to appear as the top layer  
+                       aes(label = genes),
+                       force = 2,
+                       nudge_y = 0.25)
+  }
+
+  return(p)
+}
