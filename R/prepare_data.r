@@ -33,6 +33,8 @@
 #' PCA.
 #' @param logs Logical. Whether a log file containing information about the
 #' input parameters should be saved.
+#' @param log_name String indicating name for log file. If left NULL,
+#' a generic name will be used.
 #'
 #' @returns A list of omics ready for JDR.
 #' @examples
@@ -40,10 +42,16 @@
 
 prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
                          pca = TRUE, thresh = 0.85, n_pcs = 20, save_pca = TRUE,
-                         file_name = NULL, scale_data = TRUE, logs = FALSE) {
+                         file_name = NULL, scale_data = TRUE, logs = FALSE,
+                         log_name = NULL) {
   # create log file
   if (logs) {
-    log_file <- file("prepare_data_log.txt", open = "a")
+    if (is.null(log_name)){
+      log_file <- file("prepare_data_log.txt", open = "a")
+    } else {
+      log_file <- file(log_name, open = "a")
+    }
+    
     timestamp <- format(Sys.time, "%d-%m-%Y %H:%M:%S")
 
     # Get the function's environment
