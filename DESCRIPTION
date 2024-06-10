@@ -13,6 +13,7 @@ Imports:
     survival, survminer, pcaMethods, ggbeeswarm, MOFA2, RGCCA, omicade4, r.jive, fgsea, limma,
     RColorBrewer, dplyr, magrittr, tidyr, ggplot2, purrr, preprocessCore, data.table, GSVA,
     reshape2
+VignetteBuilder: knitr
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0), BiocStyle, knitr, rmarkdown
 Config/testthat/edition: 3
