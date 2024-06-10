@@ -53,11 +53,12 @@ for (cancer in cancers){
 
     # without PCA
     omics <- prepare_data(omics = files, names = omic_names, pca = FALSE,
-                         logs = TRUE, log_name = "prep_data_no_pca_log.txt")
-    
+                         logs = TRUE,
+                         log_name = "logs/prep_data_no_pca_log.txt")
+
     # with PCA
     omics <- prepare_data(omics = files, names = omic_names, pca = TRUE,
-                         logs = TRUE, log_name = "prep_data_pca_log.txt")
+                         logs = TRUE, log_name = "logs/prep_data_pca_log.txt")
 }
 
 ```

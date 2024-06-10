@@ -51,7 +51,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     } else {
       log_file <- file(log_name, open = "a")
     }
-    
+
     timestamp <- format(Sys.time, "%d-%m-%Y %H:%M:%S")
 
     # Get the function's environment
