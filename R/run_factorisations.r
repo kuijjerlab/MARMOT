@@ -185,8 +185,26 @@ run_rgcca <- function(omic_list, n_fct) {
 #' @return A trained MCIA model.
 #'
 #' @export
-#' @import omicade4
+#' @importFrom omicade4 mcia
 
 run_mcia <- function(omic_list, n_fct) {
+  # make omics positive & scale between (0,1)
+  # not sure why this is required specifically for this method
+  # but that it what cantini did (but not for the other methods)
+  # as far as I can tell, there is no specification anywhere in the docu
+  # saying positive input is needed
+  # so I dunno
+  omics_pos<-list()
+  for (j in omic_list){
+    if (min(omics_list[[j]]) < 0) {
+      omics_pos[[j]] <- omics_list[[j]] + abs(min(omics_list[[j]]))
+    }else{
+      omics_pos[[j]] <- omics_list[[j]]
+    }
+    omics_pos[[j]] <- omics_pos[[j]] / max(omics_pos[[j]])
+  }
 
+  mcia_model <- mcia(omics_pos, cia.nf = n_fct)
+
+  return(mcia_model)
 }
