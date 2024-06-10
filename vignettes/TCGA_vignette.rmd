@@ -25,6 +25,7 @@ Some text.
 library(devtools)
 devtools::load_all("/storage/kuijjerarea/romana/TCGAmofa/MOFAnet/")
 library(tidyverse)
+library(preprocessCore)
 ```
 
 # Preparing data
@@ -45,20 +46,56 @@ omic_names <- c("expression", "methylation", "miRNA", "indegree", "outdegree")
 ```
 ```{r prepare_data}
 # prepare data for JDR
-for (cancer in cancers){
+for (cancer in cancers) {
     # get omic file names
     files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
-               c("log_exp", "methy", "log_mirna", "indegree.RData",
+               c("log_exp", "methy", "log_mirna", "indegree_quant.RData",
                "outdegree.RData")))
+
+    # normalise indegrees
+    if (!file.exists(files[4])) {
+        load(files[4])
+        indegree <- normalise.quantiles(indegree, copy = FALSE)
+        save(indegree, file = paste0(data_dir, cancer, "/indegree_quant.RData"))
+    }
 
     # without PCA
     omics <- prepare_data(omics = files, names = omic_names, pca = FALSE,
                          logs = TRUE,
                          log_name = "logs/prep_data_no_pca_log.txt")
+    save(omics, file = paste0(wd, "/", cancer, "_omics_no_pca.Rda"))
 
     # with PCA
     omics <- prepare_data(omics = files, names = omic_names, pca = TRUE,
                          logs = TRUE, log_name = "logs/prep_data_pca_log.txt")
+    save(omics, file = paste0(wd, "/", cancer, "_omics_pca.Rda"))
 }
+```
 
+# PCA vs no PCA comparison with multiple JDR tools
+
+```{r bench_no_pca}
+for (cancer in cancers) {
+    # load data
+    load(paste0(wd, "/", cancer, "_omics_no_pca.Rda"))
+
+    # run the factorisation with all tools without PCA
+    fct_list <- run_factorisations(omic_list = omics, pca = FALSE, seed = 13)
+
+    save(fct_list, file = paste0("benchmark/", cancer,
+         "_factorizations_no_pca.Rda"))
+}
+```
+
+```{r bench_pca}
+for (cancer in cancers) {
+    # load data
+    load(paste0(wd, "/", cancer, "_omics_pca.Rda"))
+
+    # run the factorisation with all tools without PCA
+    fct_list <- run_factorisations(omic_list = omics, pca = FALSE, seed = 13)
+
+    save(fct_list, file = paste0("benchmark/", cancer,
+         "_factorizations_pca.Rda"))
+}
 ```
