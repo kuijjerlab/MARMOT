@@ -83,7 +83,7 @@ for (cancer in cancers) {
     fct_list <- run_factorisations(omic_list = omics, pca = FALSE, seed = 13)
 
     save(fct_list, file = paste0("benchmark/", cancer,
-         "_factorizations_no_pca.Rda"))
+         "_JDR_models_no_pca.Rda"))
 }
 ```
 
@@ -96,6 +96,6 @@ for (cancer in cancers) {
     fct_list <- run_factorisations(omic_list = omics, pca = FALSE, seed = 13)
 
     save(fct_list, file = paste0("benchmark/", cancer,
-         "_factorizations_pca.Rda"))
+         "_JDR_models_pca.Rda"))
 }
 ```
