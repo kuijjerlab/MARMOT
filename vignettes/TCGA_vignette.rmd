@@ -31,11 +31,11 @@ library(preprocessCore)
 # Preparing data
 ```{r params}
 # setting working directory
-wd <- "/storage/kuijjerarea/TCGAmofa/june_2024_run"
+wd <- "/storage/kuijjerarea/romana/TCGAmofa/june_2024_run"
 setwd(wd)
 
 # specify data directory
-data_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer"
+data_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/"
 
 # defining vector of cancer names for which to do the analysis
 cancers <- c("aml", "breast", "colon", "gbm", "kidney", "liver", "lung",
@@ -49,13 +49,13 @@ omic_names <- c("expression", "methylation", "miRNA", "indegree", "outdegree")
 for (cancer in cancers) {
     # get omic file names
     files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
-               c("log_exp", "methy", "log_mirna", "indegree_quant.RData",
-               "outdegree.RData")))
+               c("log_exp", "methy", "log_mirna",
+               "indegree_quant.RData", "outdegree.RData")))
 
     # normalise indegrees
     if (!file.exists(files[4])) {
-        load(files[4])
-        indegree <- normalise.quantiles(indegree, copy = FALSE)
+        load(paste0(data_dir, cancer, "/indegree.RData"))
+        indegree <- normalize.quantiles(as.matrix(indegree), copy = FALSE)
         save(indegree, file = paste0(data_dir, cancer, "/indegree_quant.RData"))
     }
 
