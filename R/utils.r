@@ -52,7 +52,7 @@
 
 .check_variance <- function(df) {
   constant_columns <- df %>%
-    summarise_all(~ if(is.numeric(.)) var(.) == 0 else n_distinct(.) == 1) %>%
+    summarise_all(~ if (is.numeric(.)) var(.) == 0 else n_distinct(.) == 1) %>%
     pivot_longer(everything(), names_to = "Column", values_to = "Constant") %>%
     filter(Constant)
 
@@ -129,7 +129,7 @@
 #' @description Function to check if a matrix is numeric.
 #' @param mat A matrix to test.
 #' @noRd
-#'
+
 .numeric_mat <- function(mat) {
   all(sapply(as.vector(mat), function(elem) {
     is.numeric(elem) || (is.character(elem) && !is.na(as.numeric(elem))) ||
@@ -139,7 +139,7 @@
 
 #' @name .pos_omics
 #' @description Function that takes an omic matrix as input and transforms it so
-#' that all values are positive and scaled between (0,1)
+#' that all values are positive and scaled between (0,1).
 #' @param omic An omic matrix with rows as features and columns as samples.
 #' @noRd
 
