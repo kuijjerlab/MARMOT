@@ -114,9 +114,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # check and load file
   if (grepl(x = file, pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) {
     return(as.matrix(get(load(file))))
-  } else if (grepl(x = file, pattern = "\\.txt$|\\.tsv$|\\.csv$",
-                   ignore.case = TRUE)) {
-
+  } else {
     # reading the data without the first column
     dat <- as.matrix(data.table::fread(file, drop = 1))
 
@@ -125,9 +123,6 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     rownames(dat) <- rows
 
     return(dat)
-  } else {
-    stop(paste0("Invalid file format: ", print(file),
-                ". Please make sure you provide a supported file format."))
   }
 }
 
