@@ -194,15 +194,7 @@ run_mcia <- function(omic_list, n_fct) {
   # as far as I can tell, there is no specification anywhere in the docu
   # saying positive input is needed
   # so I dunno
-  omics_pos<-list()
-  for (j in omic_list){
-    if (min(omics_list[[j]]) < 0) {
-      omics_pos[[j]] <- omics_list[[j]] + abs(min(omics_list[[j]]))
-    }else{
-      omics_pos[[j]] <- omics_list[[j]]
-    }
-    omics_pos[[j]] <- omics_pos[[j]] / max(omics_pos[[j]])
-  }
+  omics_pos <- lapply(omic_list, .pos_omics)
 
   mcia_model <- mcia(omics_pos, cia.nf = n_fct)
 
