@@ -34,8 +34,6 @@
 #' mode. Can be one of c("slow", "medium", "fast").
 #' @param use_basilisk Logical. Whether basilisk should be used to automatically
 #' set up conda environment. Only needed when MOFA2 is used.
-#' @param ... Any other parameters that can be passed to any used functions
-#' from the JDR packages. See respective package documentation for further details. #nolint
 #'
 #' @return A list of factorisations. Each element is the factorisation
 #' based on one JDR method.
@@ -105,8 +103,6 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #' @description Performs JDR on a list of omic matrices with MOFA2.
 #'
 #' @inheritParams run_jdr
-#' @param ... Any other parameters that can be passed to MOFA2 functions.
-#' See documentation of the MOFA2 package for details.
 #'
 #' @return A trained MOFA2 model.
 #'
@@ -145,7 +141,7 @@ run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk) {
 run_jive <- function(omic_list, n_fct) {
   # run jive
   # look a little more into JIVE options and what they mean
-  jive_model <- jive(omic_list, rankJ = n_fct, 
+  jive_model <- jive(omic_list, rankJ = n_fct,
                      rankA = rep(n_fct, length(omic_list)))
 
   return(jive_model)
