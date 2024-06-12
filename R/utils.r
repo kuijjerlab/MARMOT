@@ -127,7 +127,7 @@
 
 #' @name .numeric_mat
 #' @description Function to check if a matrix is numeric.
-#' @param A matrix to test.
+#' @param mat A matrix to test.
 #' @noRd
 #'
 .numeric_mat <- function(mat) {
@@ -135,4 +135,24 @@
     is.numeric(elem) || (is.character(elem) && !is.na(as.numeric(elem))) ||
       is.na(elem)
   }))
+}
+
+#' @name .pos_omics
+#' @description Function that takes an omic matrix as input and transforms it so
+#' that all values are positive and scaled between (0,1)
+#' @param omic An omic matrix with rows as features and columns as samples.
+#' @noRd
+
+.pos_omics <- function(omic) {
+  # ensure positivity
+  if (min(omic) < 0) {
+    omic_pos <- omic + abs(min(omic))
+  } else {
+    omic_pos <- omic
+  }
+
+  #scale between (0,1)
+  omic_pos <- omic_pos / max(omic_pos)
+
+  return(omic_pos)
 }
