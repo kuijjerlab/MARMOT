@@ -174,8 +174,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     # Subset to only common samples
     omic <- .filter_omics(omic)
   } else {
-    # ensure samples are all in the same order
-    omic <- lapply(omic, function(x) { x[, all_samples, drop = FALSE]})
+    # pad matrices
+    .pad_mat_wrapper(omic)
   }
 
   # name the omics
