@@ -157,22 +157,52 @@
   return(omic_pos)
 }
 
-#' @name .pad_mat
+#' @name .pad_matrix
 #' @description Function to pad a matrix with NAs up to a specified number of
 #' columns.
 #' @param mat A matrix.
 #' @param n_cols Number of columns.
-#' @noRd 
+#' @param mat_colnames A vector of column names for the padded matrix.
+#' @noRd
 
-.pad_matrix <- function(mat, n_cols) {
+.pad_matrix <- function(mat, n_cols, mat_colnames) {
   # If the matrix has fewer columns than max_cols, pad it with NA columns
   if (ncol(mat) < n_cols) {
+
+    current_colnames <- colnames(mat)
+    common_colnames <- intersect(mat_colnames, current_colnames)
+
+    # Reorder columns of the current matrix to match the order in max_colnames
+    mat <- mat[, common_colnames, drop = FALSE]
+
     # Create a matrix with NA columns to fill in
     na_cols <- matrix(NA, nrow = nrow(mat), ncol = n_cols - ncol(mat))
+
     # Combine the original matrix with the NA columns
     mat <- cbind(mat, na_cols)
-    # Preserve the original column names and add NA column names
-    colnames(mat) <- c(colnames(mat), paste0("NA", seq_len(n_cols - ncol(mat))))
+
+    # Ensure the columns are in the same order as max_colnames
+    colnames(mat) <- mat_colnames
+    mat <- mat[, mat_colnames, drop = FALSE]
   }
   return(mat)
+}
+
+#' @name .pad_mat_wrapper
+#' @description A wrapper that applies .pad_matrix to a list of matrices,
+#' preserving column names and order.
+#' @param mat_list A list of matrices
+#' @noRd
+
+.pad_mat_wrapper <- function(mat_list) {
+  # Find the maximum number of columns
+  max_cols <- max(sapply(mat_list, ncol))
+
+  # Get all column names, preserving order
+  max_colnames <- colnames(mat_list[[which.max(sapply(mat_list, ncol))]])
+
+  # pad matrices
+  mat_pad <- lapply(mat_list, function(mat) .pad_matrix(mat, max_cols, max_colnames)) #nolint
+
+  return(mat_pad)
 }
