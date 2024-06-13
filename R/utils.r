@@ -156,3 +156,23 @@
 
   return(omic_pos)
 }
+
+#' @name .pad_mat
+#' @description Function to pad a matrix with NAs up to a specified number of
+#' columns.
+#' @param mat A matrix.
+#' @param n_cols Number of columns.
+#' @noRd 
+
+.pad_matrix <- function(mat, n_cols) {
+  # If the matrix has fewer columns than max_cols, pad it with NA columns
+  if (ncol(mat) < n_cols) {
+    # Create a matrix with NA columns to fill in
+    na_cols <- matrix(NA, nrow = nrow(mat), ncol = n_cols - ncol(mat))
+    # Combine the original matrix with the NA columns
+    mat <- cbind(mat, na_cols)
+    # Preserve the original column names and add NA column names
+    colnames(mat) <- c(colnames(mat), paste0("NA", seq_len(n_cols - ncol(mat))))
+  }
+  return(mat)
+}
