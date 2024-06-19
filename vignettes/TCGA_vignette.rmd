@@ -442,13 +442,11 @@ gsea_res <- Map(function(x, file_name) {
 
 ```{r plot_diff_gsea_results}
 titles <- names(gsea_res)
-file_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z), ".pdf")
+file_names <- paste0(rep("figures/liver_gsea_diff_indeg_", ncol(Z)), colnames(Z), ".pdf")
 
-Map(function(x, title, file_name) {
-  # Remove list element name prefix if present
-  colnames(x) <- sub(".*\\.", "", colnames(x))
-
+plots <- Map(function(x, title, file_name, ...) {
   gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "hallmark",
-  title = title, file_name = file_name, n_path = NULL, thresh = 1.30103)
+  title = title, file_name = file_name, n_path = NULL, thresh = 1.30103,
+  width = 50, height = 80, limitsize = FALSE)
 }, gsea_res, titles, file_names)
 ```
