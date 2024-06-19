@@ -166,7 +166,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 
   p <- ggplot(surv_df, aes(x = cancer, y = logp, fill = label)) +
     geom_beeswarm(shape = 21, cex = 0.7, size = 7) +
-    scale_y_continuous(breaks = seq(0, 10, 1), limits = c(0, 10)) +
+    scale_y_continuous(breaks = seq(0, 5, 1), limits = c(0, 5)) +
     scale_fill_manual(values = cols) +
     geom_hline(yintercept = 2, linetype = "dashed", col = "red") +
     geom_hline(yintercept = 1.30103, linetype = "dashed", col = "blue") +
@@ -265,6 +265,9 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
 #' @param thresh Pvalue (in -log10 scale) based on which to select pathways for
 #' plotting. If NULL, all pathways will be plotted. Only use if \code{n_path}
 #' is not used.
+#' @param file_name Optional. Character string with a file name. If used, the
+#' plot will be saved in a file with the specified name, as well as returned
+#' as an object.
 #'
 #' @param ... Any other ggplot2 parameters.
 #'
@@ -273,7 +276,8 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
 #' @export
 
 gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
-                          n_path = 20, thresh = NULL, colours = NULL, ...) {
+                          n_path = 20, thresh = NULL, colours = NULL, file_name,
+                          ...) {
   # sanity checks
   # check that either n_path or thresh are set
   if(!is.null(n_path) && !is.null(thresh)) {
@@ -317,6 +321,10 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
         axis.text.y = element_text(size = 120),
         axis.text.x = element_text(size = 100),
         panel.grid.major = element_line(color = "black"))
+  
+  if (!is.null(file_name)) {
+    ggsave(p, file = file_name)
+  }
 
   return(p)
 }
