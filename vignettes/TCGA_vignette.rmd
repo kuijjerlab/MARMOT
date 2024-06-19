@@ -35,6 +35,7 @@ devtools::load_all("/storage/kuijjerarea/romana/TCGAmofa/MOFAnet/")
 library(tidyverse)
 library(preprocessCore)
 library(RColorBrewer)
+library(msigdbr)
 ```
 
 # Preparing data
@@ -45,6 +46,9 @@ setwd(wd)
 
 # specify data directory
 data_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/"
+
+# specify directory with clinical data
+clin_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/clinical/"
 
 # defining vector of cancer names for which to do the analysis
 cancers <- c("aml", "breast", "colon", "gbm", "kidney", "liver", "lung",
@@ -88,7 +92,7 @@ for (cancer in cancers) {
 ```{r prepare_surv}
 for (cancer in cancers) {
   print(cancer)
-  clin <- paste0("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/clinical/", cancer)
+  clin <- paste0(clin_dir, cancer)
   # kidney just gotta be special
   if (cancer == "kidney") {
     surv <- prepare_surv(clinical = clin, feature_names = list(sample_id = "submitter_id.samples", 
@@ -388,5 +392,63 @@ dev.off()
 
 ```{r diff_indeg_liver}
 # load data
-load("liver_omics_no_pca.Rda")
+indeg <- get(load("liver_omics_no_pca.Rda"))[["indegree"]]
+clin <- read.table(paste0(clin_dir, "liver"), sep = "\t", head = TRUE)
+colnames(clin)[1] <- "sample_id"
+clin$sample_id <- gsub("-", "\\.", clin$sample_id)
+load("liver_surv.Rda")
+load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
+load("MOFA_liver_pca_both.Rda")
+
+# get significant factors
+sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
+Z <- get_factors(mofa_both)[[1]]
+Z <- as.data.frame(Z[, sig$factor])
+
+# run with limma and no covariate correction
+file_names <- paste0(rep("diff_indeg_liver_limma_", ncol(Z)), colnames(Z), ".Rda")
+
+# Apply differential_analysis to each column of Z with corresponding file name
+diff <- Map(function(x, file_name) {
+  factor <- setNames(x, rownames(Z))
+  differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
+  file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis",
+                                        "gender"), sample_label = "sample_id")
+}, Z, file_names)
+
+```
+
+```{r diff_indeg_liver_gsea}
+# get pathways
+hallmark <- msigdbr(species = "human", category = "H")
+hallmark <- as.data.frame(cbind(hallmark$gs_name,hallmark$human_gene_symbol))
+colnames(hallmark) <- c("gs_name", "human_gene_symbol")
+
+# make pathway names lowercase
+hallmark$gs_name <- tolower(hallmark$gs_name)
+
+# remove the "hallmark" before every path name
+hallmark$gs_name <- gsub("hallmark_","",hallmark$gs_name)
+
+hallmark <- split(hallmark$human_gene_symbol, hallmark$gs_name)
+
+file_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z), ".Rda")
+
+# run gsea
+gsea_res <- Map(function(x, file_name) {
+  perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name,
+  limma = TRUE)}, diff, file_names)
+```
+
+```{r plot_diff_gsea_results}
+titles <- names(gsea_res)
+file_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z), ".pdf")
+
+Map(function(x, title, file_name) {
+  # Remove list element name prefix if present
+  colnames(x) <- sub(".*\\.", "", colnames(x))
+
+  gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "hallmark",
+  title = title, file_name = file_name, n_path = NULL, thresh = 1.30103)
+}, gsea_res, titles, file_names)
 ```
