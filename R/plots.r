@@ -296,7 +296,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
     col <- colours
   }
 
-  df <- data.frame(gsea_res)
+  df <- data.frame(gsea_results)
   df$logp <- -log10(gsea_results$padj)
 
   #order pathway fct by the gsea signif
