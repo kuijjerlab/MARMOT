@@ -323,7 +323,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
         panel.grid.major = element_line(color = "black"))
   
   if (!is.null(file_name)) {
-    ggsave(p, file = file_name)
+    ggsave(p, file = file_name, ...)
   }
 
   return(p)
