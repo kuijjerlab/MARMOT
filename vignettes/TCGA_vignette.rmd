@@ -158,6 +158,7 @@ for (cancer in cancers) {
 }
 ```
 
+# surv analysis for all cancers
 
 ```{r surv_assoc_bench}
 # with old code for now
@@ -361,6 +362,8 @@ for(i in model_comp){
 }
 ```
 
+# liver analysis
+
 ```{r clin_association_liver}
 clin <- read.table(paste0(clin_dir, "liver"), head = T, sep ="\t")
 #clin$sampleID <- gsub("-", "\\.", clin$sampleID)
@@ -389,6 +392,8 @@ p <- plot_clin_association(association)
 print(p)
 dev.off()
 ```
+
+# differential indegree analysis
 
 ```{r diff_indeg_liver}
 # load data
@@ -449,4 +454,26 @@ plots <- Map(function(x, title, file_name, ...) {
   title = title, file_name = file_name, n_path = NULL, thresh = 1.30103,
   width = 50, height = 80, limitsize = FALSE)
 }, gsea_res, titles, file_names)
+```
+
+# outdegree analysis
+
+```{r features_mapping_liver}
+# load data
+out <- get(load("liver_omics_no_pca.Rda"))[["outdegree"]]
+load("MOFA_liver_pca_both.Rda")
+load("liver_omics_pca_results.Rda")
+
+# get MOFA weights
+mofa_weights <- get_weights(mofa_both)
+
+mapped_wts <- Map(function(x, pca_wts) {
+  map_wts(fct_weights = x, pca_weights = pca_wts)
+}, mofa_weights, omics_pca)
+
+save(mapped_wts, file = "liver_mapped_feat_wts.Rda")
+```
+
+```{r plot_feature_weights}
+
 ```
