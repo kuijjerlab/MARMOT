@@ -396,3 +396,34 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 
   return(p)
 }
+
+#' @name plot_feat_wts
+#'
+#' @description Function to plot feature weights.
+#'
+#' @param feat_wts Matrix with omic feature weights.
+#' @param fct Numeric. Indicates which factors should be plotted. It is assumed
+#' that each column of the omic matrix is one factor.
+#' @param n_feat Number of top features to label.
+#' @param manual_lab Character vector of feature names to manually label.
+#' Will be checked against omic rownames.
+#' @param ... Any other parameters of ggplot functions.
+#'
+#' @returns A ggplot object.
+#' @export 
+
+plot_feat_wts <- function(feat_wts, fct, n_feat = 10, manual_lab = NULL,  ...) {
+  # get factors of interest
+  if (!is.null(fct)) {
+    feat_wts[, fct]
+  }
+
+  # check that manual labels exist in the data
+  if (!is.null(manual_lab)) {
+    .check_names(manual_lab, rownames(feat_wts),
+                 error = "features marked for manual labelling exist in the omic data") #nolint
+  }
+
+
+ 
+}
