@@ -66,7 +66,7 @@ map_weights_to_features <- function(jdr_methods = c("MOFA", "JIVE", "RGCCA", "MC
   dimensions <- c()
 
   for (j in omics) {
-    loadings <- PCA_weights[[j]]@loadings
+    loadings <- pca_weights[[j]]@loadings
     #selecting only the PCs used in the mofa analysis
     loadings <- loadings[,1:nrow(weights[[j]])]
     # matrix multiplication between the PCA loadings and the factor weights
@@ -75,7 +75,7 @@ map_weights_to_features <- function(jdr_methods = c("MOFA", "JIVE", "RGCCA", "MC
 
 
     #change the expectations (i.e. actual weight values)
-    MOFAobject@expectations$W[[j]] <- feat_wts[[j]]
+    mofa_object@expectations$W[[j]] <- feat_wts[[j]]
 
     #get new feature metadata
     view_metadata <- data.frame(feature = rownames(feat_wts[[j]]), view = rep(j, nrow(feat_wts[[j]])))
@@ -86,12 +86,12 @@ map_weights_to_features <- function(jdr_methods = c("MOFA", "JIVE", "RGCCA", "MC
     
     
     #replace feature metadata
-    MOFAobject@features_metadata <- metadata
+    mofa_object@features_metadata <- metadata
     
     #replace dimensions
-    MOFAobject@dimensions$D <- dimensions
+    mofa_object@dimensions$D <- dimensions
   }
   
-  names(MOFAobject@dimensions$D) <- omics
-  return(MOFAobject)
+  names(mofa_object@dimensions$D) <- omics
+  return(mofa_object)
 }
