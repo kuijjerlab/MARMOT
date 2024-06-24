@@ -276,8 +276,8 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
 #' @export
 
 gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
-                          n_path = 20, thresh = NULL, colours = NULL, file_name,
-                          ...) {
+                          n_path = 20, thresh = NULL, colours = NULL,
+                          file_name = NULL, ...) {
   # sanity checks
   # check that either n_path or thresh are set
   if(!is.null(n_path) && !is.null(thresh)) {
@@ -402,28 +402,107 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @description Function to plot feature weights.
 #'
 #' @param feat_wts Matrix with omic feature weights.
-#' @param fct Numeric. Indicates which factors should be plotted. It is assumed
-#' that each column of the omic matrix is one factor.
+#' @param fct Character vector indicating the names of the factors to be plotted.
+#' If \code{NULL}, all factors will be plotted.
 #' @param n_feat Number of top features to label.
 #' @param manual_lab Character vector of feature names to manually label.
-#' Will be checked against omic rownames.
-#' @param ... Any other parameters of ggplot functions.
+#' Will be checked against omic rownames. Overrides \code{n_feat}.
+#' @param scale Logical. Whether to scale the feature weight between c(-1,1).
+#' @param ... Any other parameters of \code{ggplot} functions.
 #'
 #' @returns A ggplot object.
-#' @export 
+#' @export
+#' @import dplyr ggplot2, tidyr
+#' @importFrom magrittr %>%
 
-plot_feat_wts <- function(feat_wts, fct, n_feat = 10, manual_lab = NULL,  ...) {
-  # get factors of interest
-  if (!is.null(fct)) {
-    feat_wts[, fct]
-  }
-
+plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
+                          scale = TRUE, file_name = NULL, ...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
                  error = "features marked for manual labelling exist in the omic data") #nolint
   }
+  
+  # reshape for plotting
+  df <- reshape2::melt(feat_wts)
+  colnames(df) <- c("feature", "factor", "value")
+  
+  # get factors of interest
+  if (!is.null(fct)) {
+    df <- df %>% filter(factor %in% fct)
+  }
 
+  # scale by weight with highest absolute value
+  if (scale) df$value <- df$value/max(abs(df$value))
 
- 
+  # add labelling groups
+  df$to_label <- FALSE
+
+  # Define group of features to color according to the loading
+  if (is.null(manual_lab) && n_feat > 0) {
+    for (i in colnames(feat_wts)) {
+      features <- df[df$factor == i, ] %>% top_n(n = n_feat, abs(value))
+      features <- features$feature
+      df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
+    }
+  }
+  
+  # Define group of features to label manually
+  if (!is.null(manual_lab)) {
+    for (i in colnames(feat_wts)) {
+      features <- df[df$factor == i, ] %>% filter(feature %in% manual_lab)
+      df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
+
+    }
+  }
+
+  # Sort features by weight
+  df <- df %>%
+  group_by(factor) %>%
+  arrange(feature, value) %>%
+  ungroup()
+  
+  df$feature_id <- paste(df$feature, df$factor, sep="_")
+  df$feature_id <- factor(df$feature_id, levels = unique(df$feature_id[order(df$value)]))
+
+  p <- ggplot(df, aes(x = value, y = feature_id), ...) +
+    geom_point() +
+    scale_y_discrete(expand = c(0.03, 0.03)) +
+    labs(x = "Weight", y = "Rank", size = 10) +
+    theme_minimal() +
+    theme(
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank()
+    )
+
+  # Add labels
+  if (n_feat > 0 || length(unique(df$to_label)) > 0) {
+    p <- p + ggrepel::geom_text_repel(
+      data = df[df$to_label != FALSE, ],
+      aes(label = feature, col = to_label),
+      size = 3, segment.alpha = 0.25, segment.color = "black",
+      segment.size = 0.3, show.legend = FALSE, max.overlaps = Inf)
+  }
+
+  # configure axes
+  if (scale) {
+    p <- p + 
+      coord_cartesian(xlim = c(-1, 1)) +
+      scale_x_continuous(breaks = c(-1, 0, 1)) +
+      expand_limits(x = c(-1, 1))
+  }
+
+  # Define dot size
+  p <- p + scale_size_manual(values=c(2/2, 2*2)) + guides(size = "none")
+
+  # Facet if multiple factors
+  if (ncol(feat_wts) > 1) {
+    p <- p + facet_wrap(~factor, nrow = 1, scales = "free")
+  }
+
+  if (!is.null(file_name)) {
+    ggsave(p, file = file_name, ...)
+  }
+
+  return(p)
 }
