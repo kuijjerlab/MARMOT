@@ -119,7 +119,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     dat <- as.matrix(data.table::fread(file, drop = 1))
 
     # reading the first column separately and setting as row names
-    rows <- data.table::fread(file, select = 1, colClasses = "character")$V1
+    rows <- data.table::fread(file, select = 1, colClasses = "character")[, 1]
     rownames(dat) <- rows
 
     return(dat)
