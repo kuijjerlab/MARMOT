@@ -406,8 +406,10 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' If \code{NULL}, all factors will be plotted.
 #' @param n_feat Number of top features to label.
 #' @param manual_lab Character vector of feature names to manually label.
-#' Will be checked against omic rownames. Overrides \code{n_feat}.
+#' Will be checked against omic rownames.
 #' @param scale Logical. Whether to scale the feature weight between c(-1,1).
+#' @param thresh Numeric. Weight threshold above which to label features.
+#' Absolute value will be considered.  
 #' @param ... Any other parameters of \code{ggplot} functions.
 #'
 #' @returns A ggplot object.
@@ -416,7 +418,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @importFrom magrittr %>%
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
-                          scale = TRUE, file_name = NULL, ...) {
+                          scale = TRUE, file_name = NULL, thresh = NULL,...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
@@ -445,14 +447,21 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
       features <- features$feature
       df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
     }
-  }
-  
-  # Define group of features to label manually
-  if (!is.null(manual_lab)) {
+  } else if (!is.null(manual_lab) && n_feat > 0) {
     for (i in colnames(feat_wts)) {
       features <- df[df$factor == i, ] %>% filter(feature %in% manual_lab)
+      features <- c(features, df[df$factor == i, ] %>%
+                    top_n(n = n_feat, abs(value)))
       df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
 
+    }
+  }
+
+  # add anything above threshhold if specified
+  if (!is.null(thresh)) {
+    for (i in colnames(feat_wts)) {
+      features <- df[df$factor == i, ] %>% filter(feature >= thresh)
+      df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
     }
   }
 
@@ -505,4 +514,60 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   }
 
   return(p)
+}
+
+#' @name top_surv_factors_km
+#' @description Plots Kaplan-Meier curves for the significantly associated
+#' survival factors (identified in surv_compare)
+#' @param surv Survival information as data frame.
+#' @param factor Factor name. Along with "model_label" it will form the plot title.
+#' @param model_label Along with "factor name" will form the plot title
+#' @param conf.int Whether or not to show confidence intervals. Will be passed to ggsurvplot.
+#' @param factor Vector containing the factor for which to do this.
+#' Only one factor at a time, call mutiple times for multiple factors.
+#' @returns A list containing KM plots for each significantly survival associated factor
+#' @export
+#' @import survminer ggplot2 survival
+surv_factor_km <- function(surv, factor, model_label, conf_int = FALSE) {
+
+  #colors to use
+  col <- palette("Dark2")
+
+  #factor name
+  fct <- colnames(factor)
+
+  # overlap samples
+  # Define the sets
+  sets <- list(
+    surv_samples = surv$sample_id,
+    factor_samples = names(factor)
+  )
+  # Compute the intersection of sets
+  samples <- .overlap_sets(sets)
+
+  factor <- factor[samples]
+  surv <- surv[which(surv$sample_id %in% samples), ]
+
+  #get cutpoint
+  df <- .fct_cutpoint(factor, surv)
+
+  fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
+
+  km <- survminer::ggsurvplot(fit, data = df,
+    conf.int = conf_int, pval = TRUE, pval.method = TRUE,
+    pval.coord = c(max(df$time) / 4, 0), fun = function(y) y * 100, palette = col,
+    strata = "FactorValue",
+    legend = "top",
+    xlab = "Time to last follow-up", ylab = "Survival probability (%)",
+    title = paste0(fct, "-", model_label)
+  )$plot +
+  # changing text font size
+  theme(
+        axis.text = element_text(size = 15),
+        legend.text = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        plot.title = element_text(size = 25)
+    )
+
+  return(km)
 }
