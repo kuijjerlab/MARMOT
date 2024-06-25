@@ -34,6 +34,8 @@
 #' mode. Can be one of c("slow", "medium", "fast").
 #' @param use_basilisk Logical. Whether basilisk should be used to automatically
 #' set up conda environment. Only needed when MOFA2 is used.
+#' @param save_factors Logical. Whether to save a list of the extracted factors
+#' in a separate file.
 #'
 #' @return A list of factorisations. Each element is the factorisation
 #' based on one JDR method.
@@ -46,25 +48,32 @@
 run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
                     n_fct = 5, seed = 42, convergence = "slow",
-                    use_basilisk = TRUE) {
+                    use_basilisk = TRUE, save_factors = TRUE) {
   # overlap samples if not already done
   if (!samples_overlap) {
     omic_fil <- .filter_omics(omic_list)
   }
 
   # initialise factorisation list
-  fct_list <- list()
+  model_list <- list()
+  if (save_factors) fct_list <- list()
 
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
     mofa_model <- .run_mofa2(omic_list, n_fct)
-    fct_list$MOFA <- mofa_model
+    model_list$MOFA <- mofa_model
+    if (save_factors) {
+      fct_list$MOFA <- MOFA2::get_factors(mofa_model)
+    }
   }
 
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
     jive_model <- .run_jive(omic_list, n_fct)
-    fct_list$JIVE <- jive_model
+    model_list$JIVE <- jive_model
+    if (save_factors) {
+      fct_list$MOFA <- MOFA2::get_factors(mofa_model)
+    }
   }
 
   # run RGCCA
