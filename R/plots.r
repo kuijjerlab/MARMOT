@@ -459,10 +459,10 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 
   # add anything above threshhold if specified
   if (!is.null(thresh)) {
-    for (i in colnames(feat_wts)) {
-      features <- df[df$factor == i, ] %>% filter(abs(feature) >= thresh)
-      df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
-    }
+    df <- df %>%
+    group_by(factor) %>%
+    mutate(to_label = ifelse(abs(value) >= thresh, TRUE, to_label)) %>%
+    ungroup()
   }
 
   # Sort features by weight
@@ -471,7 +471,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   arrange(feature, value) %>%
   ungroup()
   
-  df$feature_id <- paste(df$feature, df$factor, sep="_")
+  df$feature_id <- paste(df$feature, df$factor, sep = "_")
   df$feature_id <- factor(df$feature_id, levels = unique(df$feature_id[order(df$value)]))
 
   p <- ggplot(df, aes(x = value, y = feature_id), ...) +
