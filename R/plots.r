@@ -409,7 +409,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' Will be checked against omic rownames.
 #' @param scale Logical. Whether to scale the feature weight between c(-1,1).
 #' @param thresh Numeric. Weight threshold above which to label features.
-#' Absolute value will be considered.  
+#' Absolute value will be considered.
 #' @param ... Any other parameters of \code{ggplot} functions.
 #'
 #' @returns A ggplot object.
@@ -418,7 +418,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @importFrom magrittr %>%
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
-                          scale = TRUE, file_name = NULL, thresh = NULL,...) {
+                          scale = TRUE, file_name = NULL, thresh = NULL, ...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
@@ -460,7 +460,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   # add anything above threshhold if specified
   if (!is.null(thresh)) {
     for (i in colnames(feat_wts)) {
-      features <- df[df$factor == i, ] %>% filter(feature >= thresh)
+      features <- df[df$factor == i, ] %>% filter(abs(feature) >= thresh)
       df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
     }
   }
