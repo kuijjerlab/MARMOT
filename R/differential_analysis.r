@@ -51,6 +51,11 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
     .check_names(sample_label, colnames(clin),
                  err_msg = "sample_label exists in the clinical data")
 
+    # check that sample names for survival and clinical are the same
+    .check_names(clin[, sample_label], surv[, sample_label], partial = TRUE,
+               err_msg = "sample names are the same in clinical and survival data") # nolint
+
+
     # check that limma is selected as the method
     if (!limma) {
       stop("Limma must be used for covariate correction.")
@@ -62,10 +67,6 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
       stop("Covariates is NULL. Please provide the names of covariates you wish to correct for.") # nolint
     }
   }
-
-  # check that sample names for survival and clinical are the same
-  .check_names(clin[, sample_label], surv[, sample_label], partial = TRUE,
-               err_msg = "sample names are the same in clinical and survival data") # nolint
 
   # overlap samples
   # Define the sets
