@@ -288,9 +288,10 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
     col <- col[c(3, 4)]
+    col <- append(col, "white", after = 1)
   } else {
-       if (length(colours) != 2) {
-      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+       if (length(colours) != 3) {
+      stop(paste0(length(colours), " colours were specified, when 3 were expected. ",
       "Please make sure you specify the correct number of colours."))
     }
     col <- colours
@@ -312,7 +313,8 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES)) +
    geom_point(data = df, aes(size = abs(NES) * 25)) +
    scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
-   scale_color_gradientn(colours = col, name = "NES") +
+   scale_color_gradient2(low = col[1], mid = col[2], high = col[3],midpoint = 0,
+                         name = "NES") +
    labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
    theme_bw() +
    theme(text = element_text(size = 100),
