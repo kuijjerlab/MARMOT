@@ -41,32 +41,39 @@ library(msigdbr)
 # Preparing data
 ```{r params}
 # setting working directory
-wd <- "/storage/kuijjerarea/romana/TCGAmofa/june_2024_run"
+#wd <- "/storage/kuijjerarea/romana/TCGAmofa/june_2024_run"
+wd <- "/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/gep_liver"
 setwd(wd)
 
 # specify data directory
-data_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/"
+#data_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/"
+data_dir <- "/storage/kuijjerarea/romana/TCGAmofa/liver_val_old"
 
 # specify directory with clinical data
-clin_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/clinical/"
+#clin_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/clinical/"
+clin_dir <- data_dir
 
 # defining vector of cancer names for which to do the analysis
-cancers <- c("aml", "colon", "gbm", "kidney", "liver", "lung",
-            "melanoma", "ovarian", "sarcoma")
+#cancers <- c("aml", "colon", "gbm", "kidney", "liver", "lung",
+#            "melanoma", "ovarian", "sarcoma")
+cancers <- "liver"
 
 model <- c("nonet", "indeg", "out", "both")
 
 # define vector of omic names that will be used
-omic_names <- c("expression", "methylation", "miRNA", "indegree", "outdegree")
+#omic_names <- c("expression", "methylation", "miRNA", "indegree", "outdegree")
+omic_names <- c("expression", "indegree", "outdegree")
 ```
 ```{r prepare_data}
 # prepare data for JDR
 for (cancer in cancers) {
     print(cancer)
     # get omic file names
+#    files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
+#               c("log_exp", "methy", "log_mirna",
+#               "indegree_quant.RData", "outdegree.RData")))
     files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
-               c("log_exp", "methy", "log_mirna",
-               "indegree_quant.RData", "outdegree.RData")))
+               c("log_exp", "indegree_quant.RData", "outdegree.RData")))
 
     # normalise indegrees
     if (!file.exists(files[4])) {
@@ -466,7 +473,7 @@ Z <- get_factors(mofa_both)[[1]]
 Z <- as.data.frame(Z[, sig$factor])
 
 # plot km
-file_names <- paste0(rep("liver_km_", ncol(Z)), colnames(Z), ".Rda")
+file_names <- paste0(rep("figures/liver_km_", ncol(Z)), colnames(Z), ".pdf")
 
 plots <- Map(function(factor, file_name) {
   factor <- setNames(factor, rownames(Z))
