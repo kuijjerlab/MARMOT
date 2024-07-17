@@ -266,7 +266,7 @@ for (cancer in cancers) {
   mofa_out <- run_mofa2(data_out, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_out, file = paste0("MOFA_", cancer, "_pca_out.Rda"))
   
-  # with indeg
+  # with both
   data_both <- omics
   mofa_both <- run_mofa2(data_both, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_both, file = paste0("MOFA_", cancer, "_pca_both.Rda"))
@@ -533,4 +533,95 @@ plots <- Map(function(feat, title, file_name, ...) {
   width = 7, height = 10, limitsize = FALSE)
 }, mapped_wts, omic_names, file_names)
 
+```
+
+# randomising mofa seeds
+
+```{r randomise_mofa_seed}
+# set directory
+seed_dir <- paste0(wd, "/seed_variations/")
+setwd(seed_dir)
+
+# set random seed
+seeds <- sample.int(100, 5)
+
+for (seed in seeds) {
+  for (cancer in cancers) {
+    load(paste0(wd, "/", cancer, "_omics_pca.Rda"))
+
+    #nonet
+    #data_nonet <- omics[1:3]
+    data_nonet <- omics[1]
+    mofa_nonet <- run_mofa2(data_nonet, n_fct = 5, seed = seed, convergence = "slow", use_basilisk = T)
+    save(mofa_nonet, file = paste0("MOFA_", cancer, "_pca_nonet_", seed, ".Rda"))
+
+    # with both
+    data_both <- omics
+    mofa_both <- run_mofa2(data_both, n_fct = 5, seed = seed, convergence = "slow", use_basilisk = T)
+    save(mofa_both, file = paste0("MOFA_", cancer, "_pca_both_", seed, ".Rda"))
+  }
+}
+
+save(seeds, file = "random_seeds.Rda")
+```
+
+```{r surv_random_seed}
+seed_dir <- paste0(wd, "/seed_variations/")
+setwd(seed_dir)
+load("random_seeds.Rda")
+
+for (seed in seeds) {
+  surv_df <- data.frame()
+for (i in cancers) {
+  # load mofa models
+  nonet <- get(load(paste0("MOFA_", i, "_pca_nonet_", seed, ".Rda")))
+  both <- get(load(paste0("MOFA_", i, "_pca_both_", seed, ".Rda")))
+
+  # get surv data
+  load(paste0(wd, "/", i, "_surv.Rda"))
+
+  # getting factors
+  nonet_fct <- get_factors(nonet)[[1]]
+  both_fct <- get_factors(both)[[1]]
+
+  cox <- surv_association(nonet_fct, surv, univariate = TRUE)
+  cox_b <- surv_association(both_fct, surv, univariate = TRUE)
+
+  df <- surv_compare(models = list(cox, cox_b),
+                     model_labels = model[c(1, 4)], univariate = TRUE,
+                     method = method)
+
+  df$cancer <- i
+
+  surv_df <- rbind(surv_df, df)
+
+  cox_all <- list(cox, cox_b)
+  names(cox_all) <- c("nonet", "both")
+
+  save(cox_all, file = paste0(i,"_cox_models_PCA_quant_", seed, ".Rda"))
+
+}
+
+save(surv_df, file = paste0("TCGA_MOFA_surv_df_all_PCA_quant_", seed, ".Rda"))
+}
+```
+
+```{r surv_compare_random_seed}
+seed_dir <- paste0(wd, "/seed_variations/")
+setwd(seed_dir)
+load("random_seeds.Rda")
+
+for (seed in seeds) {
+  # generate comparison plots
+  if (!exists("surv_df")) {
+    load(paste0("TCGA_MOFA_surv_df_all_PCA_quant_", seed, ".Rda"))
+  }
+
+  models_to_compare <- c("nonet", "both")
+  p <- surv_compare_dotplot(surv_df = surv_df, models_to_compare = models_to_compare)
+
+  ggsave(p, file=paste0("figures/surv_compare_",models_to_compare[2],"_bee_5_PCA_quant_", seed, ".png"))
+  ggsave(p, file=paste0("figures/surv_compare_",models_to_compare[2],"_bee_5_PCA_quant_", seed, ".pdf"))
+  
+}
 ```
