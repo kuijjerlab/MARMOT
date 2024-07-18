@@ -550,8 +550,7 @@ for (seed in seeds) {
     load(paste0(wd, "/", cancer, "_omics_pca.Rda"))
 
     #nonet
-    #data_nonet <- omics[1:3]
-    data_nonet <- omics[1]
+    data_nonet <- omics[1:3]
     mofa_nonet <- run_mofa2(data_nonet, n_fct = 5, seed = seed, convergence = "slow", use_basilisk = T)
     save(mofa_nonet, file = paste0("MOFA_", cancer, "_pca_nonet_", seed, ".Rda"))
 
@@ -572,35 +571,34 @@ load("random_seeds.Rda")
 
 for (seed in seeds) {
   surv_df <- data.frame()
-for (i in cancers) {
-  # load mofa models
-  nonet <- get(load(paste0("MOFA_", i, "_pca_nonet_", seed, ".Rda")))
-  both <- get(load(paste0("MOFA_", i, "_pca_both_", seed, ".Rda")))
+  for (i in cancers) {
+    # load mofa models
+    nonet <- get(load(paste0("MOFA_", i, "_pca_nonet_", seed, ".Rda")))
+    both <- get(load(paste0("MOFA_", i, "_pca_both_", seed, ".Rda")))
 
-  # get surv data
-  load(paste0(wd, "/", i, "_surv.Rda"))
+    # get surv data
+    load(paste0(wd, "/", i, "_surv.Rda"))
 
-  # getting factors
-  nonet_fct <- get_factors(nonet)[[1]]
-  both_fct <- get_factors(both)[[1]]
+    # getting factors
+    nonet_fct <- get_factors(nonet)[[1]]
+    both_fct <- get_factors(both)[[1]]
 
-  cox <- surv_association(nonet_fct, surv, univariate = TRUE)
-  cox_b <- surv_association(both_fct, surv, univariate = TRUE)
+    cox <- surv_association(nonet_fct, surv, univariate = TRUE)
+    cox_b <- surv_association(both_fct, surv, univariate = TRUE)
 
-  df <- surv_compare(models = list(cox, cox_b),
+    df <- surv_compare(models = list(cox, cox_b),
                      model_labels = model[c(1, 4)], univariate = TRUE,
                      method = method)
 
-  df$cancer <- i
+    df$cancer <- i
 
-  surv_df <- rbind(surv_df, df)
+    surv_df <- rbind(surv_df, df)
 
-  cox_all <- list(cox, cox_b)
-  names(cox_all) <- c("nonet", "both")
+    cox_all <- list(cox, cox_b)
+    names(cox_all) <- c("nonet", "both")
 
-  save(cox_all, file = paste0(i,"_cox_models_PCA_quant_", seed, ".Rda"))
-
-}
+    save(cox_all, file = paste0(i,"_cox_models_PCA_quant_", seed, ".Rda"))
+  }
 
 save(surv_df, file = paste0("TCGA_MOFA_surv_df_all_PCA_quant_", seed, ".Rda"))
 }
