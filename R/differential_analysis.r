@@ -92,7 +92,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   omic <- omic[, samples]
 
   # define groups
-  df <- .fct_cutpoint(factor = factor, surv)
+  df <- .fct_cutpoint(factor = factor, surv, minprop = minprop)
 
   if (!is.null(covariates)) {
     # grab covariates
@@ -131,7 +131,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 #' @param factor Factor based on which to split the cohort. Expects a matrix.
 #' @returns Data frame containing the information about the two survival groups.
 
-.fct_cutpoint <- function(factor, surv, minprop = 0.1) {
+.fct_cutpoint <- function(factor, surv, minprop) {
   # get samples
   samples <- surv$sample_id
 
