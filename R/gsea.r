@@ -55,6 +55,24 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
   return(gsea_res)
 }
 
+#' @name select_stable_path
+#' @description Function that takes multiple gsea results and selects
+#' pathways that are common to all of them.
+#' @param gsea_res A list of dataframe outputs of \code{\link{fgsea::fgsea}}
+#'
+#' @returns A list with the subsetted data frames.
+
+select_stable_path <- function(gsea_res) {
+  # find common pathways
+  common_path <- purrr::reduce(gsea_res, ~ dplyr::inner_join(.x$pathway,
+                                                            .y$pathway))$pathway
+
+  # subset to only common pathways
+  gsea_subset <- purrr::map(df_list, ~ filter(.x, psthway %in% common_path))
+
+  return(gsea_subset)
+}
+
 #' @name .create_rank
 #' @description Function to create ranks either from limma or wilcox tests for
 #' GSEA. For limma, it simply extracts the test statistic. For wilcox, it
