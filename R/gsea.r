@@ -64,11 +64,10 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
 
 select_stable_path <- function(gsea_res) {
   # find common pathways
-  common_path <- purrr::reduce(gsea_res, ~ dplyr::inner_join(.x$pathway,
-                                                            .y$pathway))$pathway
+  common_path <- purrr::reduce(gsea_res, ~ dplyr::inner_join(.x, .y))$pathway
 
   # subset to only common pathways
-  gsea_subset <- purrr::map(df_list, ~ filter(.x, psthway %in% common_path))
+  gsea_subset <- purrr::map(gsea_res, ~ filter(.x, pathway %in% common_path))
 
   return(gsea_subset)
 }
