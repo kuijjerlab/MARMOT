@@ -424,6 +424,7 @@ clin$sample_id <- gsub("-", "\\.", clin$sample_id)
 load("liver_surv.Rda")
 load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 load("MOFA_liver_pca_both.Rda")
+minprops <- c(0.1, 0.2, 0.3)
 
 # get significant factors
 sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
@@ -431,15 +432,17 @@ Z <- get_factors(mofa_both)[[1]]
 Z <- as.data.frame(Z[, sig$factor])
 
 # run with limma and no covariate correction
-file_names <- paste0(rep("diff_indeg_liver_limma_", ncol(Z)), colnames(Z), ".Rda")
+
+# Create the  file names
+base_names <- paste0("diff_indeg_liver_limma_", colnames(Z))
 
 # Apply differential_analysis to each column of Z with corresponding file name
-diff <- Map(function(x, file_name) {
-  factor <- setNames(x, rownames(Z))
-  differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
-  file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis",
-                                        "gender"), sample_label = "sample_id")
-}, Z, file_names)
+#diff <- Map(function(x, file_name) {
+#  factor <- setNames(x, rownames(Z))
+#  differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
+#  file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis",
+#                                        "gender"), sample_label = "sample_id")
+#}, Z, file_names)
 
 #diff <- Map(function(x, file_name) {
 #  factor <- setNames(x, rownames(Z))
@@ -447,11 +450,24 @@ diff <- Map(function(x, file_name) {
 #  file_name = file_name, sample_label = "sample_id")
 #}, Z, file_names)
 
-save(diff, file = "diff_indeg_liver_limma_all_fct.Rda")
+# trying this with varying minprop
+diff <- Map(function(x, base_name) {
+  Map(function(mp) {
+    factor <- setNames(x, rownames(Z))
+    file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
+    differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
+      file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis", "gender"),
+      sample_label = "sample_id", minprop = mp)
+  }, minprops)
+}, Z, base_names)
+
+save(diff, file = "diff_indeg_liver_limma_all_fct_minprop_var.Rda")
 ```
 
 ```{r diff_indeg_liver_gsea}
-load("diff_indeg_liver_limma_all_fct")
+load("diff_indeg_liver_limma_all_fct_minprop_var.Rda")
+minprops <- c(0.1, 0.2, 0.3)
+
 # get pathways
 hallmark <- msigdbr(species = "human", category = "H")
 hallmark <- as.data.frame(cbind(hallmark$gs_name,hallmark$human_gene_symbol))
@@ -465,13 +481,31 @@ hallmark$gs_name <- gsub("hallmark_","",hallmark$gs_name)
 
 hallmark <- split(hallmark$human_gene_symbol, hallmark$gs_name)
 
-file_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z), ".Rda")
+base_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z))
 
 # run gsea
-gsea_res <- Map(function(x, file_name) {
-  perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name,
-  limma = TRUE)}, diff, file_names)
-save(gsea_res, file = "liver_gsea_diff_all_fct.Rda")
+#gsea_res <- Map(function(x, file_name) {
+#  perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name,
+#  limma = TRUE)}, diff, file_names)
+
+# trying with minprop variation
+gsea_res <- Map(function(diff_sublist, base_name) {
+  Map(function(x, mp) {
+    file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
+    perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name, limma = TRUE)
+  }, diff_sublist, minprops)
+}, diff, base_names)
+
+save(gsea_res, file = "liver_gsea_diff_all_fct_minprop_var.Rda")
+```
+
+```{r path_select}
+load("liver_gsea_diff_all_fct_minprop_var.Rda")
+
+# select only pathways that are enriched across all 3 minprops
+stable_path <- Map(function(res) {
+  select_stable_path(res)
+}, gsea_res)
 ```
 
 ```{r plot_diff_gsea_results}
