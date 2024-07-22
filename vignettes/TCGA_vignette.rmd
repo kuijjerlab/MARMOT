@@ -504,20 +504,31 @@ load("liver_gsea_diff_all_fct_minprop_var.Rda")
 
 # select only pathways that are enriched across all 3 minprops
 stable_path <- Map(function(res) {
-  select_stable_path(res)
+  select_stable_path(res, thresh = 0.05)
 }, gsea_res)
+
+
+save(stable_path, file = "gsea_stable_path_across_minprop.Rda")
 ```
 
 ```{r plot_diff_gsea_results}
-load()
+load("liver_gsea_diff_all_fct.Rda")
+load("gsea_stable_path_across_minprop.Rda")
 titles <- names(gsea_res)
-file_names <- paste0(rep("figures/liver_gsea_diff_indeg_", ncol(Z)), colnames(Z), ".png")
+file_names <- paste0(rep("figures/liver_gsea_diff_indeg_", length(gsea_res)), names(gsea_res), "_stable_path.png")
+
+#get stable pathways across minprop
+path_names <- lapply(stable_path, function(x) x[[1]]$pathway)
+gsea_subset <- Map(function(x, path) {
+  sub <- intersect(x$pathway, path)
+  res <- x[which(x$pathway %in% sub), ]
+}, gsea_res, path_names)
 
 plots <- Map(function(x, title, file_name, ...) {
   gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "hallmark",
   title = title, file_name = file_name, n_path = NULL, thresh = 1.30103,
   width = 60, height = 80, limitsize = FALSE)
-}, gsea_res, titles, file_names)
+}, gsea_subset, titles, file_names)
 ```
 
 ```{r plot_KM_plots}
