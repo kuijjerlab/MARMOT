@@ -59,15 +59,21 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
 #' @description Function that takes multiple gsea results and selects
 #' pathways that are common to all of them.
 #' @param gsea_res A list of dataframe outputs of \code{\link{fgsea::fgsea}}
+#' @param thresh P-value threshold for significance.
 #'
 #' @returns A list with the subsetted data frames.
+#' @export
 
-select_stable_path <- function(gsea_res) {
+select_stable_path <- function(gsea_res, thresh) {
+  # select only significant pathways
+  gsea_sig <- purrr::map(gsea_res, ~ filter(.x, padj <= thresh))
+
   # find common pathways
-  common_path <- purrr::reduce(gsea_res, ~ dplyr::inner_join(.x, .y))$pathway
+  common_path <- purrr::reduce(gsea_sig, function(x, y) inner_join(x, y, by = "pathway")) %>% 
+                 dplyr::pull(pathway)
 
   # subset to only common pathways
-  gsea_subset <- purrr::map(gsea_res, ~ filter(.x, pathway %in% common_path))
+  gsea_subset <- purrr::map(gsea_sig, ~ filter(.x, pathway %in% common_path))
 
   return(gsea_subset)
 }
