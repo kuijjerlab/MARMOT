@@ -506,7 +506,7 @@ save(gsea_res, file = "liver_gsea_diff_all_fct_minprop_var_react.Rda")
 ```
 
 ```{r path_select}
-load("liver_gsea_diff_all_fct_minprop_var.Rda")
+load("liver_gsea_diff_all_fct_minprop_var_react.Rda")
 
 # select only pathways that are enriched across all 3 minprops
 stable_path <- Map(function(res) {
@@ -514,14 +514,16 @@ stable_path <- Map(function(res) {
 }, gsea_res)
 
 
-save(stable_path, file = "gsea_stable_path_across_minprop.Rda")
+save(stable_path, file = "gsea_stable_path_across_minprop_react.Rda")
 ```
 
 ```{r plot_diff_gsea_results}
-load("liver_gsea_diff_all_fct.Rda")
-load("gsea_stable_path_across_minprop.Rda")
+load("liver_gsea_diff_all_fct_minprop_var_react.Rda")
+load("gsea_stable_path_across_minprop_react.Rda")
+
+gsea_res <- lapply(gsea_res, function(x) x[[1]]) # only for the reactome ones cos I was too lazy to redo a non minprop one separately
 titles <- names(gsea_res)
-file_names <- paste0(rep("figures/liver_gsea_diff_indeg_", length(gsea_res)), names(gsea_res), "_stable_path.png")
+file_names <- paste0(rep("figures/liver_gsea_diff_indeg_", length(gsea_res)), names(gsea_res), "_stable_path_react.pdf")
 
 #get stable pathways across minprop
 path_names <- lapply(stable_path, function(x) x[[1]]$pathway)
@@ -531,9 +533,9 @@ gsea_subset <- Map(function(x, path) {
 }, gsea_res, path_names)
 
 plots <- Map(function(x, title, file_name, ...) {
-  gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "hallmark",
+  gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "reactome",
   title = title, file_name = file_name, n_path = NULL, thresh = 1.30103,
-  width = 60, height = 80, limitsize = FALSE)
+  width = 160, height = 180, limitsize = FALSE)
 }, gsea_subset, titles, file_names)
 ```
 
