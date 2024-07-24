@@ -469,19 +469,25 @@ load("diff_indeg_liver_limma_all_fct_minprop_var.Rda")
 minprops <- c(0.1, 0.2, 0.3)
 
 # get pathways
-hallmark <- msigdbr(species = "human", category = "H")
-hallmark <- as.data.frame(cbind(hallmark$gs_name,hallmark$human_gene_symbol))
-colnames(hallmark) <- c("gs_name", "human_gene_symbol")
+#hallmark <- msigdbr(species = "human", category = "H")
+#hallmark <- as.data.frame(cbind(hallmark$gs_name,hallmark$human_gene_symbol))
+#colnames(hallmark) <- c("gs_name", "human_gene_symbol")
+react <- msigdbr(species = "human", category = "C2", subcategory = "CP:REACTOME")
+react <- as.data.frame(cbind(react$gs_name, react$human_gene_symbol))
+colnames(react) <- c("gs_name", "human_gene_symbol")
 
 # make pathway names lowercase
-hallmark$gs_name <- tolower(hallmark$gs_name)
+#hallmark$gs_name <- tolower(hallmark$gs_name)
+react$gs_name <- tolower(react$gs_name)
 
 # remove the "hallmark" before every path name
-hallmark$gs_name <- gsub("hallmark_","",hallmark$gs_name)
+#hallmark$gs_name <- gsub("hallmark_","",hallmark$gs_name)
+react$gs_name <- gsub("reactome_","",react$gs_name)
 
-hallmark <- split(hallmark$human_gene_symbol, hallmark$gs_name)
+#hallmark <- split(hallmark$human_gene_symbol, hallmark$gs_name)
+react <- split(react$human_gene_symbol, react$gs_name)
 
-base_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z))
+base_names <- paste0(rep("liver_gsea_diff_indeg_", length(diff)), names(diff))
 
 # run gsea
 #gsea_res <- Map(function(x, file_name) {
@@ -491,12 +497,12 @@ base_names <- paste0(rep("liver_gsea_diff_indeg_", ncol(Z)), colnames(Z))
 # trying with minprop variation
 gsea_res <- Map(function(diff_sublist, base_name) {
   Map(function(x, mp) {
-    file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
-    perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name, limma = TRUE)
+    file_name <- paste0(base_name, "_minprop_", mp, "_react.Rda")
+    perform_gsea(diff_results = x, gene_set = react, file_name = file_name, limma = TRUE)
   }, diff_sublist, minprops)
 }, diff, base_names)
 
-save(gsea_res, file = "liver_gsea_diff_all_fct_minprop_var.Rda")
+save(gsea_res, file = "liver_gsea_diff_all_fct_minprop_var_react.Rda")
 ```
 
 ```{r path_select}
@@ -549,6 +555,7 @@ plots <- Map(function(factor, file_name) {
   ggsave(file = file_name)
 }, Z, file_names)
 ```
+
 # outdegree analysis
 
 ```{r features_mapping_liver}
