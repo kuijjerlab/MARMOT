@@ -23,8 +23,8 @@
 #' Only applies if limma is used.
 #' @param limma Whether limma should be used for the differential analysis.
 #' If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.
-#' @param minprop Numeric between c(0,1), indicating the minimum proportion of
-#' samples per group.
+#' @param minprop Numeric between c(0,0.5), indicating the minimum
+#' proportion of samples per group.
 #' @param save_file Logical. Whether to save the output as an RData file.
 #' @param file_name Optional. Character string with a file name. Only used if
 #' \code{save_file = TRUE}. If not provided, a generic name will be used.
