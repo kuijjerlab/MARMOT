@@ -589,6 +589,64 @@ plots <- Map(function(feat, title, file_name, ...) {
 
 ```
 
+```{r diff_out_liver}
+# load data
+indeg <- get(load("liver_omics_no_pca.Rda"))[["outdegree"]]
+clin <- read.table(paste0(clin_dir, "liver"), sep = "\t", head = TRUE)
+colnames(clin)[1] <- "sample_id"
+clin$sample_id <- gsub("-", "\\.", clin$sample_id)
+load("liver_surv.Rda")
+load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
+load("MOFA_liver_pca_both.Rda")
+minprops <- c(0.1, 0.2, 0.3)
+
+# get significant factors
+sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
+Z <- get_factors(mofa_both)[[1]]
+Z <- as.data.frame(Z[, sig$factor])
+
+# run with limma and no covariate correction
+
+# Create the  file names
+base_names <- paste0("diff_out_liver_limma_", colnames(Z))
+
+# Apply differential_analysis to each column of Z with corresponding file name
+#diff <- Map(function(x, file_name) {
+#  factor <- setNames(x, rownames(Z))
+#  differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
+#  file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis",
+#                                        "gender"), sample_label = "sample_id")
+#}, Z, file_names)
+
+#diff <- Map(function(x, file_name) {
+#  factor <- setNames(x, rownames(Z))
+#  differential_analysis(omic = indeg, factor = factor, surv = surv,
+#  file_name = file_name, sample_label = "sample_id")
+#}, Z, file_names)
+
+# trying this with varying minprop
+diff <- Map(function(x, base_name) {
+  Map(function(mp) {
+    factor <- setNames(x, rownames(Z))
+    file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
+    differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
+      file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis", "gender"),
+      sample_label = "sample_id", minprop = mp)
+  }, minprops)
+}, Z, base_names)
+
+save(diff, file = "diff_out_liver_limma_all_fct_minprop_var.Rda")
+```
+
+```{r out_volcano_plots}
+load("diff_out_liver_limma_all_fct_minprop_var.Rda")
+
+p <- volcano_plot(diff[[1]][[3]], labels = TRUE)
+
+ggsave(p, file = "figures/volcano_test.pdf")
+
+```
+
 # randomising mofa seeds
 
 ```{r randomise_mofa_seed}
