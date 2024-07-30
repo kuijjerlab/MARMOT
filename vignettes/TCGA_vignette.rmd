@@ -54,7 +54,7 @@ clin_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebo
 #clin_dir <- data_dir
 
 # defining vector of cancer names for which to do the analysis
-cancers <- c("aml", "colon", "gbm", "kidney", "liver", "lung",
+cancers <- c("aml", "breast", "colon", "gbm", "kidney", "liver", "lung",
             "melanoma", "ovarian", "sarcoma")
 #cancers <- "liver"
 
@@ -69,19 +69,19 @@ omic_names <- c("expression", "methylation", "miRNA", "indegree", "outdegree")
 for (cancer in cancers) {
     print(cancer)
     # get omic file names
-#    files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
-#               c("log_exp", "methy", "log_mirna",
-#               "indegree_quant.RData", "outdegree.RData")))
-    files <- c(paste0(rep(paste0(data_dir, "/"), 3),
-               c("exp_log.txt", "indegree_quant.RData", "outdegree.RData")))
+    files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
+               c("log_exp", "methy", "log_mirna",
+               "indegree_quant.RData", "outdegree.RData")))
+#    files <- c(paste0(rep(paste0(data_dir, "/"), 3),
+#               c("exp_log.txt", "indegree_quant.RData", "outdegree.RData")))
 
     # normalise indegrees
     if (!file.exists(files[4])) {
-        #load(paste0(data_dir, cancer, "/indegree.RData"))
-        load(paste0(data_dir, "/indegree.RData"))
+        load(paste0(data_dir, cancer, "/indegree.RData"))
+        #load(paste0(data_dir, "/indegree.RData"))
         indegree <- normalize.quantiles(as.matrix(indegree), copy = FALSE)
-        #save(indegree, file = paste0(data_dir, cancer, "/indegree_quant.RData"))
-        save(indegree, file = paste0(data_dir, "/indegree_quant.RData"))
+        save(indegree, file = paste0(data_dir, cancer, "/indegree_quant.RData"))
+        #save(indegree, file = paste0(data_dir, "/indegree_quant.RData"))
 
     }
 
@@ -113,12 +113,12 @@ for (cancer in cancers) {
                                                                 "days_to_last_follow_up.diagnoses")))
     surv$sample_id <- str_sub(surv$sample_id, end = -2)
   } else {
-    #surv <- prepare_surv(clinical = clin, feature_names = list(sample_id = "sampleID", 
-    #                                          vital_status = "vital_status",
-    #                                          time_to_event = c("days_to_death", "days_to_last_followup")))
-    surv <- prepare_surv(clinical = clin, feature_names = list(sample_id = "Run",
-                                              vital_status = "OS.event",
-                                              time_to_event = c("OS")))  
+    surv <- prepare_surv(clinical = clin, feature_names = list(sample_id = "sampleID", 
+                                              vital_status = "vital_status",
+                                              time_to_event = c("days_to_death", "days_to_last_followup")))
+    #surv <- prepare_surv(clinical = clin, feature_names = list(sample_id = "Run",
+     #                                         vital_status = "OS.event",
+      #                                        time_to_event = c("OS")))  
   }
 
   surv$sample_id <- gsub("-", "\\.", surv$sample_id)
@@ -237,7 +237,7 @@ for(i in method){
   surv_meth <- surv_df[which(surv_df$method == i),]
   models <- unique(surv_meth$label)
   p <- surv_compare_dotplot(surv_df = surv_meth, models_to_compare = models,
-                            colours = c(cols[1], "grey", "turquoise"))
+                            colours = c(cols[8], "grey", cols[6]))
   
   ggsave(p, file=paste0(wd,"/figures/surv_compare_PCA_",i,"_5fct.png"))
   ggsave(p, file=paste0(wd,"/figures/surv_compare_PCA_",i,"_5fct.pdf"))
@@ -291,8 +291,36 @@ for (cancer in cancers) {
 ```
 
 ```{r fct_corr}
-# load mofa models
-net <- get(load("MOFA_liver_"))
+corr_all <- list()
+corr_df <- data.frame()
+
+for (i in cancers) {
+  # load models
+  all <- get(load(paste0("MOFA_", i, "_pca_both.Rda")))
+  nonet <- get(load(paste0("MOFA_", i, "_pca_nonet.Rda")))
+
+  # get factors
+  all_fct <- get_factors(all)[[1]]
+  nonet_fct <- get_factors(nonet)[[1]]
+
+  corr <- fct_corr(all_fct, nonet_fct, labels = c("all", "no_networks"),
+                    as_data_frame = TRUE)
+  corr_all[[i]] <- corr
+
+  # reformat as data frame
+  df <- format_fct_corr(corr)
+  df$cancer <- i
+  corr_df <- rbind(corr_df, df)
+}
+
+save(corr_df, file = "view_exclusion_corr_df_indeg.Rda")
+save(corr_all, file = "view_exclusion_corr_indeg.Rda")
+
+q <- plot_fct_corr(corr_df)
+ggsave(q, file = paste0("figures/view_exclusion_heat_both.pdf"),
+       height = 10, width = 10)
+ggsave(q, file = paste0("figures/view_exclusion_heat_both.png"),
+       height = 10, width = 10)
 ```
 
 ```{r var_explained_heat}
@@ -393,9 +421,13 @@ if(!exists("surv_df")){
 #get models to compare
 model_comp <- setdiff(model, "nonet")
 
+#set colours
+cols <- palette("Dark2")
+
 for(i in model_comp){
   models_to_compare <- c("nonet", i)
-  p <- surv_compare_dotplot(surv_df = surv_df, models_to_compare = models_to_compare)
+  p <- surv_compare_dotplot(surv_df = surv_df, models_to_compare = models_to_compare, 
+                            colours = c(cols[8], "grey", cols[1]))
   
   ggsave(p, file=paste0(wd, "/figures/surv_compare_",models_to_compare[2],"_bee_5_PCA_quant.png"))
   ggsave(p, file=paste0(wd, "/figures/surv_compare_",models_to_compare[2],"_bee_5_PCA_quant.pdf"))
