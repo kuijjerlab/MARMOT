@@ -347,13 +347,13 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
 volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0.05) {
   #set axis parameters (breaks & labels)
   breaks <- c(seq(plyr::round_any(min(limma$logFC),round_to), plyr::round_any(max(limma$logFC), round_to), 
-                  plyr::round_any(max(abs(limma$logFC)),round_to)/4))
-  limits <- c(plyr::round_any(min(limma$logFC),round_to), 
-              plyr::round_any(max(limma$logFC),round_to))
+                  plyr::round_any(max(abs(limma$logFC)), round_to) / 4))
+  limits <- c(plyr::round_any(min(limma$logFC), round_to),
+              plyr::round_any(max(limma$logFC), round_to))
 
   #set fold change limits
   #set to be 1/10 of the max FC value
-  FClimit <- plyr::round_any(max(abs(limma$logFC)),round_to)/10
+  FClimit <- plyr::round_any(max(abs(limma$logFC)), round_to) / 10
 
   col <- palette("Dark2")
   #setting rules for colouring & shading
@@ -366,26 +366,26 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
   alphas <- c("up" = 1, "down" = 1, "ns" = 0.5)
 
   #pdf(file="volcano_test.pdf")
-  p <- ggplot(data=limma, aes(x = logFC,y = -log10(adj.P.Val), fill = gene_type,    
-                         size = gene_type, alpha = gene_type)) + 
+  p <- ggplot(data=limma, aes(x = logFC, y = -log10(adj.P.Val), fill = gene_type,
+                         size = gene_type, alpha = gene_type)) +
     geom_point(shape = 21, colour = "black")+
     geom_hline(yintercept = -log10(signif_thresh),
-               linetype = "dashed") + 
+               linetype = "dashed") +
     geom_vline(xintercept = c(-FClimit, FClimit),
                linetype = "dashed") +
-    scale_x_continuous(breaks = breaks, # Modify x-axis tick intervals    
-                      limits = limits)+
-    theme_classic()+
+    scale_x_continuous(breaks = breaks, # Modify x-axis tick intervals
+                      limits = limits) +
+    theme_classic() +
     scale_fill_manual(values = cols) + # Modify point colour
     scale_size_manual(values = sizes) + # Modify point size
     scale_alpha_manual(values = alphas)
   #dev.off()
 
   #determining features to be labeled
-  if(labels){
+  if (labels) {
     limma$genes <- rownames(limma)
-    top_feat<- limma[which(limma$adj.P.Val <= signif_thresh),]
-    top_feat <- top_feat[which(abs(top_feat$logFC) >= FClimit),]
+    top_feat <- limma[which(limma$adj.P.Val <= signif_thresh), ]
+    top_feat <- top_feat[which(abs(top_feat$logFC) >= FClimit), ]
 
     sig_genes <- limma %>%
       filter(genes %in% top_feat$genes)
@@ -406,12 +406,15 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @param feat_wts Matrix with omic feature weights.
 #' @param fct Character vector indicating the names of the factors to be plotted.
 #' If \code{NULL}, all factors will be plotted.
-#' @param n_feat Number of top features to label.
+#' @param n_feat Number of top features to label. Is overridden by \code{thresh}
 #' @param manual_lab Character vector of feature names to manually label.
 #' Will be checked against omic rownames.
 #' @param scale Logical. Whether to scale the feature weight between c(-1,1).
 #' @param thresh Numeric. Weight threshold above which to label features.
 #' Absolute value will be considered.
+#' @param plot_distribution If \code{TRUE}, this will show a distribution of the
+#' feature weights, annotating the top features. If \code{FALSE}, it will
+#' plot only the top features.
 #' @param ... Any other parameters of \code{ggplot} functions.
 #'
 #' @returns A ggplot object.
@@ -420,17 +423,18 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @importFrom magrittr %>%
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
-                          scale = TRUE, file_name = NULL, thresh = NULL, ...) {
+                          scale = TRUE, file_name = NULL, thresh = NULL,
+                          plot_distribution = FALSE, ...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
                  error = "features marked for manual labelling exist in the omic data") #nolint
   }
-  
+
   # reshape for plotting
   df <- reshape2::melt(feat_wts)
   colnames(df) <- c("feature", "factor", "value")
-  
+
   # get factors of interest
   if (!is.null(fct)) {
     df <- df %>% filter(factor %in% fct)
@@ -472,39 +476,76 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   group_by(factor) %>%
   arrange(feature, value) %>%
   ungroup()
-  
+
+  # store sign
+  df$sign <- ifelse(df$value > 0, "+", "-")
+
   df$feature_id <- paste(df$feature, df$factor, sep = "_")
   df$feature_id <- factor(df$feature_id, levels = unique(df$feature_id[order(df$value)]))
 
-  p <- ggplot(df, aes(x = value, y = feature_id), ...) +
-    geom_point() +
-    scale_y_discrete(expand = c(0.03, 0.03)) +
-    labs(x = "Weight", y = "Rank", size = 10) +
-    theme_minimal() +
-    theme(
-      axis.text.y = element_blank(),
-      axis.ticks.y = element_blank()
-    )
+  if (plot_distribution) {
+    p <- ggplot(df, aes(x = value, y = feature_id), ...) +
+      geom_point() +
+      scale_y_discrete(expand = c(0.03, 0.03)) +
+      labs(x = "Weight", y = "Rank", size = 10) +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid.major.y = element_blank()
+      )
 
-  # Add labels
-  if (n_feat > 0 || length(unique(df$to_label)) > 0) {
-    p <- p + ggrepel::geom_text_repel(
-      data = df[df$to_label != FALSE, ],
-      aes(label = feature, col = to_label),
-      size = 3, segment.alpha = 0.25, segment.color = "black",
-      segment.size = 0.3, show.legend = FALSE, max.overlaps = Inf)
+    # Add labels
+    if (n_feat > 0 || length(unique(df$to_label)) > 0) {
+      p <- p + ggrepel::geom_text_repel(
+        data = df[df$to_label != FALSE, ],
+        aes(label = feature, col = to_label),
+        size = 3, segment.alpha = 0.25, segment.color = "black",
+        segment.size = 0.3, show.legend = FALSE, max.overlaps = Inf)
+    }
+
+    # configure axes
+    if (scale) {
+      p <- p + 
+        coord_cartesian(xlim = c(-1, 1)) +
+        scale_x_continuous(breaks = c(-1, 0, 1)) +
+        expand_limits(x = c(-1, 1))
+    }
+
+    # Define dot size
+    p <- p + scale_size_manual(values=c(2/2, 2*2)) + guides(size = "none")
+  } else {
+    p <- ggplot(W, aes(x = reorder(feature, value), y = value, fill = sign)) +
+      geom_bar(stat = "identity", show.legend = FALSE) +
+      scale_fill_manual(values = col[c(3, 6)]) +
+      ylab("Weight") +
+      xlab("") +
+      labs(title = views) +
+      coord_flip() +
+      theme_bw() +
+      theme(
+        axis.title.x = element_text(color = 'black'),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(size=rel(1.1), hjust = 1, color = 'black'),
+        axis.text.x = element_text(color = 'black'),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_line(),
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(color = "black"),
+        legend.key = element_rect(fill = "transparent"),
+        plot.title = element_text(size = rel(1.3), hjust = 0.5),
+
+        # facets
+        #strip.text = element_text(size = rel(1.2)),
+        #panel.background = element_blank(),
+        #panel.spacing = unit(1, "lines"),
+
+        # gridlines
+        panel.grid.major.y = element_blank(),
+        ) +
+        facet_wrap(~factor, nrow = 1, scales = "free")
   }
-
-  # configure axes
-  if (scale) {
-    p <- p + 
-      coord_cartesian(xlim = c(-1, 1)) +
-      scale_x_continuous(breaks = c(-1, 0, 1)) +
-      expand_limits(x = c(-1, 1))
-  }
-
-  # Define dot size
-  p <- p + scale_size_manual(values=c(2/2, 2*2)) + guides(size = "none")
 
   # Facet if multiple factors
   if (ncol(feat_wts) > 1) {
