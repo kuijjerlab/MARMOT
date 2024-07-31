@@ -634,11 +634,11 @@ save(mapped_wts, file = "liver_mapped_feat_wts.Rda")
 load("liver_mapped_feat_wts.Rda")
 
 factors <- c("Factor2")
-file_names <- paste0(rep("figures/liver_feat_wts_", length(omic_names)), omic_names, "_", factors, "_thresh.pdf")
+file_names <- paste0(rep("figures/liver_feat_wts_", length(omic_names)), omic_names, "_", factors, "_thresh_test.pdf")
 
 plots <- Map(function(feat, title, file_name, ...) {
   plot_feat_wts(feat_wts = feat, fct = factors, file_name = file_name, thresh = 0.5,
-  width = 7, height = 10, limitsize = FALSE)
+  plot_distribution = FALSE, width = 7, height = 10, limitsize = FALSE)
 }, mapped_wts, omic_names, file_names)
 
 ```
@@ -747,6 +747,8 @@ seed_dir <- paste0(wd, "/seed_variations/")
 setwd(seed_dir)
 load("random_seeds.Rda")
 
+surv_seed <- data.frame()
+
 for (seed in seeds) {
   surv_df <- data.frame()
   for (i in cancers) {
@@ -769,6 +771,7 @@ for (seed in seeds) {
                      method = method)
 
     df$cancer <- i
+    df$seed <- seed
 
     surv_df <- rbind(surv_df, df)
 
@@ -778,26 +781,12 @@ for (seed in seeds) {
     save(cox_all, file = paste0(i,"_cox_models_PCA_quant_", seed, ".Rda"))
   }
 
-save(surv_df, file = paste0("TCGA_MOFA_surv_df_all_PCA_quant_", seed, ".Rda"))
+  surv_seed <- rbind(surv_seed, surv_df)
+
+  #save(surv_df, file = paste0("TCGA_MOFA_surv_df_all_PCA_quant_", seed, ".Rda"))
 }
+
+save(surv_seed, file = "TCGA_MOFA_surv_seed.Rda")
+write.csv(surv_seed, file = "TCGA_MOFA_surv_seed.csv")
 ```
 
-```{r surv_compare_random_seed}
-seed_dir <- paste0(wd, "/seed_variations/")
-setwd(seed_dir)
-load("random_seeds.Rda")
-
-for (seed in seeds) {
-  # generate comparison plots
-  if (!exists("surv_df")) {
-    load(paste0("TCGA_MOFA_surv_df_all_PCA_quant_", seed, ".Rda"))
-  }
-
-  models_to_compare <- c("nonet", "both")
-  p <- surv_compare_dotplot(surv_df = surv_df, models_to_compare = models_to_compare)
-
-  ggsave(p, file=paste0("figures/surv_compare_",models_to_compare[2],"_bee_5_PCA_quant_", seed, ".png"))
-  ggsave(p, file=paste0("figures/surv_compare_",models_to_compare[2],"_bee_5_PCA_quant_", seed, ".pdf"))
-  
-}
-```
