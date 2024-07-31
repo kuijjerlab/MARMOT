@@ -403,6 +403,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #'
 #' @description Function to plot feature weights.
 #'
+#' @inheritParams plot_data_dim
 #' @param feat_wts Matrix with omic feature weights.
 #' @param fct Character vector indicating the names of the factors to be plotted.
 #' If \code{NULL}, all factors will be plotted.
@@ -424,11 +425,23 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
                           scale = TRUE, file_name = NULL, thresh = NULL,
-                          plot_distribution = FALSE, ...) {
+                          plot_distribution = FALSE, colours = NULL, ...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
                  error = "features marked for manual labelling exist in the omic data") #nolint
+  }
+
+  # set colours
+  if (is.null(colours)) {
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
+    col <- col[c(3, 4)]
+  } else {
+       if (length(colours) != 3) {
+      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+      "Please make sure you specify the correct number of colours."))
+    }
+    col <- colours
   }
 
   # reshape for plotting
@@ -515,12 +528,14 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
     # Define dot size
     p <- p + scale_size_manual(values=c(2/2, 2*2)) + guides(size = "none")
   } else {
-    p <- ggplot(W, aes(x = reorder(feature, value), y = value, fill = sign)) +
+    # filter to only selected features
+    df <- df %>% filter(to_label == TRUE)
+
+    p <- ggplot(df, aes(x = reorder(feature, value), y = value, fill = sign)) +
       geom_bar(stat = "identity", show.legend = FALSE) +
-      scale_fill_manual(values = col[c(3, 6)]) +
+      scale_fill_manual(values = col) +
       ylab("Weight") +
       xlab("") +
-      labs(title = views) +
       coord_flip() +
       theme_bw() +
       theme(
