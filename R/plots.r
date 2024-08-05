@@ -310,7 +310,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
     df <- df[which(df$logp >= thresh), ]
   }
 
-  p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES)) +
+  p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES, shape = factor)) +
    geom_point(data = df, aes(size = abs(NES) * 25)) +
    scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
    scale_color_gradient2(low = col[1], mid = col[2], high = col[3],midpoint = 0,
@@ -583,13 +583,13 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 #' @param conf.int Whether or not to show confidence intervals. Will be passed to ggsurvplot.
 #' @param factor Vector containing the factor for which to do this.
 #' Only one factor at a time, call mutiple times for multiple factors.
+#' @param minprops Minimum proportion of samples per group for the split into
+#' survival groups.
 #' @returns A list containing KM plots for each significantly survival associated factor
 #' @export
 #' @import survminer ggplot2 survival
-surv_factor_km <- function(surv, factor, model_label, conf_int = FALSE) {
-
-  #colors to use
-  col <- palette("Dark2")
+surv_factor_km <- function(surv, factor, model_label, conf_int = FALSE,
+                           minprops) {
 
   #factor name
   fct <- colnames(factor)
@@ -601,31 +601,56 @@ surv_factor_km <- function(surv, factor, model_label, conf_int = FALSE) {
     factor_samples = names(factor)
   )
   # Compute the intersection of sets
-  samples <- .overlap_sets(sets)
+  samples <- .overlap_sets(sets, 
+                           err_msg = "There is no overlap between the samples in the survival and factor data. Please ensure at least some samples are common.")
 
   factor <- factor[samples]
   surv <- surv[which(surv$sample_id %in% samples), ]
 
   #get cutpoint
-  df <- .fct_cutpoint(factor, surv)
+  df_list <- list()
+  fit_list <- list()
+  legend_labels <- c()
+  for (minprop in minprops) {
+    df <- .fct_cutpoint(factor, surv, minprop = minprop)
+    df$FactorValue <- paste0(df$FactorValue, "_", minprop)
+    fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
+    df_list <- append(df_list, list(df))
+    fit_list <- append(fit_list, list(fit))
+    legend_labels <- c(legend_labels, unique(df$FactorValue))
+  }
 
-  fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
+  names(df_list) <- paste0("minprop_", minprops)
+  names(fit_list) <- paste0("minprop_", minprops)
 
-  km <- survminer::ggsurvplot(fit, data = df,
-    conf.int = conf_int, pval = TRUE, pval.method = TRUE,
-    pval.coord = c(max(df$time) / 4, 0), fun = function(y) y * 100, palette = col,
-    strata = "FactorValue",
+  #colors to use
+  col <- palette("Dark2")
+  high_cols <- colorRampPalette(c(col[1], "white"))(length(fit_list)+1)
+  low_cols <- colorRampPalette(c(col[2], "white"))(length(fit_list)+1)
+  cols <- unlist(mapply(c, low_cols, high_cols, SIMPLIFY = FALSE))
+  cols <- head(cols, -2)
+  names(cols) <- NULL
+
+  km <- survminer::ggsurvplot_combine(fit_list, data = df_list,
+    conf.int = conf_int,
+    pval = TRUE,
+    pval.method = TRUE,
+    pval.coord = c(max(df$time) / 4, 0),
+    fun = function(y) y * 100,
+    palette = cols,
+    strata = "group",
     legend = "top",
     xlab = "Time to last follow-up", ylab = "Survival probability (%)",
-    title = paste0(fct, "-", model_label)
-  )$plot +
-  # changing text font size
-  theme(
+    legend.labs = legend_labels,
+    #title = paste0(fct, "-", model_label)
+  )
+
+  km <- km$plot + theme(
         axis.text = element_text(size = 15),
         legend.text = element_text(size = 20),
         legend.title = element_text(size = 20),
         plot.title = element_text(size = 25)
-    )
+  )
 
   return(km)
 }
