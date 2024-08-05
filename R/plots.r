@@ -6,10 +6,11 @@
 #' @description Barplot that shows the dimensionalities for a set of multi-omics
 #' data. Expects the output of \code{\link{prepare_data}} as input.
 #'
-#' @param data Character vector containing the path to two .Rda files. The data
-#' files are expected to be the output of \code{\link{prepare_data}}.
-#' @param data_labels Optional. Character label for the data. This will be used
-#' for the title of the plot.
+#' @param data Character vector containing the path to one or two .Rda files.
+#' The data files are expected to be the output of \code{\link{prepare_data}}.
+#' @param data_labels Character vector with labels for the data. This will be used
+#' for the title of the plot. Also used for comparison. Order should be the same
+#' as \code{data}.
 #' @param which_omics Optional. Character vector specifying the omics to be
 #' plotted. If not specified, all the omics will be plotted.
 #' @param colours Optional. Character vector with colour IDs to use for plotting.
@@ -21,10 +22,24 @@
 #' @import ggplot2
 #' @export
 
-plot_data_dim <- function(data, data_label = NULL, which_omics = NULL,
-                          colours = NULL) {
-  # loading data
-  dat <- get(load(data[1]))
+plot_data_dim <- function(data, data_labels, which_omics = NULL,
+                          colours = NULL, compare = TRUE) {
+  # sanity
+  if (compare) {
+    if (length(data) !=2) {
+      stop("You must provide two data files if comparison = TRUE")
+    } else {
+      # loading data
+      dat <- get(load(data[1]))
+      dat_2 <- get(load(data[2]))
+    }
+  } else {
+    if (length(data) !=1) {
+      stop("You mut provide one data file if comparison = FALSE")
+    } else {
+      dat <- get(load(data))
+    }
+  }
 
   #setting colours
   if (is.null(colours)) {
@@ -37,18 +52,37 @@ plot_data_dim <- function(data, data_label = NULL, which_omics = NULL,
   #filtering data
   if (!is.null(which_omics)) {
     dat <- dat[[which_omics]]
+    if (compare) {
+      dat_2 <- dat_2[[which_omics]]
+    }
   }
 
-  #creating data frames for plotting
+  #creating data frame for plotting
   df <- data.frame(
     omic = names(dat),
     features = sapply(dat, function(mat) dim(mat)[1]),
     samples = sapply(dat, function(mat) dim(mat)[2]),
-    label = data_label
+    label = data_labels[1]
   )
 
+  # add second data info
+  if (compare) {
+    df_2 <- data.frame(
+    omic = names(dat_2),
+    features = sapply(dat_2, function(mat) dim(mat)[1]),
+    samples = sapply(dat_2, function(mat) dim(mat)[2]),
+    label = data_labels[2]
+    )
+
+    # merge
+    df <- rbind(df, df_2)
+  }
+
+  # oder by number of feat
+  #df <- df %>% arrange(features)
+
   #set levels
-  df$omic <- factor(df$omic, levels = df$omic)
+  df$omic <- factor(df$omic, levels = unique(df$omic))
 
   p <- ggplot(df, aes(x = omic, y = features, fill = omic)) +
     geom_bar(stat = "identity") +
@@ -57,7 +91,8 @@ plot_data_dim <- function(data, data_label = NULL, which_omics = NULL,
     scale_fill_manual(values = col[seq_len(nrow(df))]) +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels for readability
-    coord_flip()
+    coord_flip() +
+    facet_wrap(~label, ncol = 2, scales = "free_x")
 
   return(p)
 
