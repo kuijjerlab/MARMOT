@@ -578,8 +578,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 #' @description Plots Kaplan-Meier curves for the significantly associated
 #' survival factors (identified in surv_compare)
 #' @param surv Survival information as data frame.
-#' @param factor Factor name. Along with "model_label" it will form the plot title.
-#' @param model_label Along with "factor name" will form the plot title
+#' @param title Character string. Title of the plot.
 #' @param conf.int Whether or not to show confidence intervals. Will be passed to ggsurvplot.
 #' @param factor Vector containing the factor for which to do this.
 #' Only one factor at a time, call mutiple times for multiple factors.
@@ -588,11 +587,8 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 #' @returns A list containing KM plots for each significantly survival associated factor
 #' @export
 #' @import survminer ggplot2 survival
-surv_factor_km <- function(surv, factor, model_label, conf_int = FALSE,
+surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
                            minprops) {
-
-  #factor name
-  fct <- colnames(factor)
 
   # overlap samples
   # Define the sets
@@ -642,10 +638,11 @@ surv_factor_km <- function(surv, factor, model_label, conf_int = FALSE,
     legend = "top",
     xlab = "Time to last follow-up", ylab = "Survival probability (%)",
     legend.labs = legend_labels,
-    #title = paste0(fct, "-", model_label)
+    title = title
   )
 
-  km <- km$plot + theme(
+  km <- km$plot +
+      theme(
         axis.text = element_text(size = 15),
         legend.text = element_text(size = 20),
         legend.title = element_text(size = 20),
