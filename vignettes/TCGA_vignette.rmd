@@ -572,12 +572,12 @@ save(stable_path, file = "gsea_stable_path_across_minprop_react.Rda")
 ```
 
 ```{r plot_diff_gsea_results}
-load("liver_gsea_diff_all_fct_minprop_var_react.Rda")
-load("gsea_stable_path_across_minprop_react.Rda")
+load("liver_gsea_diff_all_fct_minprop_var.Rda")
+load("gsea_stable_path_across_minprop.Rda")
 
 gsea_res <- lapply(gsea_res, function(x) x[[1]]) # only for the reactome ones cos I was too lazy to redo a non minprop one separately
 titles <- names(gsea_res)
-file_names <- paste0(rep("figures/liver_gsea_diff_indeg_", length(gsea_res)), names(gsea_res), "_stable_path_react.pdf")
+file_name <- "gsea_stable_path_hallmark.pdf"
 
 #get stable pathways across minprop
 path_names <- lapply(stable_path, function(x) x[[1]]$pathway)
@@ -586,11 +586,21 @@ gsea_subset <- Map(function(x, path) {
   res <- x[which(x$pathway %in% sub), ]
 }, gsea_res, path_names)
 
-plots <- Map(function(x, title, file_name, ...) {
-  gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "reactome",
-  title = title, file_name = file_name, n_path = NULL, thresh = 1.30103,
-  width = 160, height = 180, limitsize = FALSE)
-}, gsea_subset, titles, file_names)
+# Add the factor column to each data frame and merge them
+factors <- names(gsea_subset)
+merged_df <- bind_rows(Map(function(df, factor) {
+  df %>% mutate(factor = factor)
+}, gsea_subset, factors))
+
+plot <- gsea_dotplots(merged_df, surv_df = surv_df, gene_set = "hallmark",
+                      title = "TCGA", file_name = file_names[1], n_path = NULL,
+                      thresh = 1.30103, width = 160, height = 180, limitsize = FALSE)
+
+#plots <- Map(function(x, title, file_name, ...) {
+ # gsea_dotplots(gsea_results = x, surv_df = surv_df, gene_set = "reactome",
+  #title = title, file_name = file_name, n_path = NULL, thresh = 1.30103,
+  #width = 160, height = 180, limitsize = FALSE)
+#}, gsea_subset, titles, file_names)
 ```
 
 ```{r plot_KM_plots}
@@ -598,18 +608,24 @@ load("liver_surv.Rda")
 load("MOFA_liver_pca_both.Rda")
 load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 
+minprops <- c(0.1, 0.2, 0.3)
+
 sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
 Z <- get_factors(mofa_both)[[1]]
 Z <- as.data.frame(Z[, sig$factor])
 
 # plot km
-file_names <- paste0(rep("figures/liver_km_", ncol(Z)), colnames(Z), ".pdf")
+file_names <- paste0(rep("figures/liver_km_", ncol(Z)), colnames(Z), "_test.pdf")
 
 plots <- Map(function(factor, file_name) {
   factor <- setNames(factor, rownames(Z))
-  surv_factor_km(surv = surv, factor = factor, model_label = "both")
+  surv_factor_km(surv = surv, factor = factor, model_label = "both", minprops = minprops)
   ggsave(file = file_name)
 }, Z, file_names)
+
+#c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
+#c("#1B9E77", "#D95F02", "#67BEA4", "#E59456", "#B3DED1", "#F2C9AA")
+
 ```
 
 # outdegree analysis
