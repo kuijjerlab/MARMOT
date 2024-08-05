@@ -36,6 +36,7 @@ library(tidyverse)
 library(preprocessCore)
 library(RColorBrewer)
 library(msigdbr)
+library(gridExtra)
 ```
 
 # Preparing data
@@ -615,13 +616,16 @@ Z <- get_factors(mofa_both)[[1]]
 Z <- as.data.frame(Z[, sig$factor])
 
 # plot km
-file_names <- paste0(rep("figures/liver_km_", ncol(Z)), colnames(Z), "_test.pdf")
+titles <- colnames(Z)
 
-plots <- Map(function(factor, file_name) {
+plots <- Map(function(factor, title) {
   factor <- setNames(factor, rownames(Z))
-  surv_factor_km(surv = surv, factor = factor, model_label = "both", minprops = minprops)
-  ggsave(file = file_name)
-}, Z, file_names)
+  surv_factor_km(surv = surv, factor = factor, title = title, minprops = minprops)
+  #ggsave(km, file = file_name)
+}, Z, titles)
+
+grid_plot <- grid.arrange(grobs = plots, ncol = 3)
+ggsave(grid_plot, file = "figures/km_grid_all_fct.pdf", width = 27, height = 10)
 
 #c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
 #c("#1B9E77", "#D95F02", "#67BEA4", "#E59456", "#B3DED1", "#F2C9AA")
