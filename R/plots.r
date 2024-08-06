@@ -145,8 +145,10 @@ plot_clin_association <- function(clin_assoc, colours = NULL) {
     col <- colours
   }
 
-  p <- ggplot(data = clin_assoc, aes(x = Factor, y = feat, fill = logp)) +
+  p <- ggplot(data = clin_assoc, aes(x = Factor, y = feat, fill = logp,
+              label = round(logp, 2))) +
     geom_tile() +
+    geom_text(color = "black") +
     scale_fill_gradient(low = "white", high = col[3], name = "-log10(FDR)") +
     labs(x = NULL, y = "clinical feature") +
     theme_classic()
