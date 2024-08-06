@@ -35,6 +35,8 @@
 #' input parameters should be saved.
 #' @param log_name String indicating name for log file. If left NULL,
 #' a generic name will be used.
+#' @param filter_features Logical. Whether to remove features with a standard
+#' deviation of 0.
 #'
 #' @returns A list of omics ready for JDR.
 #' @examples
@@ -43,7 +45,7 @@
 prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
                          pca = TRUE, thresh = 0.85, n_pcs = 20, save_pca = TRUE,
                          file_name = NULL, scale_data = TRUE, logs = FALSE,
-                         log_name = NULL) {
+                         log_name = NULL, filter_features = TRUE) {
   # create log file
   if (logs) {
     if (is.null(log_name)){
@@ -79,7 +81,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   }
 
   # create omics list
-  omic_list <- .create_omics_list(omics, names, overlap_samples)
+  omic_list <- .create_omics_list(omics, names, overlap_samples,
+                                  filter_features)
 
   if (pca) {
     omics_pca <- lapply(omic_list, function(omic) .omics_pca(omic, scale_data))
@@ -137,7 +140,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics matrices for JDR.
 #' @noRd
 
-.create_omics_list <- function(omics, names = NULL, overlap_samples = TRUE) {
+.create_omics_list <- function(omics, names = NULL, overlap_samples,
+                               filter_features) {
   # read in omics and create a list
   omic <- lapply(omics, .load_data)
 
@@ -169,14 +173,13 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # get all sample names
   all_samples <- colnames(omic[[1]])
 
-  # ensure only common samples are kept
-  if (overlap_samples) {
-    # Subset to only common samples
-    omic <- .filter_omics(omic)
-  } else {
-    # pad matrices
-    .pad_mat_wrapper(omic)
-  }
+  # Filter omics
+  omic <- .filter_omics(omic, samples = overlap_samples,
+                        features = filter_features)
+
+  # pad matrices
+  .pad_mat_wrapper(omic)
+
 
   # name the omics
   if (length(names) == length(omic)) {
@@ -199,15 +202,25 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics that are filtered to only common samples.
 #' @noRd
 
-.filter_omics <- function(omic_list) {
-  # Get all sample names
-  all_samples <- lapply(omic_list, colnames)
+.filter_omics <- function(omic_list, samples, features) {
+  if (samples) {
+    # Get all sample names
+    all_samples <- lapply(omic_list, colnames)
 
-  # Find common samples
-  common_samples <- Reduce(intersect, all_samples)
+    # Find common samples
+    common_samples <- Reduce(intersect, all_samples)
 
-  # Filter to only common samples
-  omic_fil <- lapply(omic_list, function(x) x[, common_samples])
+    # Filter to only common samples
+    omic_fil <- lapply(omic_list, function(x) x[, common_samples])
+  }
+
+  if (features) {
+    # filter features
+    omic_fil <- Map(function(omic) {
+      stdev <- apply(omic, 1, sd)
+      omic <- omic[which(stdev > 0), ]
+    }, omic_fil)
+  }
 
   return(omic_fil)
 }
