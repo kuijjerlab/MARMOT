@@ -192,6 +192,10 @@ grid_plot <- grid.arrange(grobs = p_list, ncol = 3)
 ggsave(grid_plot, file = "figures/data_dim_compare_all_can.pdf", height = 20, width = 20)
 ```
 
+```{r pca_vs_no_pca_data_distr}
+
+```
+
 # surv analysis for all cancers
 
 ```{r surv_assoc_bench}
@@ -270,20 +274,20 @@ for (cancer in cancers) {
   load(paste0(wd, "/", cancer, "_omics_pca.Rda"))
 
   #nonet
-  #data_nonet <- omics[1:3]
-  data_nonet <- omics[1]
+  data_nonet <- omics[1:3]
+  #data_nonet <- omics[1]
   mofa_nonet <- run_mofa2(data_nonet, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_nonet, file = paste0("MOFA_", cancer, "_pca_nonet.Rda"))
 
   # with indeg
-  #data_indeg <- omics[-5] #tcga
-  data_indeg <- omics[-3]
+  data_indeg <- omics[-5] #tcga
+  #data_indeg <- omics[-3]
   mofa_indeg <- run_mofa2(data_indeg, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_indeg, file = paste0("MOFA_", cancer, "_pca_indeg.Rda"))
   
   # with outdeg
-  #data_out <- omics[-4]
-  data_out <- omics[-2]
+  data_out <- omics[-4]
+  #data_out <- omics[-2]
   mofa_out <- run_mofa2(data_out, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_out, file = paste0("MOFA_", cancer, "_pca_out.Rda"))
   
@@ -302,7 +306,7 @@ for (cancer in cancers) {
   mofa_nometh <- run_mofa2(data_nometh, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_noexp, file = paste0("MOFA_", cancer, "_pca_no_methy.Rda"))
 
-  # without exp
+  # without mirna
   data_nomir <- omics[-3]
   mofa_nomir<- run_mofa2(data_nomir, n_fct = 5, seed = 13, convergence = "slow", use_basilisk = T)
   save(mofa_noexp, file = paste0("MOFA_", cancer, "_pca_no_mir.Rda"))
@@ -323,7 +327,7 @@ for (i in cancers) {
   nonet_fct <- get_factors(nonet)[[1]]
 
   corr <- fct_corr(all_fct, nonet_fct, labels = c("all", "no_networks"),
-                    as_data_frame = TRUE)
+                    as_data_frame = TRUE, abs = TRUE)
   corr_all[[i]] <- corr
 
   # reformat as data frame
@@ -332,13 +336,13 @@ for (i in cancers) {
   corr_df <- rbind(corr_df, df)
 }
 
-save(corr_df, file = "view_exclusion_corr_df_indeg.Rda")
-save(corr_all, file = "view_exclusion_corr_indeg.Rda")
+save(corr_df, file = "view_exclusion_corr_df_indeg_abs.Rda")
+save(corr_all, file = "view_exclusion_corr_indeg_abs.Rda")
 
 q <- plot_fct_corr(corr_df)
-ggsave(q, file = paste0("figures/view_exclusion_heat_both.pdf"),
+ggsave(q, file = paste0("figures/view_exclusion_heat_both_abs.pdf"),
        height = 10, width = 10)
-ggsave(q, file = paste0("figures/view_exclusion_heat_both.png"),
+ggsave(q, file = paste0("figures/view_exclusion_heat_both_abs.png"),
        height = 10, width = 10)
 ```
 
