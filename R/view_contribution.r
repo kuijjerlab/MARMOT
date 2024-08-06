@@ -14,12 +14,14 @@
 #' @param labels Option character vector with labels for the two sets of factors.
 #' @param as_data_frame Logical, indicating whether the output should be a
 #' data frame instead of a list of matrices.
+#' @param abs Logical. Whether absolute correlation should be reported.
 #'
 #' @returns A list containing the factor correlation matrices.
 #'
 #' @export
 
-fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
+fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE,
+                     abs = TRUE) {
   # sanity checks
   # check that the number of features is the same in the two sets
   if (nrow(set1) != nrow(set2)) {
@@ -47,6 +49,33 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
 
   # concatenate the two matrices into a list
   corr_res <- list(corr_pears, corr_spear)
+
+  # take absolute value
+  if (abs) {
+    corr_res <- lapply(corr_res, abs)
+  }
+
+  # ensure outputs are matrices
+  if (!is.matrix(corr_pears)) {
+    corr_res <- lapply(corr_res, as.matrix)
+    # transpose matrices in the edge case of one of the sets
+    # only having one column
+    if (ncol(corr_res[[1]]) == 1) {
+      corr_res <- lapply(corr_res, t)
+    }
+  }
+
+  # ensure labels are correct
+  corr_res <- lapply(corr_res, function(x) {
+    rownames(x) <- colnames(set2)
+    return(x)
+  })
+
+  corr_res <- lapply(corr_res, function(x) {
+    colnames(x) <- colnames(set1)
+    return(x)
+  })
+
   names(corr_res) <- c("pearson", "spearman")
 
   return(corr_res)
