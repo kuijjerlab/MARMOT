@@ -98,6 +98,9 @@ plot_data_dim <- function(data, data_labels, which_omics = NULL,
 
 }
 
+#' @name plot_data_distribution
+#' @description Plot distribution of the data.
+
 #' @title
 #'
 #' @name plot_variance_bar
@@ -112,7 +115,7 @@ plot_data_dim <- function(data, data_labels, which_omics = NULL,
 
 plot_variance_bar <- function() {
     ggplot(data = var_df, aes(x = cancer, y = var_perc, fill = omic))+
-      geom_bar(stat="identity")+
+      geom_violin(stat="identity")+
       scale_fill_manual(labels = labels[[j]], values = col[2:6])+
       ylab("Variance")+ xlab("")+
       theme_classic()+
