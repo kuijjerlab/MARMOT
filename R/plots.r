@@ -362,7 +362,10 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
         legend.text = element_text(size = 100),
         axis.text.y = element_text(size = 120),
         axis.text.x = element_text(size = 100),
-        panel.grid.major = element_line(color = "black"))
+        panel.grid.major = element_line(color = "black")) +
+   guides(
+     shape = guide_legend(override.aes = list(size = 30))  # Increase size of shapes in legend
+   )
   
   if (!is.null(file_name)) {
     ggsave(p, file = file_name, ...)
