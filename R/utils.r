@@ -206,3 +206,36 @@
 
   return(mat_pad)
 }
+
+#' Convert Interval to Median Value
+#'
+#' This function converts an interval string to its median value.
+#' The interval string can be in the form of ">=X" or "X-Y".
+#'
+#' @param interval A character string representing an interval.
+#'        The interval can be in the format ">=X" or "X-Y".
+#'
+#' @return A numeric value representing the median of the interval.
+#'         If the interval is ">=X", it returns X. If the interval is "X-Y", it returns the median of X and Y.
+#'         If the input is `NA` or an unrecognized format, it returns `NA`.
+#'
+#' @examples
+#' convert_interval_to_median(">=70") # Returns 70
+#' convert_interval_to_median("50-69") # Returns 59.5
+#' convert_interval_to_median(NA) # Returns NA
+#' convert_interval_to_median("1-17") # Returns 9
+
+.convert_interval_to_median <- function(interval) {
+  if (is.na(interval)) {
+    return(NA)
+  } else if (grepl(">=", interval)) {
+    # Handle the '>=X' case, assuming median to be X
+    return(as.numeric(sub(">=", "", interval)))
+  } else if (grepl("-", interval)) {
+    # Handle the 'X-Y' case
+    bounds <- as.numeric(unlist(strsplit(interval, "-")))
+    return(median(bounds))
+  } else {
+    return(NA)
+  }
+}
