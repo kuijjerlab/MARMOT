@@ -451,6 +451,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @param fct Character vector indicating the names of the factors to be plotted.
 #' If \code{NULL}, all factors will be plotted.
 #' @param n_feat Number of top features to label. Is overridden by \code{thresh}
+#' Should a positive integer.
 #' @param manual_lab Character vector of feature names to manually label.
 #' Will be checked against omic rownames.
 #' @param scale Logical. Whether to scale the feature weight between c(-1,1).
@@ -472,7 +473,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
-                 error = "features marked for manual labelling exist in the omic data") #nolint
+                 err_msg = "features marked for manual labelling exist in the omic data") #nolint
   }
 
   # set colours
@@ -481,7 +482,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
     col <- col[c(3, 4)]
   } else {
        if (length(colours) != 3) {
-      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+      stop(paste0(length(colours), err_msg = " colours were specified, when 2 were expected. ",
       "Please make sure you specify the correct number of colours."))
     }
     col <- colours
@@ -497,27 +498,49 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   }
 
   # scale by weight with highest absolute value
-  if (scale) df$value <- df$value/max(abs(df$value))
+  if (scale) {
+    df <- df %>%
+           group_by(factor) %>%
+           mutate(value = value / max(abs(value), na.rm = TRUE)) %>%
+           ungroup()
+  }
 
   # add labelling groups
   df$to_label <- FALSE
 
   # Define group of features to color according to the loading
   if (is.null(manual_lab) && n_feat > 0) {
-    for (i in colnames(feat_wts)) {
-      features <- df[df$factor == i, ] %>% top_n(n = n_feat, abs(value))
-      features <- features$feature
-      df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
-    }
+    features <- df %>%
+                group_by(factor) %>%
+                top_n(n =  n_feat, abs(value)) %>%
+                ungroup()
+    features <- features$feature
+    df <- df %>% 
+            group_by(factor) %>%
+            mutate(to_label = ifelse(feature %in% features, TRUE, to_label)) %>%
+            ungroup()
   } else if (!is.null(manual_lab) && n_feat > 0) {
-    for (i in colnames(feat_wts)) {
-      features <- df[df$factor == i, ] %>% filter(feature %in% manual_lab)
-      features <- c(features, df[df$factor == i, ] %>%
-                    top_n(n = n_feat, abs(value)))
-      df[df$feature %in% features & df$factor == i, "to_label"] <- TRUE
-
+      features <- df %>%
+                group_by(factor) %>%
+                top_n(n = n_feat, abs(value)) %>%
+                filter(feature %in% manual_lab) %>%
+                ungroup()
+      features <- features$feature
+      df <- df %>% 
+            group_by(factor) %>%
+            mutate(to_label = ifelse(feature %in% features, TRUE, to_label)) %>%
+            ungroup()
+    } else if (!is.null(manual_lab) && n_feat == 0) {
+      features <- df %>%
+                group_by(factor) %>%
+                filter(feature %in% manual_lab) %>%
+                ungroup()
+      features <- features$feature
+      df <- df %>% 
+            group_by(factor) %>%
+            mutate(to_label = ifelse(feature %in% features, TRUE, to_label)) %>%
+            ungroup()
     }
-  }
 
   # add anything above threshhold if specified
   if (!is.null(thresh)) {
