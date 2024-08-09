@@ -34,8 +34,6 @@
 #' mode. Can be one of c("slow", "medium", "fast").
 #' @param use_basilisk Logical. Whether basilisk should be used to automatically
 #' set up conda environment. Only needed when MOFA2 is used.
-#' @param save_factors Logical. Whether to save a list of the extracted factors
-#' in a separate file.
 #'
 #' @return A list of factorisations. Each element is the factorisation
 #' based on one JDR method.
@@ -48,36 +46,47 @@
 run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
                     n_fct = 5, seed = 42, convergence = "slow",
-                    use_basilisk = TRUE, save_factors = TRUE) {
+                    use_basilisk = TRUE) {
+
   # overlap samples if not already done
   if (!samples_overlap) {
     omic_fil <- .filter_omics(omic_list)
   }
 
   # initialise factorisation list
-  model_list <- list()
-  if (save_factors) fct_list <- list()
+  fct_list <- list()
 
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
-    mofa_model <- .run_mofa2(omic_list, n_fct)
-    model_list$MOFA <- mofa_model
-    if (save_factors) {
-      fct_list$MOFA <- MOFA2::get_factors(mofa_model)
+    print("Performing JDR with MOFA2...")
+    mofa_model <- run_mofa2(omic_list, n_fct, seed = seed,
+                            convergence = convergence,
+                            use_basilisk = use_basilisk)
+
+    fct_list$MOFA <- MOFA2::get_factors(mofa_model)
     }
-  }
 
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
-    jive_model <- .run_jive(omic_list, n_fct)
-    model_list$JIVE <- jive_model
-    if (save_factors) {
-      fct_list$MOFA <- MOFA2::get_factors(mofa_model)
+    print("Performing JDR with JIVE...")
+    jive_model <- run_jive(omic_list, n_fct)
+
+    # I don't actually know what this does
+    # just copying cantini's code
+    # will have to look into it more
+    rankJV <- jive_model$rankJ
+    J <- numeric(0)
+    for(j in 1:length(omics)){
+      J <- rbind(J, jive_model$joint[[j]])
     }
+    svd.o <- svd(J)
+    jV <- svd.o$v %*% diag(svd.o$d)
+    fct_list$JIVE <- jV[, 1:rankJV]
   }
 
   # run RGCCA
   if (is.element("RGCCA", jdr_methods)) {
+    print("Performing JDR with RGCCA...")
     if (!samples_overlap) {
       # run with omic_fil
       rgcca_model <- run_rgcca(omic_fil, n_fct)
@@ -85,12 +94,13 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
     } else {
       # run with omic_list
       rgcca_model <- run_rgcca(omic_list, n_fct)
-      fct_list$RGCCA <- rgcca_model
+      fct_list$RGCCA <- as.matrix(rgcca_model$Y[[1]])
     }
   }
 
   # run MCIA
   if (is.element("MCIA", jdr_methods)) {
+    print("Performing JDR with MCIA...")
     if (!samples_overlap) {
       # run with omic_fil
       mcia_model <- run_mcia(omic_fil, n_fct)
@@ -98,7 +108,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
     } else {
       # run with omic_list
       mcia_model <- run_mcia(omic_list, n_fct)
-      fct_list$MCIA <- mcia_model
+      fct_list$MCIA <- as.matrix(mcia_model$mcoa$SynVar)
     }
   }
 
@@ -200,6 +210,14 @@ run_mcia <- function(omic_list, n_fct) {
   # saying positive input is needed
   # so I dunno
   omics_pos <- lapply(omic_list, .pos_omics)
+
+  # removing any features with uniform values across all samples
+  # because MCIA has a stroke otherwise
+  # actually, it only has a stroke if the uniform value is also the minimum value
+  # i.e. 0
+  for (i in seq_along(omic_list)) {
+
+  }
 
   mcia_model <- mcia(omics_pos, cia.nf = n_fct)
 
