@@ -717,3 +717,76 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
 
   return(km)
 }
+
+#' Plot Data Distributions with Violin Plots
+#'
+#' This function creates violin plots to visualize the distributions of data 
+#' from one or two lists of omics data. It allows for custom coloring and 
+#' labeling of the different datasets.
+#'
+#' @param omic_list A list of matrices representing the first set of omics data
+#' to be plotted.
+#' @param omic_list2 An optional second list of matrices representing a second
+#' set of omics data to be plotted.
+#' @param labels A character vector of length 2 specifying labels for the two 
+#' omics lists (if \code{omic_list2} is provided). If only one list is provided, 
+#' only one label is required.
+#' @param colours A character vector of length 2 specifying the fill colors for 
+#' the violin plots. If not provided, default colors from the "Dark2" palette 
+#' will be used.
+#' @param title A character string specifying the title of the plot.
+#'
+#' @return A ggplot object representing the violin plot of the data distributions.
+#'
+#' @details This function can handle one or two lists of omics data, converting 
+#' them into a long format data frame for visualization with ggplot2. If two 
+#' lists are provided, they are combined into a single data frame before plotting.
+#'
+#' @importFrom ggplot2 ggplot aes geom_violin scale_fill_manual labs theme_minimal 
+#' theme
+#' @importFrom RColorBrewer brewer.pal
+#'
+#' @examples
+#' omic_list1 <- list(matrix1 = matrix(rnorm(100), nrow = 10, ncol = 10))
+#' omic_list2 <- list(matrix2 = matrix(rnorm(100), nrow = 10, ncol = 10))
+#' plot_data_distributions(omic_list1, omic_list2, labels = c("Set 1", "Set 2"))
+#'
+#' @export
+
+plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
+                                    colours = NULL, title = NULL) {
+  #sanity
+  if (!is.null(omic_list2) && length(labels) != 2) {
+    stop("Please provide labels for both lists of omics.")
+  } 
+
+  # set colours
+  if (is.null(colours)) {
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
+    col <- col[c(8, 6)]
+  } else {
+       if (length(colours) != 2) {
+      stop(paste0(length(colours), err_msg = " colours were specified, when 2 were expected. ",
+      "Please make sure you specify the correct number of colours."))
+    }
+    col <- colours
+  }
+
+  # create df for plotting
+  df <- .convert_list_to_df(omic_list, label = labels[1])
+
+  if (!is.null(omic_list2)) {
+    df_2 <- .convert_list_to_df(omic_list2, label = labels[2])
+    df <- rbind(df, df_2)
+  }
+
+  p <- ggplot(df, aes(x = omic, y = value, fill = pca)) +
+    geom_violin() +
+    scale_fill_manual(values = col) +
+    labs(x = NULL, y = NULL, title = title) +
+    theme_minimal() +
+    theme(axis.text = element_text(size = 25),
+      legend.position = "right")
+  
+  return(p)
+}
