@@ -239,3 +239,51 @@
     return(NA)
   }
 }
+
+#' Convert a List of Matrices to a Data Frame with Labels
+#'
+#' This function converts a list of matrices into a single data frame, where
+#' each value in the matrices is preserved along with labels indicating the
+#' matrix it came from and the original list the matrix belonged to.
+#'
+#' @param mat_list A list of matrices to be converted. Each matrix can have
+#' any dimensions.
+#' @param label A character string representing the label for the list of
+#' matrices. This label will be added as a column in the resulting data frame
+#' to indicate the origin of each value.
+#'
+#' @return A data frame with three columns:
+#' \itemize{
+#'   \item \code{value}: The values from the matrices.
+#'   \item \code{matrix_label}: The name of the matrix within the original list.
+#'   \item \code{list_label}: The label for the list from which the matrix came.
+#' }
+#'
+#' @details This function is useful when you have multiple lists of matrices and
+#' want to combine all the values into a single data frame for further analysis.
+#' The resulting data frame is in a long format, where each row represents a
+#' single value from one of the matrices.
+#'
+#' @examples
+#' list1 <- list(
+#'   matrix1 = matrix(1:4, nrow = 2, ncol = 2),
+#'   matrix2 = matrix(5:8, nrow = 2, ncol = 2)
+#' )
+#'
+#' label <- "list1"
+#' df <- convert_list_to_df(list1, list_label)
+#' print(df)
+#'
+#' @importFrom dplyr mutate
+#' @importFrom purrr imap_dfr
+#' @importFrom tidyr pivot_longer
+#'
+#' @export
+.convert_list_to_df <- function(mat_list, label) {
+  mat_list <- lapply(mat_list, scale)
+  mat_list %>%
+    imap_dfr(~ as.data.frame(.x) %>%
+               pivot_longer(everything(), names_to = "column",
+                            values_to = "value") %>%
+               mutate(omic = .y, pca = label))
+}
