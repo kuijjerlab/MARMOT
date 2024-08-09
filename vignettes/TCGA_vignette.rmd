@@ -196,7 +196,14 @@ ggsave(grid_plot, file = "figures/data_dim_compare_all_can.pdf", height = 20, wi
 ```
 
 ```{r pca_vs_no_pca_data_distr}
+for (cancer in cancers) {
+  pca <- get(load(paste0(cancer, "_omics_pca.Rda")))
+  no_pca <- get(load(paste0(cancer, "_omics_no_pca.Rda")))
 
+  plot <- plot_data_distributions(pca, no_pca, labels = c("pca", "no_pca"), title = cancer)
+
+  ggsave(plot, file = paste0("figures/", cancer, "_data_distribution_comparison.pdf"))
+}
 ```
 
 # surv analysis for all cancers
@@ -679,7 +686,7 @@ plots <- Map(function(factor, title) {
 grid_plot <- grid.arrange(grobs = plots, ncol = 3)
 ggsave(grid_plot, file = "figures/km_grid_all_fct.pdf", width = 27, height = 10)
 
-#c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
+c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
 #c("#1B9E77", "#D95F02", "#67BEA4", "#E59456", "#B3DED1", "#F2C9AA")
 
 ```
