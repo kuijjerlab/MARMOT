@@ -802,10 +802,15 @@ plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
   p <- ggplot(df, aes(x = omic, y = value, fill = pca)) +
     geom_violin() +
     scale_fill_manual(values = col) +
-    labs(x = NULL, y = NULL, title = title) +
+    labs(x = NULL, y = "Scaled omic values", title = title,
+         fill = "PCA status") +
     theme_minimal() +
-    theme(axis.text = element_text(size = 15),
-      legend.position = "right")
-  
+    theme(axis.text = element_text(size = 20),
+      legend.position = "right",
+      axis.title.y = element_text(size = 20),
+      plot.title = element_text(size = 20),
+      legend.text = element_text(size = 15),
+      legend.title = element_text(size = 15))
+
   return(p)
 }
