@@ -18,24 +18,28 @@
 #' If using custom colours, please make sure the number of colours specified
 #' matches the number of colours needed.
 #' @param title Character string. Used as plot title.
+#' @param compare Logical. Whether you want to compare the dimensions of two
+#' sets of omics. If \code{TRUE}, two file paths must be provided.
+#' @param log_x Logical. Whether the x axis should be put on a log2 scale.
 #'
 #' @returns Returns a ggplot.
 #' @import ggplot2
 #' @export
 
 plot_data_dim <- function(data, data_labels, which_omics = NULL,
-                          colours = NULL, compare = TRUE, title = NULL) {
+                          colours = NULL, compare = TRUE, title = NULL,
+                          log_x = FALSE) {
   # sanity
   if (compare) {
-    if (length(data) !=2) {
-      stop("You must provide two data files if comparison = TRUE")
+    if (length(data) != 2) {
+      stop("You must provide two data files if compare = TRUE")
     } else {
       # loading data
       dat <- get(load(data[1]))
       dat_2 <- get(load(data[2]))
     }
   } else {
-    if (length(data) !=1) {
+    if (length(data) != 1) {
       stop("You mut provide one data file if comparison = FALSE")
     } else {
       dat <- get(load(data))
@@ -85,13 +89,27 @@ plot_data_dim <- function(data, data_labels, which_omics = NULL,
   #set levels
   df$omic <- factor(df$omic, levels = unique(df$omic))
 
-  p <- ggplot(df, aes(x = omic, y = features, fill = omic)) +
+  # log transform the number of features
+  df$log_feat <- log2(df$features)
+
+  if (log_x) {
+    df$feat <- df$log_feat
+  } else {
+    df$feat <- df$features
+  }
+
+  p <- ggplot(df, aes(x = omic, y = feat, fill = omic)) +
     geom_bar(stat = "identity") +
-    geom_text(aes(label = paste0("n = ",samples)), angle =-90, vjust = -0.2, size = 4) +  # Annotate with number of columns
-    labs(title = title, y = "Number of features") +
+    geom_text(aes(label = paste0("n = ", features)), angle =-90, vjust = -0.2, size = 6) +  # Annotate with number of columns
+    labs(title = title, y = "Number of features", x = NULL) +
     scale_fill_manual(values = col[seq_len(nrow(df))]) +
     theme_classic() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels for readability
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 15),
+          axis.text.y = element_text(size = 20),
+          axis.title.x = element_text(size = 20),
+          strip.text = element_text(size = 20),
+          plot.title = element_text(size = 20),
+          legend.position = "none") + # Rotate x-axis labels for readability
     coord_flip() +
     facet_wrap(~label, ncol = 2, scales = "free_x")
 
