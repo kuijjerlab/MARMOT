@@ -169,8 +169,10 @@ plot_clin_association <- function(clin_assoc, colours = NULL) {
     geom_tile() +
     geom_text(color = "black") +
     scale_fill_gradient(low = "white", high = col[3], name = "-log10(FDR)") +
-    labs(x = NULL, y = "clinical feature") +
-    theme_classic()
+    labs(x = NULL, y = NULL) +
+    theme_classic() +
+    theme(axis.text.y = element_text(size = 15),
+    axis.text.x = element_text(size = 15))
 
   return(p)
 }
@@ -372,16 +374,17 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES, shape = factor)) +
    geom_point(data = df, aes(size = abs(NES) * 25)) +
    scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
-   scale_color_gradient2(low = col[1], mid = col[2], high = col[3],midpoint = 0,
+   scale_color_gradient2(low = col[1], mid = col[2], high = col[3], midpoint = 0,
                          name = "NES") +
    labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
    theme_bw() +
    theme(text = element_text(size = 100),
         legend.key.size = unit(5, "cm"),
         legend.text = element_text(size = 100),
-        axis.text.y = element_text(size = 120),
+        axis.text.y = element_text(size = 150),
         axis.text.x = element_text(size = 100),
-        panel.grid.major = element_line(color = "black")) +
+        panel.grid.major = element_line(color = "black"),
+        axis.title.x = element_text(size = 100)) +
    guides(
      shape = guide_legend(override.aes = list(size = 30))  # Increase size of shapes in legend
    )
@@ -805,7 +808,7 @@ plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
     labs(x = NULL, y = "Scaled omic values", title = title,
          fill = "PCA status") +
     theme_minimal() +
-    theme(axis.text = element_text(size = 20),
+    theme(axis.text = element_text(angle = 45, size = 20),
       legend.position = "right",
       axis.title.y = element_text(size = 20),
       plot.title = element_text(size = 20),
