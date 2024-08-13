@@ -205,13 +205,13 @@ for (cancer in cancers) {
 
   plot <- plot_data_distributions(pca, no_pca, labels = c("PCA", "no PCA"),
                                   title = cancer)
-  ggsave(plot, file = paste0("figures/", cancer, "_data_distribution_comparison.pdf"))
+  #ggsave(plot, file = paste0("figures/", cancer, "_data_distribution_comparison.pdf"))
 
   p_list[[cancer]] <- plot
 }
 
-#grid_plot <- grid.arrange(grobs = p_list, ncol = 3)
-#ggsave(grid_plot, file = "figures/data_dis_compare_all_can.pdf", height = 20, width = 20)
+grid_plot <- grid.arrange(grobs = p_list, ncol = 3)
+ggsave(grid_plot, file = "figures/data_dis_compare_all_can.pdf", height = 20, width = 20)
 ```
 
 # surv analysis for all cancers
@@ -225,27 +225,27 @@ for(i in cancers){
   noPCA <- get(load(paste0(wd, "/benchmark/", i,"_factorisation_no_PCA_5fct.Rda")))
   surv <- get(load(paste0(wd, "/", i, "_surv.Rda"))) # again, this requires the MOFA analysis to have been run first, but for now it works
   
-  names(PCA$factorizations) <- PCA$method
-  names(noPCA$factorizations) <- noPCA$method
+  #names(PCA$factorizations) <- PCA$method
+  #names(noPCA$factorizations) <- noPCA$method
   
   #if(is.null(methods)){
-    methods <- PCA$method
+    methods <- names(PCA)
   #}
   
   for(j in methods){
     if(j =="MOFA"){
       #get the factorisations for that method
-      pca_fct <- PCA$factorizations[[j]][[1]][[1]]
-      nopca_fct <- noPCA$factorizations[[j]][[1]][[1]]
+      pca_fct <- PCA[[j]][[1]]
+      nopca_fct <- noPCA[[j]][[1]]
     }else{
       #get the factorisations for that method
-      pca_fct <- PCA$factorizations[[j]][[1]]
-      nopca_fct <- noPCA$factorizations[[j]][[1]]
+      pca_fct <- PCA[[j]]
+      nopca_fct <- noPCA[[j]]
     }
     
     #run the surv association of the factors
-    PCA_cox <- surv_association(pca_fct, surv, univariate=TRUE)
-    noPCA_cox <- surv_association(nopca_fct, surv, univariate=TRUE)
+    PCA_cox <- surv_association(pca_fct, surv, univariate = TRUE)
+    noPCA_cox <- surv_association(nopca_fct, surv, univariate = TRUE)
     
     df <- surv_compare(models = list(PCA_cox, noPCA_cox), 
                        model_labels = c("PCA", "no_PCA"), univariate = TRUE, 
@@ -269,7 +269,7 @@ save(surv_df, file=paste0(wd, "/benchmark/TCGA_surv_all_bench_5fct.Rda"))
 ```
 
 ```{r surv_compare_bench}
-load("TCGA_MOFA_surv_all_bench_5fct.Rda")
+load("benchmark/TCGA_surv_all_bench_5fct.Rda")
 
 method <- unique(surv_df$method)
 cols <- palette("Dark2")
@@ -488,7 +488,7 @@ clin$sampleID <- gsub("-", "\\.", clin$sampleID)
 
 # get mofa model
 #MOFAmodel <- get(load(paste0("MOFA_liver_pca_indeg_quant.Rda")))
-MOFAmodel <- get(load(paste0("MOFA_liver_pca_indeg.Rda")))
+MOFAmodel <- get(load(paste0("gep_liver/MOFA_liver_pca_both.Rda")))
 
 
 # make sure samples are the same
@@ -501,17 +501,16 @@ clin_fil <- mutate_all(clin_fil, ~ ifelse(. == "", NA, .))
 # extract factors
 Z <- as.data.frame(get_factors(MOFAmodel)[[1]])
 feat <- c("Phenotype", "Age", "Sex", "Fibrosis", "Tumor.stage", "Tumor.size")
-#feat <- c("additional_pharmaceutical_therapy", "additional_radiation_therapy",
- #         "adjacent_hepatic_tissue_inflammation_extent_type", 
-  #        "age_at_initial_pathologic_diagnosis", "histological_type", "pathologic_stage",
-   #       "gender", "fibrosis_ishak_score")
+#feat <- c("additional_pharmaceutical_therapy", "additional_radiation_therapy", 
+ #        "age_at_initial_pathologic_diagnosis", "histological_type", "pathologic_stage",
+  #       "gender", "fibrosis_ishak_score")
 association <- clin_associaton(Z, clin = clin_fil, clin_feat = feat, sample_label = "sample")
 
-save(association, file = paste0("liver_clin_feat_ass_indeg.Rda"))
+save(association, file = paste0("gep_liver/liver_clin_feat_ass_both.Rda"))
 
 # plot clin association
-load("liver_clin_feat_ass_indeg.Rda")
-pdf(file="figures/liver_clin_ass_indeg_values.pdf")
+load("gep_liver/liver_clin_feat_ass_both.Rda")
+pdf(file = "gep_liver/liver_clin_ass_both_values.pdf", width = 11, height = 10)
 p <- plot_clin_association(association)
 print(p)
 dev.off()
@@ -647,11 +646,11 @@ save(stable_path, file = "gsea_stable_path_across_minprop.Rda")
 ```
 
 ```{r plot_diff_gsea_results}
-load("gsea_stable_path_across_minprop.Rda")
+load("gep_liver/gsea_stable_path_across_minprop.Rda")
 
 #gsea_res <- lapply(gsea_res, function(x) x[[1]]) # only for the reactome ones cos I was too lazy to redo a non minprop one separately
 titles <- names(gsea_res)
-file_name <- "figures/gsea_stable_path_hallmark.pdf"
+file_name <- "gep_liver/figures/gsea_stable_path_hallmark.pdf"
 
 #get stable pathways across minprop
 stable_path <- lapply(stable_path, function(x) x[[1]])
@@ -663,8 +662,8 @@ merged_df <- bind_rows(Map(function(df, factor) {
 }, stable_path, factors))
 
 plot <- gsea_dotplots(merged_df, surv_df = surv_df, gene_set = "hallmark",
-                      title = "Gep_liver", file_name = file_name, n_path = NULL,
-                      thresh = 1.30103, width = 160, height = 180, limitsize = FALSE)
+                      title = "TCGA", file_name = file_name, n_path = NULL,
+                      thresh = 1.30103, width = 140, height = 140, limitsize = FALSE)
 
 #ggsave(plot, file = file_name)
 
