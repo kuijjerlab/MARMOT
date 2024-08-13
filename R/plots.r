@@ -17,13 +17,14 @@
 #' If NULL, the "Dark2" pallette from RColorBrewer will be used (recommended).
 #' If using custom colours, please make sure the number of colours specified
 #' matches the number of colours needed.
+#' @param title Character string. Used as plot title.
 #'
 #' @returns Returns a ggplot.
 #' @import ggplot2
 #' @export
 
 plot_data_dim <- function(data, data_labels, which_omics = NULL,
-                          colours = NULL, compare = TRUE) {
+                          colours = NULL, compare = TRUE, title = NULL) {
   # sanity
   if (compare) {
     if (length(data) !=2) {
@@ -87,7 +88,7 @@ plot_data_dim <- function(data, data_labels, which_omics = NULL,
   p <- ggplot(df, aes(x = omic, y = features, fill = omic)) +
     geom_bar(stat = "identity") +
     geom_text(aes(label = paste0("n = ",samples)), angle =-90, vjust = -0.2, size = 4) +  # Annotate with number of columns
-    labs(title = df$label, y = "Number of features") +
+    labs(title = title, y = "Number of features") +
     scale_fill_manual(values = col[seq_len(nrow(df))]) +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + # Rotate x-axis labels for readability
@@ -205,7 +206,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
 
 
   p <- ggplot(surv_df, aes(x = cancer, y = logp, fill = label)) +
-    geom_beeswarm(shape = 21, cex = 0.7, size = 7) +
+    geom_beeswarm(shape = 21, cex = 0.7, size = 10) +
     scale_y_continuous(breaks = seq(0, 5, 1), limits = c(0, 5)) +
     scale_fill_manual(values = cols) +
     geom_hline(yintercept = 2, linetype = "dashed", col = "red") +
@@ -216,7 +217,7 @@ surv_compare_dotplot <- function(surv_df, models_to_compare, colours = NULL,
           legend.background = element_rect(color = "black"),
           legend.title = element_blank(),
           text = element_text(size = 20),
-          axis.text.x = element_text(angle = 45, hjust = 1))
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 20))
 
   return(p)
 
@@ -379,7 +380,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
 #' @param limma TopTable of limma output
 #' @param labels If true, the significant features will be labeled. Not
 #' recommended if there are a lot of significant features
-#' @param round_to Integer. What should the x axis be rounded to. e.g. 
+#' @param round_to Integer. What should the x axis be rounded to. e.g.
 #' nearest 5s, 10s, 100s etc. Default rounds to the nearest 10s.
 #' @param signif_thresh P-value threshold for significance. Default 0.05.
 #'
@@ -785,7 +786,7 @@ plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
     scale_fill_manual(values = col) +
     labs(x = NULL, y = NULL, title = title) +
     theme_minimal() +
-    theme(axis.text = element_text(size = 25),
+    theme(axis.text = element_text(size = 15),
       legend.position = "right")
   
   return(p)
