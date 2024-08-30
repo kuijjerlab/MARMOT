@@ -104,11 +104,11 @@ plot_data_dim <- function(data, data_labels, which_omics = NULL,
     labs(title = title, y = "Number of features", x = NULL) +
     scale_fill_manual(values = col[seq_len(nrow(df))]) +
     theme_classic() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 15),
-          axis.text.y = element_text(size = 20),
-          axis.title.x = element_text(size = 20),
-          strip.text = element_text(size = 20),
-          plot.title = element_text(size = 20),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 20),
+          axis.text.y = element_text(size = 25),
+          axis.title.x = element_text(size = 25),
+          strip.text = element_text(size = 25),
+          plot.title = element_text(size = 25),
           legend.position = "none") + # Rotate x-axis labels for readability
     coord_flip() +
     facet_wrap(~label, ncol = 2, scales = "free_x")
@@ -709,10 +709,11 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
 
   #colors to use
   col <- palette("Dark2")
-  high_cols <- colorRampPalette(c(col[1], "white"))(length(fit_list)+1)
-  low_cols <- colorRampPalette(c(col[2], "white"))(length(fit_list)+1)
+  high_cols <- colorRampPalette(c(col[1], "white"))(length(fit_list) + 1)
+  low_cols <- colorRampPalette(c(col[2], "white"))(length(fit_list) + 1)
   cols <- unlist(mapply(c, low_cols, high_cols, SIMPLIFY = FALSE))
   cols <- head(cols, -2)
+  cols <- rev(cols)
   names(cols) <- NULL
 
   km <- survminer::ggsurvplot_combine(fit_list, data = df_list,
@@ -731,10 +732,13 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
 
   km <- km$plot +
       theme(
-        axis.text = element_text(size = 15),
-        legend.text = element_text(size = 20),
-        legend.title = element_text(size = 20),
-        plot.title = element_text(size = 25)
+        axis.text.x = element_text(size = 20),
+        axis.text.y = element_text(size = 20),
+        legend.text = element_text(size = 30),
+        legend.title = element_text(size = 30),
+        plot.title = element_text(size = 30),
+        axis.title.x = element_text(size = 30),
+        axis.title.y = element_text(size = 30)
   )
 
   return(km)
