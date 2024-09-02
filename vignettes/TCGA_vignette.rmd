@@ -139,9 +139,11 @@ for (cancer in cancers) {
     load(paste0(wd, "/", cancer, "_omics_no_pca.Rda"))
 
     #factorizations <- runfactorization(omics=omics,num.factors = 5, sep = sep)
-    factorizations <- run_jdr(omic_list = omics, seed = 13)
+    factorizations <- run_jdr(omic_list = omics, seed = 13, jdr_methods = "JIVE")
+
+    save(factorizations, file = paste0(wd, "/benchmark", cancer, "_JIVE_test_no_PCA.Rda"))
     
-    save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_factorisation_no_PCA_5fct.Rda"))
+    #save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_factorisation_no_PCA_5fct.Rda"))
 
     # run the factorisation with all tools without PCA
     #fct_list <- run_factorisations(omic_list = omics, pca = FALSE, seed = 13)
@@ -179,16 +181,39 @@ for (cancer in cancers) {
 
 # PCA vs no PCA comparison of data dimensions and distributions
 
+```{r r2_cum variations}
+r2cum <- c(0.8, 0.85, 0.9, 0.95)
+
+for (cancer in cancers) {
+
+  files <- c(paste0(rep(paste0(data_dir, cancer, "/"), 5),
+               c("log_exp", "methy", "log_mirna",
+               "indegree_quant.RData", "outdegree.RData")))
+
+  for (j in r2cum) {
+    # with PCA  # with PCA
+      omics <- prepare_data(omics = files, names = omic_names, pca = TRUE,
+                          logs = TRUE, log_name = "logs/prep_data_pca_log.txt",
+                          file_name = paste0(cancer, "_omics_pca_results_", j, ".Rda"))
+      save(omics, file = paste0(wd, "/", cancer, "_omics_pca_", j, ".Rda"))
+      omics <- prepare_data(omics = files, names = omic_names, pca = TRUE,
+                          logs = TRUE, log_name = "logs/prep_data_pca_log.txt",
+                          file_name = paste0(cancer, "_omics_pca_results_", j, ".Rda"))
+      save(omics, file = paste0(wd, "/", cancer, "_omics_pca_", j, ".Rda"))
+  }
+}
+```
+
 ```{r pca_vs_nopca_data_dim}
 p_list <- list()
 for (cancer in cancers) {
   data <- c(paste0(wd, "/", cancer, "_omics_no_pca.Rda"),
             paste0(wd, "/", cancer, "_omics_pca.Rda"))
   # plot bar plots
-  p <- plot_data_dim(data = data, data_labels = c("no PCA", "PCA"),
-                      log_x = FALSE, title = cancer)
-  #ggsave(p, file = paste0("figures/", cancer, "_data_dim_compare.pdf"),
-  #      height = 11, width = 11)
+  p <- plot_data_dim(data = data[2], data_labels = c("PCA"),
+                      log_x = FALSE, title = cancer, compare = FALSE)
+  ggsave(p, file = paste0("figures/", cancer, "_data_dim_pca.pdf"),
+        height = 11, width = 11)
 
   p_list[[cancer]] <- p
 }
@@ -344,7 +369,7 @@ for (i in cancers) {
   all_fct <- get_factors(all)[[1]]
   nonet_fct <- get_factors(nonet)[[1]]
 
-  corr <- fct_corr(all_fct, nonet_fct, labels = c("all", "no_networks"),
+  corr <- fct_corr(all_fct, nonet_fct, labels = c("all", "no GRN"),
                     as_data_frame = TRUE, abs = TRUE)
   corr_all[[i]] <- corr
 
@@ -354,13 +379,13 @@ for (i in cancers) {
 
   # plot
   p <- plot_fct_corr(df)
-  ggsave(p, file = paste0("figures/", i, "_view_exclusion_both_abs.pdf"))
+  ggsave(p, file = paste0("figures/", i, "_view_exclusion_both_abs.pdf"), width = 8)
 
   corr_df <- rbind(corr_df, df)
 }
 
-save(corr_df, file = "view_exclusion_corr_df_indeg_abs.Rda")
-save(corr_all, file = "view_exclusion_corr_indeg_abs.Rda")
+save(corr_df, file = "view_exclusion_corr_df_both_abs.Rda")
+save(corr_all, file = "view_exclusion_corr_both_abs.Rda")
 
 q <- plot_fct_corr(corr_df)
 ggsave(q, file = paste0("figures/view_exclusion_heat_both_abs.pdf"),
@@ -415,8 +440,16 @@ for (i in cancers) {
     surv$sample_id <- gsub("-", "\\.", surv$sample_id)
     
     
-    save(surv, file=paste0(i,"_surv.Rda"))
+   save(surv, file=paste0(i,"_surv.Rda"))
   }
+
+  # doing this for colon cancer because for some reason, my approach really screwed up and I lost a lot of samples
+  # have to figure out why
+  # all the other cancers got their surv processed with the above code
+  #surv <- read.table(paste0(data_dir, i, "/survival"), sep = "\t", head = TRUE)
+  #colnames(surv) <- c("sample_id", "time_to_event", "vital_status")
+  #surv$sample_id <- gsub("-", "\\.", surv$sample_id)
+  #surv$sample_id <- toupper(surv$sample_id)
   
   # getting factors
   nonet_fct <- get_factors(nonet)[[1]]
@@ -450,18 +483,18 @@ for (i in cancers) {
   cox_all <- list(cox, cox_d, cox_o, cox_b)
   names(cox_all) <- c("nonet", "indeg", "out", "both")
   
-  save(cox_all, file=paste0(i,"_cox_models_PCA_quant.Rda"))
+  save(cox_all, file=paste0(i,"_cox_models_PCA_quant_new.Rda"))
   
   
 }
 
-save(surv_df, file=paste0("TCGA_MOFA_surv_df_all_PCA_quant.Rda")) 
+save(surv_df, file=paste0("TCGA_MOFA_surv_df_all_PCA_quant_new.Rda")) 
 ```
 
 ```{r surv_compare_plots}
 # generate comparison plots
 if(!exists("surv_df")){
-  load(paste0("TCGA_MOFA_surv_df_all_PCA_quant.Rda"))
+  load(paste0("TCGA_MOFA_surv_df_all_PCA_quant_new.Rda"))
 }
 
 #get models to compare
@@ -510,7 +543,7 @@ save(association, file = paste0("gep_liver/liver_clin_feat_ass_both.Rda"))
 
 # plot clin association
 load("gep_liver/liver_clin_feat_ass_both.Rda")
-pdf(file = "gep_liver/liver_clin_ass_both_values.pdf", width = 11, height = 10)
+pdf(file = "gep_liver/figures/liver_clin_ass_both_values.pdf", width = 10, height = 10)
 p <- plot_clin_association(association)
 print(p)
 dev.off()
@@ -930,3 +963,13 @@ save(surv_seed, file = "TCGA_MOFA_surv_seed.Rda")
 write.csv(surv_seed, file = "TCGA_MOFA_surv_seed.csv")
 ```
 
+```{r samples_per_cancer}
+
+for (cancer in cancers) {
+  load(paste0(cancer, "_omics_no_pca.Rda"))
+  load(paste0(cancer, "_surv.Rda"))
+  print(cancer)
+  samples <- .overlap_sets(list(surv$sample_id, colnames(omics[[1]])))
+  print(length(samples))
+}
+```
