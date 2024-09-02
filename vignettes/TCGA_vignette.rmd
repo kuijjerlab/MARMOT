@@ -844,6 +844,9 @@ tcga <- reshape2::melt(tcga)
 colnames(gep) <- c("feature", "factor", "value")
 colnames(tcga) <- c("feature", "factor", "value")
 
+# all tfs
+tfs <- unique(gep$feature)
+
 # filter & sort by weight
 gep <- gep %>%
       filter(factor %in% gep_fct)
@@ -864,9 +867,18 @@ tcga <- tcga %>%
         filter(value >= 0.5) %>%
         ungroup()
 
-common <- intersect(tcga$feature, gep$feature)
+# create contingency table for fisher's exact test
+common <- length(intersect(tcga$feature, gep$feature))
+in_gep <- nrow(gep) - common
+in_tcga <- nrow(tcga) - common
+in_neither <- length(tfs) - (in_gep + in_tcga + common)
 
-save(common, file = "outdeg_gep_tcga_common_tfs.Rda")
+contingency_table <- matrix(c(common, in_gep, in_tcga, in_neither), nrow = 2, byrow = TRUE)
+
+# perform fisher test
+fisher_result <- fisher.test(contingency_table)
+
+save(fisher_result, file = "outdeg_gep_tcga_fisher_result.Rda")
 ```
 
 ```{r plot_common_TFs}
