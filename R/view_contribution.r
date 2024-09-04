@@ -30,8 +30,8 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE,
 
   # add labels
   if (!is.null(labels)) {
-    colnames(set1) <- paste(colnames(set1), labels[1], sep = "_")
-    colnames(set2) <- paste(colnames(set2), labels[2], sep = "_")
+    colnames(set1) <- paste(colnames(set1), labels[1], sep = " ")
+    colnames(set2) <- paste(colnames(set2), labels[2], sep = " ")
   }
 
   # perform pairwise correlations of each factor in one set with the others
@@ -110,50 +110,4 @@ format_fct_corr <- function(corr_res) {
   corr <- rbind(corr1, corr2)
 
   return(corr)
-}
-
-#' @name plot_fct_corr
-#'
-#' @description Plots heatmaps of factor correlations.
-#'
-#' @inheritParams plot_data_dim
-#' @param corr_df A data frame with the correlation values.
-#' Expects output of \code{\link{format_fct_corr}}.
-#' @param method One of c("pearson", "spearman") indicating which correlation
-#' method should be plotted.
-#' @param ... Any other ggplot parameters.
-#'
-#' @returns A list of two ggplots. One for pearson and one for spearman.
-#'
-#' @export
-#' @import ggplot2
-
-plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, ...) {
-  # set colours
-  if (is.null(colours)) {
-    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
-    col <- col[c(3, 4)]
-  } else {
-    if (length(colours) != 1) {
-      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
-                  "Please make sure you specify the correct number of colours."))
-    }
-    col <- colours
-  }
-
-  corr_df <- corr_df[which(corr_df$method == method),]
-
-  # Plot heatmap
- p <- ggplot(data = corr_df, aes(x = Var1, y = Var2, fill = value, label = round(value, 2))) +
-    geom_tile() +
-    #facet_grid(cancer ~ method) +
-    geom_text(color = "black") +
-    facet_wrap(~cancer, nrow = 3) +
-    labs(x = "Var1", y = "Var2", fill = "Value") +
-    scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-    labs(x = NULL, y = NULL, fill = paste0(method, " r")) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-  return(p)
 }

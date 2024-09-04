@@ -364,29 +364,35 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   #order pathway fct by the gsea signif
   df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)]))
 
-  # only keep top 20 or ones above threshhold
+  # only keep top n pathways or ones above threshhold
   if (!is.null(n_path)) {
     df <- df[1:n_path, ]
   } else {
     df <- df[which(df$logp >= thresh), ]
   }
 
-  p <- ggplot(data = df, aes(x = logp, y = pathway, color = NES, shape = factor)) +
-   geom_point(data = df, aes(size = abs(NES) * 25)) +
-   scale_size(range = c(20, 150), name = "abs(NES)", guide = "none") +
-   scale_color_gradient2(low = col[1], mid = col[2], high = col[3], midpoint = 0,
+  p <- ggplot(data = df, aes(x = logp, y = pathway, shape = factor)) +
+    geom_point(data = df, aes(size = 30, fill = NES),
+             color = "black",  # Set the border color to black
+             stroke = 1.5,      # Border thickness
+             position = position_jitter(width = 0.2, height = 0.2)) +
+   scale_size(range = 30, guide = "none") +
+   scale_color_manual(values = "black", guide = "none") +
+   scale_fill_gradient2(low = col[1], mid = col[2], high = col[3], midpoint = 0,
                          name = "NES") +
+   scale_shape_manual(values = c(21, 22, 23)) +
    labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
    theme_bw() +
-   theme(text = element_text(size = 100),
-        legend.key.size = unit(5, "cm"),
-        legend.text = element_text(size = 100),
-        axis.text.y = element_text(size = 150),
-        axis.text.x = element_text(size = 100),
+   theme(text = element_text(size = 30),
+        legend.key.size = unit(1.5, "cm"),
+        legend.text = element_text(size = 30),
+        axis.text.y = element_text(size = 50),
+        axis.text.x = element_text(size = 30),
         panel.grid.major = element_line(color = "black"),
-        axis.title.x = element_text(size = 100)) +
+        axis.title.x = element_text(size = 30),
+        legend.position = "bottom") +
    guides(
-     shape = guide_legend(override.aes = list(size = 30))  # Increase size of shapes in legend
+     shape = guide_legend(override.aes = list(size = 10))  # Increase size of shapes in legend
    )
   
   if (!is.null(file_name)) {
@@ -665,18 +671,19 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 #' @name top_surv_factors_km
 #' @description Plots Kaplan-Meier curves for the significantly associated
 #' survival factors (identified in surv_compare)
+#' @inheritParams differential_analysis
 #' @param surv Survival information as data frame.
 #' @param title Character string. Title of the plot.
-#' @param conf.int Whether or not to show confidence intervals. Will be passed to ggsurvplot.
+#' @param conf_int Whether or not to show confidence intervals. Will be passed
+#' to ggsurvplot.
 #' @param factor Vector containing the factor for which to do this.
 #' Only one factor at a time, call mutiple times for multiple factors.
-#' @param minprops Minimum proportion of samples per group for the split into
-#' survival groups.
-#' @returns A list containing KM plots for each significantly survival associated factor
+#' @returns A list containing KM plots for each significantly survival associated
+#' factor
 #' @export
 #' @import survminer ggplot2 survival
 surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
-                           minprops) {
+                           minprops, use_median = TRUE) {
 
   # overlap samples
   # Define the sets
@@ -692,22 +699,34 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
   surv <- surv[which(surv$sample_id %in% samples), ]
 
   #get cutpoint
+  legend_labels <- c()
   df_list <- list()
   fit_list <- list()
-  legend_labels <- c()
-  for (minprop in minprops) {
-    df <- .fct_cutpoint(factor, surv, minprop = minprop)
-    df$FactorValue <- paste0(df$FactorValue, "_", minprop)
+ 
+
+  if (use_median) {
+    df <- .fct_cutpoint(factor, surv, minprop = minprop, use_median = use_median)
+    df <- df[order(df$FactorValue, decreasing = TRUE), ]
     fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
-    df_list <- append(df_list, list(df))
-    fit_list <- append(fit_list, list(fit))
-    legend_labels <- c(legend_labels, unique(df$FactorValue))
+    list_names <- "med"
+  } else {
+    for (minprop in minprops) {
+      df <- .fct_cutpoint(factor, surv, minprop = minprop, use_median = use_median)
+      df$FactorValue <- paste0(df$FactorValue, "_", minprop)
+      df <- df[order(df$FactorValue, decreasing = TRUE), ]
+      fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
+      list_names <- paste0("minprop_", minprops)
+    }
   }
 
-  names(df_list) <- paste0("minprop_", minprops)
-  names(fit_list) <- paste0("minprop_", minprops)
+  df_list <- append(df_list, list(df))
+  fit_list <- append(fit_list, list(fit))
+  legend_labels <- c(legend_labels, unique(df$FactorValue))
 
-  #colors to use
+  names(df_list) <- list_names
+  names(fit_list) <- list_names
+
+  #colours to use
   col <- palette("Dark2")
   high_cols <- colorRampPalette(c(col[1], "white"))(length(fit_list) + 1)
   low_cols <- colorRampPalette(c(col[2], "white"))(length(fit_list) + 1)
@@ -715,6 +734,7 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
   cols <- head(cols, -2)
   cols <- rev(cols)
   names(cols) <- NULL
+
 
   km <- survminer::ggsurvplot_combine(fit_list, data = df_list,
     conf.int = conf_int,
@@ -731,6 +751,7 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
   )
 
   km <- km$plot +
+      labs(color = "Factor Value") +
       theme(
         axis.text.x = element_text(size = 20),
         axis.text.y = element_text(size = 20),
@@ -818,6 +839,55 @@ plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
       plot.title = element_text(size = 20),
       legend.text = element_text(size = 15),
       legend.title = element_text(size = 15))
+
+  return(p)
+}
+
+#' @name plot_fct_corr
+#'
+#' @description Plots heatmaps of factor correlations.
+#'
+#' @inheritParams plot_data_dim
+#' @param corr_df A data frame with the correlation values.
+#' Expects output of \code{\link{format_fct_corr}}.
+#' @param method One of c("pearson", "spearman") indicating which correlation
+#' method should be plotted.
+#' @param ... Any other ggplot parameters.
+#'
+#' @returns A list of two ggplots. One for pearson and one for spearman.
+#'
+#' @export
+#' @import ggplot2
+
+plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, ...) {
+  # set colours
+  if (is.null(colours)) {
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
+    col <- col[c(3, 4)]
+  } else {
+    if (length(colours) != 1) {
+      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+                  "Please make sure you specify the correct number of colours."))
+    }
+    col <- colours
+  }
+
+  corr_df <- corr_df[which(corr_df$method == method),]
+
+  # Plot heatmap
+ p <- ggplot(data = corr_df, aes(x = Var1, y = Var2, fill = value, label = round(value, 2))) +
+    geom_tile() +
+    #facet_grid(cancer ~ method) +
+    geom_text(color = "black", size = 6) +
+    facet_wrap(~cancer, nrow = 3) +
+    labs(x = "Var1", y = "Var2", fill = "Value") +
+    scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
+    labs(x = NULL, y = NULL, fill = paste0(method, " r")) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 20),
+          axis.text.y = element_text(size = 20),
+          legend.text = element_text(size = 15),
+          legend.title = element_text(size = 20))
 
   return(p)
 }
