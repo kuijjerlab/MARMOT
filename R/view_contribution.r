@@ -109,15 +109,18 @@ format_fct_corr <- function(corr_res) {
   # concatenate the two methods
   corr <- rbind(corr1, corr2)
 
-  #rename columns
-  cols <- colnames(corr)[1:2]
-  colnames(corr)[1] <- sapply(strsplit(cols[1], " ", fixed = TRUE), function(x) paste(x[-1], collapse = " "))
 
-  colnames(corr)[2] <- sapply(strsplit(cols[2], " ", fixed = TRUE), function(x) paste(x[-1], collapse = " "))
+  #rename columns
+  model1 <- as.character(corr[, 1])
+  model2 <- as.character(corr[, 2])
+  colnames(corr)[1] <- sapply(strsplit(model1[1], " ", fixed = TRUE), function(x) paste(x[-1], collapse = " "))
+
+  colnames(corr)[2] <- sapply(strsplit(model2[1], " ", fixed = TRUE), function(x) paste(x[-1], collapse = " "))
 
   # remove labels from factor names
-  corr[, 1] <- sapply(strsplit(corr[, 1], " ", fixed = TRUE), `[`, 1)
-  corr[, 2] <- sapply(strsplit(corr[, 2], " ", fixed = TRUE), `[`, 1)
+ 
+  corr[, 1] <- as.factor(sapply(strsplit(model1, " ", fixed = TRUE), `[`, 1))
+  corr[, 2] <- as.factor(sapply(strsplit(model2, " ", fixed = TRUE), `[`, 1))
 
   return(corr)
 }
