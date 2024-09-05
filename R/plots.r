@@ -852,6 +852,7 @@ plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
 #' Expects output of \code{\link{format_fct_corr}}.
 #' @param method One of c("pearson", "spearman") indicating which correlation
 #' method should be plotted.
+#' @param abs Logical. Whether to plot absolute correlation.
 #' @param ... Any other ggplot parameters.
 #'
 #' @returns A list of two ggplots. One for pearson and one for spearman.
@@ -859,7 +860,8 @@ plot_data_distributions <- function(omic_list, omic_list2 = NULL, labels = NULL,
 #' @export
 #' @import ggplot2
 
-plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, ...) {
+plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, abs = FALSE,
+                           ...) {
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -872,22 +874,37 @@ plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, ...) {
     col <- colours
   }
 
-  corr_df <- corr_df[which(corr_df$method == method),]
+  corr_df <- corr_df[which(corr_df$method == method), ]
 
   # Plot heatmap
- p <- ggplot(data = corr_df, aes(x = Var1, y = Var2, fill = value, label = round(value, 2))) +
-    geom_tile() +
-    #facet_grid(cancer ~ method) +
-    geom_text(color = "black", size = 6) +
-    facet_wrap(~cancer, nrow = 3) +
-    labs(x = "Var1", y = "Var2", fill = "Value") +
+ p <- .plot_heatmap(corr_df)
+ 
+ # add aditional customisations
+ p <- p + facet_wrap(~cancer, nrow = 3) +
     scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-    labs(x = NULL, y = NULL, fill = paste0(method, " r")) +
+    labs(fill = paste0(method, " r"), x = colnames(corr_df)[1], y = colnames(corr_df)[2])
+
+  return(p)
+}
+
+
+#' @param data A long format data frame with the variables to plot plus the value.
+#' Variables should be the first 2 columns and value should be the third
+#' @importFrom rlang sym
+#' @importFrom magrittr %>%
+
+.plot_heatmap <- function(data) {
+
+    p <- ggplot(data = data, aes(x = data[, 1], y = data[, 2], fill = data[, 3],
+              label = round(data[, 3], 2))) +
+    geom_tile() +
+    geom_text(color = "black", size = 6) +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 20),
           axis.text.y = element_text(size = 20),
           legend.text = element_text(size = 15),
-          legend.title = element_text(size = 20))
-
+          legend.title = element_text(size = 20),
+          axis.title = element_text(size = 20))
+  
   return(p)
 }
