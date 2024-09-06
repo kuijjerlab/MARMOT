@@ -56,7 +56,7 @@ clin_dir <- "/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebo
 
 # defining vector of cancer names for which to do the analysis
 cancers <- c("aml", "breast", "colon", "gbm", "kidney", "liver", "lung",
-           "melanoma", "ovarian", "sarcoma")
+          "melanoma", "ovarian", "sarcoma")
 #cancers <- "liver"
 
 model <- c("nonet", "indeg", "out", "both")
@@ -378,8 +378,14 @@ for (i in cancers) {
   df$cancer <- i
 
   # plot
-  p <- plot_fct_corr(df)
-  ggsave(p, file = paste0("figures/", i, "_view_exclusion_both_abs.pdf"), width = 8)
+  p <- plot_fct_corr(df, abs = TRUE)
+
+  # removing facet headers for individual plots
+  p <- p + 
+  theme(strip.background = element_blank(),  # Remove background of the facet label
+        strip.text = element_blank())
+
+  ggsave(p, file = paste0("figures/", i, "_view_exclusion_both_abs.pdf"), width = 10, height = 9)
 
   corr_df <- rbind(corr_df, df)
 }
@@ -388,33 +394,45 @@ save(corr_df, file = "view_exclusion_corr_df_both_abs.Rda")
 save(corr_all, file = "view_exclusion_corr_both_abs.Rda")
 
 q <- plot_fct_corr(corr_df)
+q <- q + theme(legend.position = c(0.65, 0.1),
+              legend.key.size = unit(1.5, "cm"))
 ggsave(q, file = paste0("figures/view_exclusion_heat_both_abs.pdf"),
-       height = 10, width = 10)
+       height = 16, width = 18)
 ggsave(q, file = paste0("figures/view_exclusion_heat_both_abs.png"),
        height = 10, width = 10)
 ```
 
 ```{r var_explained_heat}
+cols <- palette("Dark2")
+load("TCGA_MOFA_surv_df_all_PCA_quant_new.Rda")
+
 for (cancer in cancers) {
+  surv_can <- surv_df %>%
+              filter(cancer == cancer)
   load(paste0("MOFA_", cancer, "_pca_nonet.Rda"))
   load(paste0("MOFA_", cancer, "_pca_indeg.Rda"))
   load(paste0("MOFA_", cancer, "_pca_out.Rda"))
   load(paste0("MOFA_", cancer, "_pca_both.Rda"))
 
-  pdf(file = paste0("figures/", cancer, "_var_heat.pdf"))
-  n <- plot_variance_explained(mofa_nonet)
+  n <- suppressMessages(plot_var_heat(mofa_nonet))
   #n + title(main = "no net")
-  print(n)
-  i <- plot_variance_explained(mofa_indeg)
+  ggsave(n, file = paste0("figures/",cancer, "_var_explained_no_net.pdf"))
+
+
+  i <- suppressMessages(plot_var_heat(mofa_indeg))
   #i + title(main = "indegree")
-  print(i)
-  o <- plot_variance_explained(mofa_out)
+  ggsave(i, file = paste0("figures/",cancer, "_var_explained_indeg.pdf"))
+
+ 
+  o <- suppressMessages(plot_var_heat(mofa_out))
  # o + title(main = "outdegree")
-  print(o)
-  b <- plot_variance_explained(mofa_both)
+   ggsave(o, file = paste0("figures/", cancer, "_var_explained_out.pdf"))
+
+  
+  b <- suppressMessages(plot_var_heat(mofa_both))
  # b + title(main = "both")
-  print(b)
-  dev.off()
+  ggsave(b, file = paste0("figures/",cancer, "_var_explained_both.pdf"))
+
 }
 
 ```
@@ -489,6 +507,26 @@ for (i in cancers) {
 }
 
 save(surv_df, file=paste0("TCGA_MOFA_surv_df_all_PCA_quant_new.Rda")) 
+```
+
+```{r surv_sig_heat}
+load("TCGA_MOFA_surv_df_all_PCA_quant_new.Rda")
+cols <- palette("Dark2")
+
+for (can in cancers) {
+  surv_can <- surv_df %>%
+              filter(cancer == can) %>%
+              select(c(label, factor, logp, cancer)) %>%
+              filter(label %in% c("both", "nonet")) 
+
+  p <- .plot_heatmap(surv_can)
+  p <- p + 
+       scale_fill_gradient(low = "white", high = cols[1],
+                           limits = c(0,3),
+                           breaks = seq(0,3, by = 1)) +
+       labs(x = "Model", y = NULL, fill = expression("-log"[10] * "FDR"))
+  ggsave(p, file = paste0("figures/", can, "_fct_sig_heat.pdf"))
+}
 ```
 
 ```{r surv_compare_plots}
@@ -570,7 +608,8 @@ clin$sample_id <- gsub("-", "\\.", clin$sample_id)
 load("liver_surv.Rda")
 load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 load("MOFA_liver_pca_both.Rda")
-minprops <- c(0.1, 0.2, 0.3)
+minprops <- c(0.1, 0.2, 0.3, 0.4, 0.5)
+#use_median <- TRUE
 
 # get significant factors
 sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
@@ -593,18 +632,18 @@ base_names <- paste0("diff_indeg_liver_limma_", colnames(Z))
 #diff <- Map(function(x, file_name) {
 #  factor <- setNames(x, rownames(Z))
 #  differential_analysis(omic = indeg, factor = factor, surv = surv,
-#  file_name = file_name, sample_label = "sample_id")
-#}, Z, file_names)
+#  file_name = file_name, sample_label = "sample_id", use_median = use_median)
+#}, Z, base_names)
 
 # trying this with varying minprop
 #diff <- Map(function(x, base_name) {
-  #Map(function(mp) {
-    #factor <- setNames(x, rownames(Z))
-    #file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
+ # Map(function(mp) {
+  #  factor <- setNames(x, rownames(Z))
+   # file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
     #differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
-   #   file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis", "gender"),
-  #    sample_label = "sample_id", minprop = mp)
- # }, minprops)
+     # file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis", "gender"),
+      #sample_label = "sample_id", minprop = mp)
+  #}, minprops)
 #}, Z, base_names)
 
 # for gep
@@ -620,12 +659,12 @@ diff <- Map(function(x, base_name) {
   return(mps)
 }, Z, base_names)
 
-save(diff, file = "diff_indeg_liver_limma_all_fct_minprop_var.Rda")
+save(diff, file = "diff_indeg_liver_limma_all_fct.Rda")
 ```
 
 ```{r diff_indeg_liver_gsea}
-load("diff_indeg_liver_limma_all_fct_minprop_var.Rda")
-minprops <- c(0.1, 0.2, 0.3)
+load("diff_indeg_liver_limma_all_fct.Rda")
+minprops <- c(0.1, 0.2, 0.3, 0.4, 0.5)
 
 # get pathways
 hallmark <- msigdbr(species = "human", category = "H")
@@ -651,7 +690,7 @@ base_names <- paste0(rep("liver_gsea_diff_indeg_", length(diff)), names(diff))
 # run gsea
 #gsea_res <- Map(function(x, file_name) {
 #  perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name,
-#  limma = TRUE)}, diff, file_names)
+#  limma = TRUE)}, diff, base_names)
 
 # trying with minprop variation
 gsea_res <- Map(function(diff_sublist, base_name) {
@@ -661,7 +700,7 @@ gsea_res <- Map(function(diff_sublist, base_name) {
   }, diff_sublist, minprops)
 }, diff, base_names)
 
-save(gsea_res, file = "liver_gsea_diff_all_fct_minprop_var.Rda")
+save(gsea_res, file = "liver_gsea_diff_all_fct.Rda")
 ```
 
 ```{r path_select}
@@ -679,24 +718,24 @@ save(stable_path, file = "gsea_stable_path_across_minprop.Rda")
 ```
 
 ```{r plot_diff_gsea_results}
-load("gep_liver/gsea_stable_path_across_minprop.Rda")
+load("liver_gsea_diff_all_fct.Rda")
 
-#gsea_res <- lapply(gsea_res, function(x) x[[1]]) # only for the reactome ones cos I was too lazy to redo a non minprop one separately
-titles <- names(gsea_res)
-file_name <- "gep_liver/figures/gsea_stable_path_hallmark.pdf"
+gsea_res <- lapply(gsea_res, function(x) x[[5]]) # if you wanna pick a specific minprop
+file_name <- "figures/gsea_path_hallmark_minprop_0.5.pdf"
 
 #get stable pathways across minprop
-stable_path <- lapply(stable_path, function(x) x[[1]])
+#stable_path <- lapply(stable_path, function(x) x[[1]])
 
 # Add the factor column to each data frame and merge them
-factors <- names(stable_path)
+#factors <- names(stable_path)
+factors <- names(gsea_res)
 merged_df <- bind_rows(Map(function(df, factor) {
   df %>% mutate(factor = factor)
-}, stable_path, factors))
+}, gsea_res, factors))
 
 plot <- gsea_dotplots(merged_df, surv_df = surv_df, gene_set = "hallmark",
                       title = "TCGA", file_name = file_name, n_path = NULL,
-                      thresh = 1.30103, width = 140, height = 140, limitsize = FALSE)
+                      thresh = 1.30103, width = 30, height = 30, limitsize = FALSE)
 
 #ggsave(plot, file = file_name)
 
@@ -713,6 +752,7 @@ load("MOFA_liver_pca_both.Rda")
 load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 
 minprops <- c(0.1, 0.2, 0.3)
+use_median <- TRUE
 
 sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
 Z <- get_factors(mofa_both)[[1]]
@@ -723,15 +763,20 @@ titles <- colnames(Z)
 
 plots <- Map(function(factor, title) {
   factor <- setNames(factor, rownames(Z))
-  surv_factor_km(surv = surv, factor = factor, title = title, minprops = minprops)
+  surv_factor_km(surv = surv, factor = factor, title = title, minprops = minprops,
+                use_median = use_median)
   #ggsave(km, file = file_name)
 }, Z, titles)
 
 grid_plot <- grid.arrange(grobs = plots, ncol = 3)
-ggsave(grid_plot, file = "figures/km_grid_all_fct.pdf", width = 27, height = 10)
+ggsave(grid_plot, file = "figures/km_grid_all_fct_med.pdf", width = 27, height = 10)
 
 c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
 #c("#1B9E77", "#D95F02", "#67BEA4", "#E59456", "#B3DED1", "#F2C9AA")
+
+```
+
+```{r km_plots_with_median}
 
 ```
 
@@ -858,19 +903,21 @@ tcga <- tcga %>%
 gep <- gep %>%
         group_by(factor) %>%
         mutate(value = value / max(abs(value), na.rm = TRUE)) %>%
-        filter(value >= 0.5)
+        slice_max(order_by = abs(value), n = 10) %>%
+        #filter(value > 0.5) %>%
         ungroup()
 
 tcga <- tcga %>%
         group_by(factor) %>%
         mutate(value = value / max(abs(value), na.rm = TRUE)) %>%
-        filter(value >= 0.5) %>%
+        slice_max(order_by = abs(value), n = 10) %>%
+        #filter(value > 0.5) %>%
         ungroup()
 
 # create contingency table for fisher's exact test
-common <- length(intersect(tcga$feature, gep$feature))
-in_gep <- nrow(gep) - common
-in_tcga <- nrow(tcga) - common
+common <- length(unique(intersect(tcga$feature, gep$feature)))
+in_gep <- length(unique(gep$feature)) - common
+in_tcga <- length(unique(tcga$feature)) - common
 in_neither <- length(tfs) - (in_gep + in_tcga + common)
 
 contingency_table <- matrix(c(common, in_gep, in_tcga, in_neither), nrow = 2, byrow = TRUE)
@@ -878,7 +925,7 @@ contingency_table <- matrix(c(common, in_gep, in_tcga, in_neither), nrow = 2, by
 # perform fisher test
 fisher_result <- fisher.test(contingency_table)
 
-save(fisher_result, file = "outdeg_gep_tcga_fisher_result.Rda")
+save(fisher_result, file = "outdeg_gep_tcga_fisher_result_top10.Rda")
 ```
 
 ```{r plot_common_TFs}
