@@ -139,9 +139,9 @@ for (cancer in cancers) {
     load(paste0(wd, "/", cancer, "_omics_no_pca.Rda"))
 
     #factorizations <- runfactorization(omics=omics,num.factors = 5, sep = sep)
-    factorizations <- run_jdr(omic_list = omics, seed = 13, jdr_methods = "JIVE")
+    factorizations <- run_jdr(omic_list = omics, seed = 13)
 
-    save(factorizations, file = paste0(wd, "/benchmark", cancer, "_JIVE_test_no_PCA.Rda"))
+    save(factorizations, file = paste0(wd, "/benchmark", cancer, "_no_PCA.Rda"))
     
     #save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_factorisation_no_PCA_5fct.Rda"))
 
