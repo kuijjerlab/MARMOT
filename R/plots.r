@@ -867,10 +867,16 @@ plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, abs = FAL
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
     col <- col[c(3, 4)]
   } else {
-    if (length(colours) != 1) {
-      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
-                  "Please make sure you specify the correct number of colours."))
+    if (abs) {
+      if (length(colours) != 1) {
+        stop(paste0(length(colours), " colours were specified, when 1 was expected. ",
+                    "Please make sure you specify the correct number of colours."))
+      }
+    } else if (length(colours) != 2) {
+        stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
+                    "Please make sure you specify the correct number of colours."))
     }
+      
     col <- colours
   }
 
@@ -900,11 +906,43 @@ plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, abs = FAL
     geom_tile() +
     geom_text(color = "black", size = 6) +
     theme_classic() +
+    coord_fixed() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 20),
           axis.text.y = element_text(size = 20),
           legend.text = element_text(size = 15),
           legend.title = element_text(size = 20),
           axis.title = element_text(size = 20))
+  
+  return(p)
+}
+
+#' @description takes as input a MOFA object, plots the
+#' standard variance explained heatmap from MOFA and modifies it.
+#' See also \code{\link{MOFA2::plot_variance_explained}}.
+#' @inheritParams plot_data_dim
+#' @import ggplot2
+
+plot_var_heat <- function(mofa_object, colours = NULL) {
+  # sanity check
+  if (!is.null(colours)) {
+    if (length(colours) != 1) {
+      warning(paste0(length(colours), " colours were specified, when 1 was expected. ",
+                    "Only the first colour will be used."))
+    }
+
+    cols <- colours[1]
+  } else {
+    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
+    cols <- col[3]
+  }
+
+  p <- MOFA2::plot_variance_explained(mofa_object)
+  p <- p + 
+      geom_text(aes(label = round(value, 2))) +
+      scale_fill_gradient(low = "white", high = cols[1],
+                          limits = c(0, 15), oob = scales::squish,
+                          breaks = seq(0, 15, by = 5),
+                          labels = c(as.character(seq(0,10, by = 5)), "≥ 15"))
   
   return(p)
 }
