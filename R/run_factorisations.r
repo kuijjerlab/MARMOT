@@ -164,7 +164,9 @@ run_jive <- function(omic_list, n_fct) {
   # run jive
   # look a little more into JIVE options and what they mean
   jive_model <- jive(omic_list, rankJ = n_fct,
-                     rankA = rep(n_fct, length(omic_list)))
+                     rankA = rep(n_fct, length(omic_list)),
+                     method = "given", conv = "default",
+                     maxiter = 100)
 
   return(jive_model)
 }
