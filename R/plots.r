@@ -371,17 +371,36 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
     df <- df[which(df$logp >= thresh), ]
   }
 
-  p <- ggplot(data = df, aes(x = logp, y = pathway, shape = factor)) +
-    geom_point(data = df, aes(size = 30, fill = NES),
+  p <- .generic_dotplot(df, x = "logp", y = "pathway", shape = "factor", fill = "NES")
+  p <- p +
+   scale_fill_gradient2(low = col[1], mid = col[2], high = col[3], midpoint = 0,
+                         name = "NES") +
+   labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
+   theme(legend.position = "bottom")
+  
+  if (!is.null(file_name)) {
+    ggsave(p, file = file_name, ...)
+  }
+
+  return(p)
+}
+
+#' @description Generic function to make dotplots with multiple dots per row.
+#' @param data Long format data frame for ploting.
+#' @param x String. Name of column in \code{data} to map to x axis.
+#' @param y String. Name of column in \code{data} to map to y axis
+#' @param shape String. Name of column in \code{data} to map to shape. Optional.
+#' @param fill String. Name of column in \code{data} to map to fill. Optional.
+
+.generic_dotplot <- function(data, x, y, shape = NULL, fill = NULL) {
+  p <- ggplot(data = data, aes_string(x = x, y = y, shape = shape)) +
+    geom_point(data = data, aes_string(size = 30, fill = fill),
              color = "black",  # Set the border color to black
              stroke = 1.5,      # Border thickness
              position = position_jitter(width = 0.2, height = 0.2)) +
    scale_size(range = 30, guide = "none") +
    scale_color_manual(values = "black", guide = "none") +
-   scale_fill_gradient2(low = col[1], mid = col[2], high = col[3], midpoint = 0,
-                         name = "NES") +
    scale_shape_manual(values = c(21, 22, 23)) +
-   labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
    theme_bw() +
    theme(text = element_text(size = 30),
         legend.key.size = unit(1.5, "cm"),
@@ -389,17 +408,12 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
         axis.text.y = element_text(size = 50),
         axis.text.x = element_text(size = 30),
         panel.grid.major = element_line(color = "black"),
-        axis.title.x = element_text(size = 30),
-        legend.position = "bottom") +
+        axis.title.x = element_text(size = 30)) +
    guides(
      shape = guide_legend(override.aes = list(size = 10))  # Increase size of shapes in legend
    )
-  
-  if (!is.null(file_name)) {
-    ggsave(p, file = file_name, ...)
-  }
 
-  return(p)
+   return(p)
 }
 
 #' @name volcano_plot
@@ -485,9 +499,8 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' @param scale Logical. Whether to scale the feature weight between c(-1,1).
 #' @param thresh Numeric. Weight threshold above which to label features.
 #' Absolute value will be considered.
-#' @param plot_distribution If \code{TRUE}, this will show a distribution of the
-#' feature weights, annotating the top features. If \code{FALSE}, it will
-#' plot only the top features.
+#' @param plot_type Which type of plot to make.
+#' One of c("dotplot", "distribution", "barplot").
 #' @param ... Any other parameters of \code{ggplot} functions.
 #'
 #' @returns A ggplot object.
@@ -497,7 +510,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
                           scale = TRUE, file_name = NULL, thresh = NULL,
-                          plot_distribution = FALSE, colours = NULL, ...) {
+                          plot_type = "dotplot", colours = NULL, ...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
@@ -516,6 +529,95 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
     col <- colours
   }
 
+  if (plot_type == "distribution") {
+    filter_feat <- FALSE
+  } else {
+    filter_feat <- TRUE
+  }
+
+  df <- .process_feat_wts(feat_wts = feat_wts, fct = fct, n_feat = n_feat,
+                          thresh = thresh, manual_lab = manual_lab,
+                          filter_feat = filter_feat)
+
+  if (plot_type == "distribution") {
+    p <- ggplot(df, aes(x = value, y = feature_id), ...) +
+      geom_point() +
+      scale_y_discrete(expand = c(0.03, 0.03)) +
+      labs(x = "Weight", y = "Rank", size = 10) +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid.major.y = element_blank()
+      )
+
+    # Add labels
+    if (n_feat > 0 || length(unique(df$to_label)) > 0) {
+      p <- p + ggrepel::geom_text_repel(
+        data = df[df$to_label != FALSE, ],
+        aes(label = feature, col = to_label),
+        size = 3, segment.alpha = 0.25, segment.color = "black",
+        segment.size = 0.3, show.legend = FALSE, max.overlaps = Inf)
+    }
+
+    # configure axes
+    if (scale) {
+      p <- p + 
+        coord_cartesian(xlim = c(-1, 1)) +
+        scale_x_continuous(breaks = c(-1, 0, 1)) +
+        expand_limits(x = c(-1, 1))
+    }
+
+    # Define dot size
+    p <- p + scale_size_manual(values=c(2/2, 2*2)) + guides(size = "none")
+  } else if (plot_type == "barplot") {
+    p <- ggplot(df, aes(x = reorder(feature, value), y = value, fill = sign)) +
+      geom_bar(stat = "identity", show.legend = FALSE) +
+      scale_fill_manual(values = col) +
+      ylab("Weight") +
+      xlab("") +
+      coord_flip() +
+      theme_bw() +
+      theme(
+        axis.title.x = element_text(color = 'black'),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(size=rel(1.1), hjust = 1, color = 'black'),
+        axis.text.x = element_text(color = 'black'),
+        axis.ticks.y = element_blank(),
+        axis.ticks.x = element_line(),
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(color = "black"),
+        legend.key = element_rect(fill = "transparent"),
+        plot.title = element_text(size = rel(1.3), hjust = 0.5),
+        # gridlines
+        panel.grid.major.y = element_blank(),
+        ) +
+        facet_wrap(~factor, nrow = 1, scales = "free")
+  } else if (plot_type == "dotplot") {
+    p <- .generic_dotplot(df, x = "value", y = "feature", shape = "factor", fill = "value")
+  }
+
+  # Facet if multiple factors
+  if (ncol(feat_wts) > 1) {
+    p <- p + facet_wrap(~factor, nrow = 1, scales = "free")
+  }
+
+  if (!is.null(file_name)) {
+    ggsave(p, file = file_name, ...)
+  }
+
+  return(p)
+}
+
+#' @description function to process feature weights for plotting
+#' @inheritParams plot_feat_wts
+#' @param filter_feat Logical. Whether to filter the data to only features of
+#' interest. If FALSE, all data will be kept, but only features of interest will
+#' be labeled. Useful for the distribution plots.
+
+.process_feat_wts <- function(feat_wts, fct, n_feat, scale, thresh,
+                              filter_feat = TRUE, manual_lab = NULL) {
   # reshape for plotting
   df <- reshape2::melt(feat_wts)
   colnames(df) <- c("feature", "factor", "value")
@@ -590,82 +692,12 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   df$feature_id <- paste(df$feature, df$factor, sep = "_")
   df$feature_id <- factor(df$feature_id, levels = unique(df$feature_id[order(df$value)]))
 
-  if (plot_distribution) {
-    p <- ggplot(df, aes(x = value, y = feature_id), ...) +
-      geom_point() +
-      scale_y_discrete(expand = c(0.03, 0.03)) +
-      labs(x = "Weight", y = "Rank", size = 10) +
-      theme_minimal() +
-      theme(
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        panel.grid.major.y = element_blank()
-      )
-
-    # Add labels
-    if (n_feat > 0 || length(unique(df$to_label)) > 0) {
-      p <- p + ggrepel::geom_text_repel(
-        data = df[df$to_label != FALSE, ],
-        aes(label = feature, col = to_label),
-        size = 3, segment.alpha = 0.25, segment.color = "black",
-        segment.size = 0.3, show.legend = FALSE, max.overlaps = Inf)
-    }
-
-    # configure axes
-    if (scale) {
-      p <- p + 
-        coord_cartesian(xlim = c(-1, 1)) +
-        scale_x_continuous(breaks = c(-1, 0, 1)) +
-        expand_limits(x = c(-1, 1))
-    }
-
-    # Define dot size
-    p <- p + scale_size_manual(values=c(2/2, 2*2)) + guides(size = "none")
-  } else {
+  if (filter_feat) {
     # filter to only selected features
     df <- df %>% filter(to_label == TRUE)
-
-    p <- ggplot(df, aes(x = reorder(feature, value), y = value, fill = sign)) +
-      geom_bar(stat = "identity", show.legend = FALSE) +
-      scale_fill_manual(values = col) +
-      ylab("Weight") +
-      xlab("") +
-      coord_flip() +
-      theme_bw() +
-      theme(
-        axis.title.x = element_text(color = 'black'),
-        axis.title.y = element_blank(),
-        axis.text.y = element_text(size=rel(1.1), hjust = 1, color = 'black'),
-        axis.text.x = element_text(color = 'black'),
-        axis.ticks.y = element_blank(),
-        axis.ticks.x = element_line(),
-        legend.position = "top",
-        legend.title = element_blank(),
-        legend.text = element_text(color = "black"),
-        legend.key = element_rect(fill = "transparent"),
-        plot.title = element_text(size = rel(1.3), hjust = 0.5),
-
-        # facets
-        #strip.text = element_text(size = rel(1.2)),
-        #panel.background = element_blank(),
-        #panel.spacing = unit(1, "lines"),
-
-        # gridlines
-        panel.grid.major.y = element_blank(),
-        ) +
-        facet_wrap(~factor, nrow = 1, scales = "free")
   }
 
-  # Facet if multiple factors
-  if (ncol(feat_wts) > 1) {
-    p <- p + facet_wrap(~factor, nrow = 1, scales = "free")
-  }
-
-  if (!is.null(file_name)) {
-    ggsave(p, file = file_name, ...)
-  }
-
-  return(p)
+  return(df)
 }
 
 #' @name top_surv_factors_km
