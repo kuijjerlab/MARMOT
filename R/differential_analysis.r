@@ -23,8 +23,9 @@
 #' Only applies if limma is used.
 #' @param limma Whether limma should be used for the differential analysis.
 #' If FALSE, a wilcoxon signed rank test will be used instead. Default is TRUE.
-#' @param minprop Numeric between c(0,0.5), indicating the minimum
-#' proportion of samples per group.
+#' @param minprops Numeric, between c(0,0.5) Only needed if
+#' \code{use_median = FALSE}. Minimum proportion
+#' of samples per group for the split into survival groups.
 #' @param save_file Logical. Whether to save the output as an RData file.
 #' @param file_name Optional. Character string with a file name. Only used if
 #' \code{save_file = TRUE}. If not provided, a generic name will be used.
@@ -35,7 +36,7 @@
 
 differential_analysis <- function(omic, factor, surv, clin = NULL,
                                   covariates = NULL, limma = TRUE,
-                                  minprop = 0.1, sample_label = NULL,
+                                  prop = 0.1, sample_label = NULL,
                                   save_file = TRUE, file_name = NULL) {
   # sanity checks
   if (!is.null(covariates)) {
@@ -92,7 +93,7 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
   omic <- omic[, samples]
 
   # define groups
-  df <- .fct_cutpoint(factor = factor, surv, minprop = minprop)
+  df <- .fct_cutpoint(factor = factor, surv, prop = prop)
 
   if (!is.null(covariates)) {
     # grab covariates
@@ -130,20 +131,26 @@ differential_analysis <- function(omic, factor, surv, clin = NULL,
 #' @inheritParams differential_analysis
 #' @param factor Factor based on which to split the cohort. Expects a matrix.
 #' @returns Data frame containing the information about the two survival groups.
+#' @import dplyr
+#' @importFrom magrittr %>%
 
-.fct_cutpoint <- function(factor, surv, minprop) {
+.fct_cutpoint <- function(factor, surv, prop) {
   # get samples
   samples <- surv$sample_id
 
-  # cut the data
+  # create data frame
   time <- surv$time_to_event
   event <- surv$vital_status
+  factor <- sort(factor)
+  cutpoint <- quantile(factor, probs = prop)
   df <- data.frame(sample = samples, time = time, event = event,
                    factor = factor)
-  cut <- survminer::surv_cutpoint(df, variables = "factor", minprop = minprop)
-  df$FactorValue <- survminer::surv_categorize(cut)$factor
-  df$FactorCluster <- df$factor > cut$cutpoint$cutpoint
 
+  # cut the data
+  df <- df %>%
+        mutate(FactorValue = ifelse(factor > cutpoint, "high", "low"),
+              FactorCluster = factor > cutpoint)
+  
   # determine which is the good survival group and which
   # is the poor survival group
   # not sure if this is the best way to do it
