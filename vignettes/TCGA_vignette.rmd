@@ -133,15 +133,15 @@ for (cancer in cancers) {
     print(cancer)
     # for now I'm gonna do it with cantini's code until I figure
     # out the finer details for my own code
-    #source("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/scripts/runfactorization.R")
+    source("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/scripts/runfactorization.R")
 
     # load data
     load(paste0(wd, "/", cancer, "_omics_no_pca.Rda"))
 
-    #factorizations <- runfactorization(omics=omics,num.factors = 5, sep = sep)
-    factorizations <- run_jdr(omic_list = omics, seed = 13)
+    factorizations <- runfactorization(omics=omics,num.factors = 5, sep = sep)
+    #factorizations <- run_jdr(omic_list = omics, seed = 13)
 
-    save(factorizations, file = paste0(wd, "/benchmark", cancer, "_no_PCA.Rda"))
+    save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_no_PCA_cantini_code.Rda"))
     
     #save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_factorisation_no_PCA_5fct.Rda"))
 
@@ -162,9 +162,9 @@ for (cancer in cancers) {
     # load data
     load(paste0(wd, "/", cancer, "_omics_pca.Rda"))
 
-    #factorizations <- runfactorization(omics=omics,num.factors = 5, sep = sep)
-    factorizations <- run_jdr(omic_list = omics, seed = 13)
-    save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_factorisation_PCA_5fct.Rda"))
+    factorizations <- runfactorization(omics=omics,num.factors = 5, sep = sep)
+    #factorizations <- run_jdr(omic_list = omics, seed = 13)
+    save(factorizations, file = paste0(wd, "/benchmark/", cancer, "_factorisation_PCA_cantini_code.Rda"))
   
     # run the factorisation with all tools without PCA
   #  model_list <- run_factorisations(omic_list = omics, pca = FALSE, seed = 13)
@@ -246,26 +246,26 @@ ggsave(grid_plot, file = "figures/data_dis_compare_all_can.pdf", height = 20, wi
 #run survival for each cancer for each method
 surv_df <- data.frame()
 for(i in cancers){
-  PCA <- get(load(paste0(wd, "/benchmark/", i,"_factorisation_PCA_5fct.Rda")))
-  noPCA <- get(load(paste0(wd, "/benchmark/", i,"_factorisation_no_PCA_5fct.Rda")))
+  PCA <- get(load(paste0(wd, "/benchmark/", i,"_factorisation_PCA_cantini_code.Rda")))
+  noPCA <- get(load(paste0(wd, "/benchmark/", i,"_no_PCA_cantini_code.Rda")))
   surv <- get(load(paste0(wd, "/", i, "_surv.Rda"))) # again, this requires the MOFA analysis to have been run first, but for now it works
   
-  #names(PCA$factorizations) <- PCA$method
-  #names(noPCA$factorizations) <- noPCA$method
+  names(PCA$factorizations) <- PCA$method
+  names(noPCA$factorizations) <- noPCA$method
   
   #if(is.null(methods)){
-    methods <- names(PCA)
+    methods <- names(PCA[[1]])
   #}
   
   for(j in methods){
     if(j =="MOFA"){
       #get the factorisations for that method
-      pca_fct <- PCA[[j]][[1]]
-      nopca_fct <- noPCA[[j]][[1]]
+      pca_fct <- PCA[[1]][[j]][[1]][[1]]
+      nopca_fct <- noPCA[[1]][[j]][[1]][[1]]
     }else{
       #get the factorisations for that method
-      pca_fct <- PCA[[j]]
-      nopca_fct <- noPCA[[j]]
+      pca_fct <- PCA[[1]][[j]][[1]]
+      nopca_fct <- noPCA[[1]][[j]][[1]]
     }
     
     #run the surv association of the factors
@@ -284,17 +284,17 @@ for(i in cancers){
     cox_all <- list(PCA_cox, noPCA_cox)
     names(cox_all) <- c("PCA", "no_PCA")
     
-    save(cox_all, file=paste0(i,"_cox_models_", j,"_5fct.Rda"))
+    save(cox_all, file=paste0("benchmark/",i,"_cox_models_", j,"_5fct_cantini_code.Rda"))
   }
 }
-save(surv_df, file=paste0(wd, "/benchmark/TCGA_surv_all_bench_5fct.Rda"))
+save(surv_df, file=paste0(wd, "/benchmark/TCGA_surv_all_bench_5fct_cantini_code.Rda"))
 
 # extract the factors
 
 ```
 
 ```{r surv_compare_bench}
-load("benchmark/TCGA_surv_all_bench_5fct.Rda")
+load("benchmark/TCGA_surv_all_bench_5fct_cantini_code.Rda")
 
 method <- unique(surv_df$method)
 cols <- palette("Dark2")
@@ -305,8 +305,8 @@ for(i in method){
   p <- surv_compare_dotplot(surv_df = surv_meth, models_to_compare = models,
                             colours = c(cols[8], "grey", cols[6]))
   
-  ggsave(p, file=paste0(wd,"/figures/surv_compare_PCA_",i,"_5fct.png"))
-  ggsave(p, file=paste0(wd,"/figures/surv_compare_PCA_",i,"_5fct.pdf"))
+  ggsave(p, file=paste0(wd,"/figures/surv_compare_PCA_",i,"_5fct_cantini_code.png"))
+  ggsave(p, file=paste0(wd,"/figures/surv_compare_PCA_",i,"_5fct_cantini_code.pdf"))
 }
 ```
 
@@ -598,7 +598,6 @@ clin$Age <- age_med
 write.table(clin, file = paste0(clin_dir, "liver_med_age"), sep = "\t")
 ```
 
-
 ```{r diff_indeg_liver}
 # load data
 indeg <- get(load("liver_omics_no_pca.Rda"))[["indegree"]]
@@ -660,6 +659,38 @@ diff <- Map(function(x, base_name) {
 }, Z, base_names)
 
 save(diff, file = "diff_indeg_liver_limma_all_fct.Rda")
+```
+
+```{r selecting minprop}
+factors <- c("Factor2", "Factor4", "Factor5")
+
+# see what the "preffered" split is for each factor by enforcing 0.1
+# and checking what the split is
+min_all <- data.frame()
+for (fct in factors) {
+  load(paste0("diff_indeg_liver_limma_", fct, "_minprop_0.1.Rda"))
+  # splitting by low/high
+  preferred_split <- split(df, df$Factor_value)
+  #all samples
+  all <- nrow(df)
+  # samples labelled high fct value based on split
+  high <- nrow(preferred_split$high)
+  # samples labaled low fct_value based on split
+  low <- nrow(preferred_split$low)
+  prop_high <- high / all
+  prop_low <- low / all
+  prop_min <- min(prop_high, prop_low)
+  min_all <- rbind(min_all, c(fct, prop_high, prop_low, prop_min))
+}
+
+names(min_all) <- c("Factor", "prop_long", "prop_short", "prop_min")
+min_all[, 2:4] <- lapply(min_all[, 2:4], as.numeric, 2)
+
+# take the average and median
+min_all$avg_minprop <- mean(min_all$prop_min)
+min_all$med_minprop <- median(min_all$prop_min)
+
+save(min_all, file = "liver_TCGA_preferred_minprop.Rda")
 ```
 
 ```{r diff_indeg_liver_gsea}
@@ -801,12 +832,12 @@ save(mapped_wts, file = "liver_mapped_feat_wts_test.Rda")
 ```{r plot_feature_weights}
 load("liver_mapped_feat_wts.Rda")
 
-factors <- c("Factor2")
+factors <- c("Factor2", "Factor4", "Factor5")
 file_names <- paste0(rep("figures/liver_feat_wts_", length(omic_names)), omic_names, "_", factors, "_thresh_test.pdf")
 
 plots <- Map(function(feat, title, file_name, ...) {
-  plot_feat_wts(feat_wts = feat, fct = factors, file_name = file_name, thresh = 0.5,
-  plot_distribution = FALSE, width = 7, height = 10, limitsize = FALSE)
+  suppressMessages(plot_feat_wts(feat_wts = feat, fct = factors, file_name = file_name, n_feat = 10,
+  plot_type = "dotplot", width = 20, height = 20, limitsize = FALSE))
 }, mapped_wts, omic_names, file_names)
 
 ```
@@ -915,7 +946,8 @@ tcga <- tcga %>%
         ungroup()
 
 # create contingency table for fisher's exact test
-common <- length(unique(intersect(tcga$feature, gep$feature)))
+common_tfs <- unique(intersect(tcga$feature, gep$feature))
+common <- length(common_tfs)
 in_gep <- length(unique(gep$feature)) - common
 in_tcga <- length(unique(tcga$feature)) - common
 in_neither <- length(tfs) - (in_gep + in_tcga + common)
@@ -925,23 +957,22 @@ contingency_table <- matrix(c(common, in_gep, in_tcga, in_neither), nrow = 2, by
 # perform fisher test
 fisher_result <- fisher.test(contingency_table)
 
-save(fisher_result, file = "outdeg_gep_tcga_fisher_result_top10.Rda")
+save(fisher_result, contingency_table, common_tfs, file = "outdeg_gep_tcga_fisher_result_top10.Rda")
 ```
 
 ```{r plot_common_TFs}
 # load data
 gep <- get(load("liver_mapped_feat_wts.Rda"))[["outdegree"]]
 tcga <- get(load("liver_mapped_feat_wts.Rda"))[["outdegree"]]
-load("/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/outdeg_gep_tcga_common_tfs.Rda")
+load("/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/outdeg_gep_tcga_fisher_result_top20.Rda")
 
 factors <- c("Factor2", "Factor3", "Factor4")
-file_names <- paste0(rep("figures/liver_feat_wts_", length(factors)), factors, "_common.pdf")
+file_name <- "figures/liver_outdeg_wts_common_gep.pdf"
 
-plots <- Map(function(factor, file_name, ...) {
-  plot_feat_wts(feat_wts = gep, fct = factor, file_name = file_name,
-  thresh = NULL, plot_distribution = FALSE, manual_lab = common, n_feat = 0,
-  width = 7, height = 10, limitsize = FALSE)
-}, factors, file_names)
+plots <- suppressMessages(plot_feat_wts(feat_wts = gep, fct = factors, file_name = file_name,
+  thresh = NULL, plot_type = "dotplot", manual_lab = common_tfs, n_feat = 0,
+  width = 20, height = 20, limitsize = FALSE))
+
 
 ```
 
