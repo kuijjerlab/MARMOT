@@ -501,6 +501,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #' Absolute value will be considered.
 #' @param plot_type Which type of plot to make.
 #' One of c("dotplot", "distribution", "barplot").
+#' @param facet Logical, whether to facet plots.
 #' @param ... Any other parameters of \code{ggplot} functions.
 #'
 #' @returns A ggplot object.
@@ -510,7 +511,8 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
                           scale = TRUE, file_name = NULL, thresh = NULL,
-                          plot_type = "dotplot", colours = NULL, ...) {
+                          plot_type = "dotplot", colours = NULL, facet = FALSE,
+                          filter_feat = TRUE, ...) {
   # check that manual labels exist in the data
   if (!is.null(manual_lab)) {
     .check_names(manual_lab, rownames(feat_wts),
@@ -519,8 +521,8 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 
   # set colours
   if (is.null(colours)) {
-    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
-    col <- col[c(3, 4)]
+    cols <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
+    col <- cols[c(2, 5)]
   } else {
        if (length(colours) != 3) {
       stop(paste0(length(colours), err_msg = " colours were specified, when 2 were expected. ",
@@ -537,7 +539,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 
   df <- .process_feat_wts(feat_wts = feat_wts, fct = fct, n_feat = n_feat,
                           thresh = thresh, manual_lab = manual_lab,
-                          filter_feat = filter_feat)
+                          filter_feat = filter_feat, scale = scale)
 
   if (plot_type == "distribution") {
     p <- ggplot(df, aes(x = value, y = feature_id), ...) +
@@ -595,11 +597,16 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
         ) +
         facet_wrap(~factor, nrow = 1, scales = "free")
   } else if (plot_type == "dotplot") {
-    p <- .generic_dotplot(df, x = "value", y = "feature", shape = "factor", fill = "value")
+    # this ain't finished
+    p <- .generic_dotplot(df, x = "value", y = "feature", fill = "value", shape = "factor")
+    p <- p +
+        scale_shape_manual(values = c(21, 22, 23)) +
+        scale_fill_gradient2(high = col[2], low = col[1], midpoint = 0, name = "Weight") +
+        labs(x = "Factor")
   }
 
   # Facet if multiple factors
-  if (ncol(feat_wts) > 1) {
+  if (facet) {
     p <- p + facet_wrap(~factor, nrow = 1, scales = "free")
   }
 
