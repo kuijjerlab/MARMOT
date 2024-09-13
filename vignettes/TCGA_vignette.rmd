@@ -607,7 +607,7 @@ clin$sample_id <- gsub("-", "\\.", clin$sample_id)
 load("liver_surv.Rda")
 load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 load("MOFA_liver_pca_both.Rda")
-minprops <- c(0.1, 0.2, 0.3, 0.4, 0.5)
+minprops <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
 #use_median <- TRUE
 
 # get significant factors
@@ -635,28 +635,28 @@ base_names <- paste0("diff_indeg_liver_limma_", colnames(Z))
 #}, Z, base_names)
 
 # trying this with varying minprop
-#diff <- Map(function(x, base_name) {
- # Map(function(mp) {
-  #  factor <- setNames(x, rownames(Z))
-   # file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
-    #differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
-     # file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis", "gender"),
-      #sample_label = "sample_id", minprop = mp)
-  #}, minprops)
-#}, Z, base_names)
+diff <- Map(function(x, base_name) {
+  Map(function(mp) {
+    factor <- setNames(x, rownames(Z))
+    file_name <- paste0(base_name, "_prop_", mp, ".Rda")
+    differential_analysis(omic = indeg, factor = factor, surv = surv, clin = clin,
+      file_name = file_name, covariates = c("age_at_initial_pathologic_diagnosis", "gender"),
+      sample_label = "sample_id", prop = mp)
+  }, minprops)
+}, Z, base_names)
 
 # for gep
-diff <- Map(function(x, base_name) {
-  mps <- Map(function(mp) {
-    factor <- setNames(x, rownames(Z))
-    file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
-    differential_analysis(omic = indeg, factor = factor, surv = surv,
-      file_name = file_name,
-      sample_label = "sample_id", minprop = mp)
-  }, minprops)
-  names(mps) <- paste0("minprop_", minprops)
-  return(mps)
-}, Z, base_names)
+#diff <- Map(function(x, base_name) {
+ # mps <- Map(function(mp) {
+  #  factor <- setNames(x, rownames(Z))
+   # file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
+    #differential_analysis(omic = indeg, factor = factor, surv = surv,
+     # file_name = file_name,
+      #sample_label = "sample_id", minprop = mp)
+  #}, minprops)
+  #names(mps) <- paste0("minprop_", minprops)
+  #return(mps)
+#}, Z, base_names)
 
 save(diff, file = "diff_indeg_liver_limma_all_fct.Rda")
 ```
@@ -695,7 +695,7 @@ save(min_all, file = "liver_TCGA_preferred_minprop.Rda")
 
 ```{r diff_indeg_liver_gsea}
 load("diff_indeg_liver_limma_all_fct.Rda")
-minprops <- c(0.1, 0.2, 0.3, 0.4, 0.5)
+minprops <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
 
 # get pathways
 hallmark <- msigdbr(species = "human", category = "H")
@@ -726,7 +726,7 @@ base_names <- paste0(rep("liver_gsea_diff_indeg_", length(diff)), names(diff))
 # trying with minprop variation
 gsea_res <- Map(function(diff_sublist, base_name) {
   Map(function(x, mp) {
-    file_name <- paste0(base_name, "_minprop_", mp, ".Rda")
+    file_name <- paste0(base_name, "_prop_", mp, ".Rda")
     perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name, limma = TRUE)
   }, diff_sublist, minprops)
 }, diff, base_names)
@@ -735,7 +735,7 @@ save(gsea_res, file = "liver_gsea_diff_all_fct.Rda")
 ```
 
 ```{r path_select}
-load("liver_gsea_diff_all_fct_minprop_var.Rda")
+load("liver_gsea_diff_all_fct.Rda")
 
 # select only pathways that are enriched across all 3 minprops
 stable_path <- Map(function(res) {
@@ -745,24 +745,24 @@ stable_path <- Map(function(res) {
 }, gsea_res)
 
 
-save(stable_path, file = "gsea_stable_path_across_minprop.Rda")
+save(stable_path, file = "gsea_stable_path_across_prop.Rda")
 ```
 
 ```{r plot_diff_gsea_results}
-load("liver_gsea_diff_all_fct.Rda")
+load("gsea_stable_path_across_prop.Rda")
 
-gsea_res <- lapply(gsea_res, function(x) x[[5]]) # if you wanna pick a specific minprop
-file_name <- "figures/gsea_path_hallmark_minprop_0.5.pdf"
+#gsea_res <- lapply(gsea_res, function(x) x[[5]]) # if you wanna pick a specific minprop
+file_name <- "figures/gsea_path_hallmark_stable_across_prop.pdf"
 
 #get stable pathways across minprop
-#stable_path <- lapply(stable_path, function(x) x[[1]])
+stable_path <- lapply(stable_path, function(x) x[[1]])
 
 # Add the factor column to each data frame and merge them
-#factors <- names(stable_path)
-factors <- names(gsea_res)
+factors <- names(stable_path)
+factors <- names(stable_path)
 merged_df <- bind_rows(Map(function(df, factor) {
   df %>% mutate(factor = factor)
-}, gsea_res, factors))
+}, stable_path, factors))
 
 plot <- gsea_dotplots(merged_df, surv_df = surv_df, gene_set = "hallmark",
                       title = "TCGA", file_name = file_name, n_path = NULL,
@@ -900,11 +900,6 @@ ggsave(p, file = "figures/volcano_test.pdf")
 
 ```
 
-```{r corr_fct_tcga_gep}
-
-
-```
-
 ```{r overlap_top_TFs_TCGA_GEP}
 # load data
 gep <- get(load("gep_liver/liver_mapped_feat_wts.Rda"))[["outdegree"]]
@@ -974,6 +969,37 @@ plots <- suppressMessages(plot_feat_wts(feat_wts = gep, fct = factors, file_name
   width = 20, height = 20, limitsize = FALSE))
 
 
+```
+
+# indegree analysis (gsea on feat wts)
+```{r indegree_gsea_on_feat_wts}
+# load data
+gep <- as.data.frame(get(load("gep_liver/liver_mapped_feat_wts.Rda"))[["indegree"]])
+tcga <- as.data.frame(get(load("liver_mapped_feat_wts.Rda"))[["indegree"]])
+
+# get pathways
+hallmark <- msigdbr(species = "human", category = "H")
+hallmark <- as.data.frame(cbind(hallmark$gs_name,hallmark$human_gene_symbol))
+colnames(hallmark) <- c("gs_name", "human_gene_symbol")
+
+# make pathway names lowercase
+hallmark$gs_name <- tolower(hallmark$gs_name)
+
+# remove the "hallmark" before every path name
+hallmark$gs_name <- gsub("hallmark_","",hallmark$gs_name)
+
+hallmark <- split(hallmark$human_gene_symbol, hallmark$gs_name)
+
+# turn data into lists
+tcga <- lapply(names(tcga), function(x) tcga[, x, drop = FALSE])
+gep <- lapply(names(gep), function(x) gep[, x, drop = FALSE])
+
+file_names <- paste0(rep("liver_gsea_indeg_wts_", length(tcga)), names(tcga), ".Rda")
+
+# run gsea
+gsea_res <- Map(function(x, file_name) {
+  perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name,
+  differential = FALSE)}, tcga, file_names)
 ```
 
 # randomising mofa seeds
