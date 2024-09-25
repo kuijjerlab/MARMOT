@@ -416,22 +416,22 @@ for (cancer in cancers) {
 
   n <- suppressMessages(plot_var_heat(mofa_nonet))
   #n + title(main = "no net")
-  ggsave(n, file = paste0("figures/",cancer, "_var_explained_no_net.pdf"))
+  ggsave(n, file = paste0("figures/",cancer, "_var_explained_no_net.pdf"),width = 10, height = 9)
 
 
   i <- suppressMessages(plot_var_heat(mofa_indeg))
   #i + title(main = "indegree")
-  ggsave(i, file = paste0("figures/",cancer, "_var_explained_indeg.pdf"))
+  ggsave(i, file = paste0("figures/",cancer, "_var_explained_indeg.pdf"),width = 10, height = 9)
 
  
   o <- suppressMessages(plot_var_heat(mofa_out))
  # o + title(main = "outdegree")
-   ggsave(o, file = paste0("figures/", cancer, "_var_explained_out.pdf"))
+   ggsave(o, file = paste0("figures/", cancer, "_var_explained_out.pdf"),width = 10, height = 9)
 
   
   b <- suppressMessages(plot_var_heat(mofa_both))
  # b + title(main = "both")
-  ggsave(b, file = paste0("figures/",cancer, "_var_explained_both.pdf"))
+  ggsave(b, file = paste0("figures/",cancer, "_var_explained_both.pdf"),width = 10, height = 9)
 
 }
 
@@ -811,6 +811,33 @@ c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","g
 
 ```
 
+```{r plot_fct_value_vs_surv}
+load("liver_surv.Rda")
+load("MOFA_liver_pca_both.Rda")
+load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
+
+sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
+Z <- get_factors(mofa_both)[[1]]
+Z <- as.data.frame(Z[, sig$factor])
+
+# subset to common samples
+samples <- intersect(surv$sample_id, rownames(Z))
+surv_time <- surv %>%
+              filter(sample_id %in% samples)
+Z <- Z[samples, ]
+
+pdf(file = "figures/fct_val_vs_surv.pdf")
+for (fct in seq_along(Z)) {
+  df <- data.frame(time_to_event = surv_time$time_to_event, factor = Z[, fct], event = surv_time$vital_status)
+  p <- ggplot(data = df, aes(x = time_to_event, y = factor, color = event)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+  print(p)
+}
+dev.off()
+```
+
 # outdegree analysis
 
 ```{r features_mapping_liver}
@@ -977,29 +1004,76 @@ plots <- suppressMessages(plot_feat_wts(feat_wts = gep, fct = factors, file_name
 gep <- as.data.frame(get(load("gep_liver/liver_mapped_feat_wts.Rda"))[["indegree"]])
 tcga <- as.data.frame(get(load("liver_mapped_feat_wts.Rda"))[["indegree"]])
 
+# get survival
+surv_tcga <- get(load("TCGA_MOFA_surv_df_all_PCA_quant.Rda"))
+surv_gep <- get(load("gep_liver/TCGA_MOFA_surv_df_all_PCA_quant.Rda"))
+
+# filter to sig fct
+sig_tcga <- surv_tcga %>% filter(cancer == "liver", label == "both", padj <= 0.05)
+sig_gep <- surv_gep %>% filter(cancer == "liver", label == "both", padj <= 0.05)
+
+tcga <- tcga[, sig_tcga$factor]
+gep <- gep[, sig_gep$factor]
+
 # get pathways
 hallmark <- msigdbr(species = "human", category = "H")
 hallmark <- as.data.frame(cbind(hallmark$gs_name,hallmark$human_gene_symbol))
 colnames(hallmark) <- c("gs_name", "human_gene_symbol")
+# reactome
+react <- msigdbr(species = "human", category = "C2", subcategory = "CP:REACTOME")
+react <- as.data.frame(cbind(react$gs_name, react$human_gene_symbol))
+colnames(react) <- c("gs_name", "human_gene_symbol")
+#kegg
+kegg <- msigdbr(species = "human", category = "C2", subcategory = "CP:KEGG")
+kegg <- as.data.frame(cbind(kegg$gs_name, kegg$human_gene_symbol))
+colnames(react) <- c("gs_name", "human_gene_symbol")
 
 # make pathway names lowercase
 hallmark$gs_name <- tolower(hallmark$gs_name)
+react$gs_name <- tolower(react$gs_name)
+kegg$gs_name <- tolower(kegg$gs_name)
 
 # remove the "hallmark" before every path name
 hallmark$gs_name <- gsub("hallmark_","",hallmark$gs_name)
+react$gs_name <- gsub("reactome_","",react$gs_name)
+kegg$gs_name <- gsub("kegg_","",kegg$gs_name)
 
 hallmark <- split(hallmark$human_gene_symbol, hallmark$gs_name)
+react <- split(react$human_gene_symbol, react$gs_name)
+kegg <- split(kegg$human_gene_symbol, kegg$gs_name)
 
 # turn data into lists
 tcga <- lapply(names(tcga), function(x) tcga[, x, drop = FALSE])
 gep <- lapply(names(gep), function(x) gep[, x, drop = FALSE])
 
+# name them
+names(tcga) <- sig_tcga$factor
+names(gep) <- sig_gep$factor
+
 file_names <- paste0(rep("liver_gsea_indeg_wts_", length(tcga)), names(tcga), ".Rda")
 
 # run gsea
 gsea_res <- Map(function(x, file_name) {
-  perform_gsea(diff_results = x, gene_set = hallmark, file_name = file_name,
-  differential = FALSE)}, tcga, file_names)
+  perform_gsea(diff_results = x, gene_set = kegg, file_name = file_name,
+  differential = FALSE)}, gep, file_names)
+
+save(gsea_res, file = "gep_liver/liver_gsea_indeg_wts_all_fct_kegg.Rda")
+```
+
+```{r plot_gsea_wts}
+load("liver_gsea_indeg_wts_all_fct_react.Rda")
+
+# Add the factor column to each data frame and merge them
+factors <- names(gsea_res)
+merged_df <- bind_rows(Map(function(df, factor) {
+  df %>% mutate(factor = factor)
+}, gsea_res, factors))
+
+file_name <- "figures/liver_indeg_gsea_wts_react.pdf"
+
+plot <- gsea_dotplots(merged_df, gene_set = "reactome",
+                      title = "TCGA", file_name = file_name, n_path = 20,
+                      thresh = NULL, width = 30, height = 30, limitsize = FALSE)
 ```
 
 # randomising mofa seeds
