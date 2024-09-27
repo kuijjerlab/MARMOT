@@ -336,7 +336,7 @@ surv_compare_tile <- function(surv_df, models_to_compare, colours = NULL,
 #' @returns A ggplot object.
 #' @export
 
-gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
+gsea_dotplots <- function(gsea_results, gene_set = NULL, title = NULL,
                           n_path = 20, thresh = NULL, colours = NULL,
                           file_name = NULL, ...) {
   # sanity checks
@@ -344,7 +344,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
   if(!is.null(n_path) && !is.null(thresh)) {
     stop("Both 'n_path' and 'thresh' have value. Please set one or the other to NULL.")
   }
-
+  
   # set colours
   if (is.null(colours)) {
     col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
@@ -363,10 +363,14 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
 
   #order pathway fct by the gsea signif
   df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)]))
+  df <- df[order(df$logp, decreasing = TRUE), ]
 
-  # only keep top n pathways or ones above threshhold
+  # only keep top n pathways per factor or ones above threshhold
   if (!is.null(n_path)) {
-    df <- df[1:n_path, ]
+    df <- df %>%
+          group_by(factor) %>%
+          slice_head(n = n_path) %>%
+          ungroup()
   } else {
     df <- df[which(df$logp >= thresh), ]
   }
@@ -376,7 +380,7 @@ gsea_dotplots <- function(gsea_results, surv_df, gene_set = NULL, title = NULL,
    scale_fill_gradient2(low = col[1], mid = col[2], high = col[3], midpoint = 0,
                          name = "NES") +
    labs(y = NULL, x = expression("-log"[10] * "(FDR)"), title = title) +
-   theme(legend.position = "bottom")
+   theme(legend.position = "right")
   
   if (!is.null(file_name)) {
     ggsave(p, file = file_name, ...)
@@ -946,8 +950,8 @@ plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, abs = FAL
     geom_text(color = "black", size = 6) +
     theme_classic() +
     coord_fixed() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 20),
-          axis.text.y = element_text(size = 20),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 30),
+          axis.text.y = element_text(size = 30),
           legend.text = element_text(size = 15),
           legend.title = element_text(size = 20),
           axis.title = element_text(size = 20))
@@ -977,11 +981,20 @@ plot_var_heat <- function(mofa_object, colours = NULL) {
 
   p <- MOFA2::plot_variance_explained(mofa_object)
   p <- p + 
-      geom_text(aes(label = round(value, 2))) +
+      geom_text(aes(label = round(value, 2)), color = "black", size = 6) +
       scale_fill_gradient(low = "white", high = cols[1],
                           limits = c(0, 15), oob = scales::squish,
                           breaks = seq(0, 15, by = 5),
-                          labels = c(as.character(seq(0,10, by = 5)), "≥ 15"))
+                          labels = c(as.character(seq(0,10, by = 5)), "15+")) +
+      coord_fixed() +
+      theme_classic() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 30),
+          axis.text.y = element_text(size = 30),
+          legend.text = element_text(size = 15),
+          legend.title = element_text(size = 20),
+          axis.title = element_text(size = 20),
+          strip.background = element_blank(),
+          strip.text = element_blank())
   
   return(p)
 }
