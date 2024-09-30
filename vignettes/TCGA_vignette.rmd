@@ -857,14 +857,14 @@ save(mapped_wts, file = "liver_mapped_feat_wts_test.Rda")
 ```
 
 ```{r plot_feature_weights}
-load("liver_mapped_feat_wts.Rda")
+load("gep_liver/liver_mapped_feat_wts.Rda")
 
-factors <- c("Factor2", "Factor4", "Factor5")
-file_names <- paste0(rep("figures/liver_feat_wts_", length(omic_names)), omic_names, "_", factors, "_thresh_test.pdf")
+factors <- c("Factor2", "Factor3", "Factor3")
+file_names <- paste0(rep("gep_liver/figures/liver_feat_wts_", length(omic_names)), omic_names, "_top20.pdf")
 
-plots <- Map(function(feat, title, file_name, ...) {
-  suppressMessages(plot_feat_wts(feat_wts = feat, fct = factors, file_name = file_name, n_feat = 10,
-  plot_type = "dotplot", width = 20, height = 20, limitsize = FALSE))
+plots <- Map(function(feat, title, file_name, factor, ...) {
+  suppressMessages(plot_feat_wts(feat_wts = feat, fct = factors, file_name = file_name, n_feat = 20,
+  plot_type = "dotplot", width = 30, height = 30, limitsize = FALSE))
 }, mapped_wts, omic_names, file_names)
 
 ```
@@ -929,8 +929,8 @@ ggsave(p, file = "figures/volcano_test.pdf")
 
 ```{r overlap_top_TFs_TCGA_GEP}
 # load data
-gep <- get(load("gep_liver/liver_mapped_feat_wts.Rda"))[["outdegree"]]
-tcga <- get(load("liver_mapped_feat_wts.Rda"))[["outdegree"]]
+gep <- get(load("gep_liver/liver_mapped_feat_wts.Rda"))[["indegree"]]
+tcga <- get(load("liver_mapped_feat_wts.Rda"))[["indegree"]]
 
 # factor names
 gep_fct <- c("Factor2", "Factor3", "Factor4")
@@ -956,14 +956,14 @@ tcga <- tcga %>%
 gep <- gep %>%
         group_by(factor) %>%
         mutate(value = value / max(abs(value), na.rm = TRUE)) %>%
-        slice_max(order_by = abs(value), n = 10) %>%
+        slice_max(order_by = abs(value), n = 20) %>%
         #filter(value > 0.5) %>%
         ungroup()
 
 tcga <- tcga %>%
         group_by(factor) %>%
         mutate(value = value / max(abs(value), na.rm = TRUE)) %>%
-        slice_max(order_by = abs(value), n = 10) %>%
+        slice_max(order_by = abs(value), n = 20) %>%
         #filter(value > 0.5) %>%
         ungroup()
 
@@ -979,17 +979,17 @@ contingency_table <- matrix(c(common, in_gep, in_tcga, in_neither), nrow = 2, by
 # perform fisher test
 fisher_result <- fisher.test(contingency_table)
 
-save(fisher_result, contingency_table, common_tfs, file = "outdeg_gep_tcga_fisher_result_top10.Rda")
+save(fisher_result, contingency_table, common_tfs, file = "indeg_gep_tcga_fisher_result_top20.Rda")
 ```
 
 ```{r plot_common_TFs}
 # load data
-gep <- get(load("liver_mapped_feat_wts.Rda"))[["outdegree"]]
-tcga <- get(load("liver_mapped_feat_wts.Rda"))[["outdegree"]]
-load("/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/outdeg_gep_tcga_fisher_result_top20.Rda")
+gep <- get(load("liver_mapped_feat_wts.Rda"))[["indegree"]]
+tcga <- get(load("liver_mapped_feat_wts.Rda"))[["indegree"]]
+load("/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/indeg_gep_tcga_fisher_result_top20.Rda")
 
 factors <- c("Factor2", "Factor3", "Factor4")
-file_name <- "figures/liver_outdeg_wts_common_gep.pdf"
+file_name <- "gep_liver/figures/liver_indeg_wts_common_gep.pdf"
 
 plots <- suppressMessages(plot_feat_wts(feat_wts = gep, fct = factors, file_name = file_name,
   thresh = NULL, plot_type = "dotplot", manual_lab = common_tfs, n_feat = 0,
@@ -1026,7 +1026,7 @@ colnames(react) <- c("gs_name", "human_gene_symbol")
 #kegg
 kegg <- msigdbr(species = "human", category = "C2", subcategory = "CP:KEGG")
 kegg <- as.data.frame(cbind(kegg$gs_name, kegg$human_gene_symbol))
-colnames(react) <- c("gs_name", "human_gene_symbol")
+colnames(kegg) <- c("gs_name", "human_gene_symbol")
 
 # make pathway names lowercase
 hallmark$gs_name <- tolower(hallmark$gs_name)
@@ -1055,13 +1055,13 @@ file_names <- paste0(rep("liver_gsea_indeg_wts_", length(tcga)), names(tcga), ".
 # run gsea
 gsea_res <- Map(function(x, file_name) {
   perform_gsea(diff_results = x, gene_set = kegg, file_name = file_name,
-  differential = FALSE)}, gep, file_names)
+  differential = FALSE)}, tcga, file_names)
 
-save(gsea_res, file = "gep_liver/liver_gsea_indeg_wts_all_fct_kegg.Rda")
+save(gsea_res, file = "liver_gsea_indeg_wts_all_fct_kegg.Rda")
 ```
 
 ```{r plot_gsea_wts}
-load("liver_gsea_indeg_wts_all_fct_react.Rda")
+load("liver_gsea_indeg_wts_all_fct.Rda")
 
 # Add the factor column to each data frame and merge them
 factors <- names(gsea_res)
@@ -1069,11 +1069,11 @@ merged_df <- bind_rows(Map(function(df, factor) {
   df %>% mutate(factor = factor)
 }, gsea_res, factors))
 
-file_name <- "figures/liver_indeg_gsea_wts_react.pdf"
+file_name <- "figures/liver_indeg_gsea_wts_hall_top10.pdf"
 
-plot <- gsea_dotplots(merged_df, gene_set = "reactome",
-                      title = "TCGA", file_name = file_name, n_path = 20,
-                      thresh = NULL, width = 30, height = 30, limitsize = FALSE)
+plot <- gsea_dotplots(merged_df, gene_set = "hallmark",
+                      title = "TCGA", file_name = file_name, n_path = 10,
+                      thresh = NULL, width = 25, height = 20, limitsize = FALSE)
 ```
 
 # randomising mofa seeds
