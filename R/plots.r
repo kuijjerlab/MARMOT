@@ -359,21 +359,22 @@ gsea_dotplots <- function(gsea_results, gene_set = NULL, title = NULL,
   }
 
   df <- data.frame(gsea_results)
-  df$logp <- -log10(gsea_results$padj)
-
-  #order pathway fct by the gsea signif
-  df$pathway <- factor(df$pathway, levels = unique(df$pathway[order(df$logp)]))
-  df <- df[order(df$logp, decreasing = TRUE), ]
+  df$logp <- -log10(df$padj)
 
   # only keep top n pathways per factor or ones above threshhold
   if (!is.null(n_path)) {
     df <- df %>%
           group_by(factor) %>%
+          arrange(desc(logp), .by_group = TRUE) %>%
           slice_head(n = n_path) %>%
-          ungroup()
+          ungroup() %>%
+          arrange(desc(logp))
   } else {
     df <- df[which(df$logp >= thresh), ]
   }
+
+  #order pathway fct by the gsea signif
+  df$pathway <- factor(df$pathway, levels = rev(unique(df$pathway[order(df$logp, decreasing = TRUE)])))
 
   p <- .generic_dotplot(df, x = "logp", y = "pathway", shape = "factor", fill = "NES")
   p <- p +
