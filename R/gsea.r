@@ -15,13 +15,19 @@
 #' output of \code{link{differential_analysis}}.
 #' @param gene_set A .gmt file containing gene sets of interest or a list of
 #' gene sets to test.
+#' @param differential Logiacal. Whether differential analysis has been
+#' performed on the data or this is just being run on weights. I will probably
+#' eventually remove the differential options entirely, but for now.
+#' @param limma Logical. Whether limma was used for differential. Only needed
+#' if differential = TRUE. If false, it assumes wilcoxon was used.
 #' @param ... Any other parameters accepted by fgsea.
 #' @seealso \code{\link{fgsea::fgsea}}
 #'
 #' @returns Results of GSEA
 #' @export
 
-perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
+perform_gsea <- function(diff_results, differential = FALSE, limma = TRUE,
+                         gene_set, save_file = TRUE,
                          file_name = NULL, ...) {
   # get gene set
   if (is.character(gene_set)) {
@@ -36,7 +42,7 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
                err_msg = "the gene sets and the omic data use the same annotation") # nolint
 
   # create rank
-  rnk <- .create_rank(diff_results, limma)
+  rnk <- .create_rank(diff_results, differential, limma)
 
   # get gene set
   if (is.character(gene_set)) {
@@ -57,23 +63,29 @@ perform_gsea <- function(diff_results, limma = TRUE, gene_set, save_file = TRUE,
 
 #' @name select_stable_path
 #' @description Function that takes multiple gsea results and selects
-#' pathways that are common to all of them.
+#' pathways that are common to at least n of them.
 #' @param gsea_res A list of dataframe outputs of \code{\link{fgsea::fgsea}}
 #' @param thresh P-value threshold for significance.
+#' @param n Numeric. How many gsea results should a pathways be stable across to be kept?
 #'
 #' @returns A list with the subsetted data frames.
 #' @export
 
-select_stable_path <- function(gsea_res, thresh) {
+select_stable_path <- function(gsea_res, thresh, n = 3) {
   # select only significant pathways
   gsea_sig <- purrr::map(gsea_res, ~ filter(.x, padj <= thresh))
 
-  # find common pathways
-  common_path <- purrr::reduce(gsea_sig, function(x, y) inner_join(x, y, by = "pathway")) %>% 
-                 dplyr::pull(pathway)
+  # Extract all pathways across the significant results
+  all_pathways <- purrr::map(gsea_sig, ~ .x$pathway) %>% unlist()
 
-  # subset to only common pathways
-  gsea_subset <- purrr::map(gsea_sig, ~ filter(.x, pathway %in% common_path))
+  # Count the number of occurrences of each pathway
+  pathway_counts <- table(all_pathways)
+
+  # Find pathways that are present in at least 'n' elements
+  common_pathways <- names(pathway_counts[pathway_counts >= n])
+
+  # Subset to only common pathways
+  gsea_subset <- purrr::map(gsea_sig, ~ filter(.x, pathway %in% common_pathways))
 
   return(gsea_subset)
 }
@@ -88,16 +100,20 @@ select_stable_path <- function(gsea_res, thresh) {
 #' @returns A dataframe of gene ranks.
 #' @noRd
 
-.create_rank <- function(diff_results, limma) {
-  if (limma) {
-    # order by absolute value of statistic
-    diff_results <- diff_results[order(abs(diff_results$t),
-                                       decreasing = TRUE), ]
-    rnk <- diff_results$t
+.create_rank <- function(diff_results, differential, limma) {
+  if (differential) {
+    if (limma) {
+      # order by absolute value of statistic
+      diff_results <- diff_results[order(abs(diff_results$t),
+                                        decreasing = TRUE), ]
+      rnk <- diff_results$t
+    } else {
+      diff_results <- diff_results[order(abs(diff_results$logFC),
+                                        decreasing = TRUE), ]
+      rnk <- diff_results$W * diff_results$logFC
+    }
   } else {
-    diff_results <- diff_results[order(abs(diff_results$logFC),
-                                       decreasing = TRUE), ]
-    rnk <- diff_results$W * diff_results$logFC
+    rnk <- sort(diff_results[, 1])
   }
 
   # name rnk
