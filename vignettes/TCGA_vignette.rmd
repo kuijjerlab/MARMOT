@@ -778,9 +778,9 @@ plot <- gsea_dotplots(merged_df, surv_df = surv_df, gene_set = "hallmark",
 ```
 
 ```{r plot_KM_plots}
-load("liver_surv.Rda")
-load("MOFA_liver_pca_both.Rda")
-load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
+load("gep_liver/liver_surv.Rda")
+load("gep_liver/MOFA_liver_pca_both.Rda")
+load("gep_liver/TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 
 minprops <- c(0.1, 0.2, 0.3)
 use_median <- TRUE
@@ -794,13 +794,12 @@ titles <- colnames(Z)
 
 plots <- Map(function(factor, title) {
   factor <- setNames(factor, rownames(Z))
-  surv_factor_km(surv = surv, factor = factor, title = title, minprops = minprops,
-                use_median = use_median)
+  surv_factor_km(surv = surv, factor = factor, title = title, prop = 0.5)
   #ggsave(km, file = file_name)
 }, Z, titles)
 
 grid_plot <- grid.arrange(grobs = plots, ncol = 3)
-ggsave(grid_plot, file = "figures/km_grid_all_fct_med.pdf", width = 27, height = 10)
+ggsave(grid_plot, file = "gep_liver/figures/km_grid_all_fct_med_test.pdf", width = 27, height = 10)
 
 c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
 #c("#1B9E77", "#D95F02", "#67BEA4", "#E59456", "#B3DED1", "#F2C9AA")
@@ -1110,16 +1109,69 @@ edge_names <- paste0(sub_edges$V1, "-", sub_edges$V2)
 
 # get the subnet
 subnet <- net[as.numeric(rownames(sub_edges)), ]
+for_cyto <- cbind(sub_edges[,1:2], subnet)
 rownames(subnet) <- edge_names
 colnames(subnet) <- samples
 
 save(subnet, file = "liver_fatty_acid_path_subnet.Rda")
-
+write.table(for_cyto, file = "liver_fatty_acid_subnet_cyto.txt")
 ```
 
 ```{r split_patients}
 load("MOFA_liver_pca_both.Rda")
 load("liver_fatty_acid_path_subnet.Rda")
+load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
+load("liver_surv.Rda")
+expr <- get(load("liver_omics_no_pca.Rda"))[["expression"]]
+load("liver_fatty_acid_edges_cyto.Rda")
+
+# get sig fct
+sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
+Z <- get_factors(mofa_both)[[1]]
+Z <- as.data.frame(Z[, sig$factor])
+
+# subset samples
+samples <- intersect(surv$sample_id, rownames(Z))
+surv <- surv[which(surv$sample_id %in% samples),]
+Z <- Z[samples, ]
+subnet <- subnet[, samples]
+expr <- expr[, samples]
+
+# get samples that are consistentyly high or low
+cut <- Map(function(factor) {
+  .fct_cutpoint(factor, surv, prop = 0.5)
+}, Z)
+
+# Extract common columns from each dataframe
+common_cols <- lapply(cut, function(x){x[, c("sample", "FactorValue")]})
+
+# Merge dataframes by 'sample'
+merged_data <- Reduce(function(x, y) merge(x, y, by = "sample"), common_cols)
+
+# Identify rows where all 'FactorValue' columns are identical
+same_factorvalue <- merged_data[apply(merged_data[,-1], 1, function(row) all(row == row[1])), ]
+common_samples <- same_factorvalue$sample
+
+filtered_dfs <- lapply(cut, function(df) {
+  df[df$sample %in% common_samples, ]
+})
+
+limma_edge <- .run_limma(subnet, filtered_dfs[[1]], covariates = NULL)
+limma_edge <- cbind(sub_edges[, 1:2], limma_edge)
+limma_exp <- .run_limma(expr, filtered_dfs[[1]], covariates = NULL)
+genes <- sub("\\.*", "", rownames(limma_exp))
+limma_exp <- cbind(genes, limma_exp)
+
+# save the top 100 most differential edges
+top_100 <- limma_edge %>%
+  arrange(adj.P.Val) %>%
+  slice_head(n = 100)
+
+
+write.table(limma_exp, file="liver_exp_limma.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(limma_edge, file="liver_fatty_acid_subnet_limma.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(top_100, file="liver_fatty_acid_subnet_limma_100.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
 ```
 
 ```{r TFBS enrichment at fatty acid gene promoters}
