@@ -1159,7 +1159,7 @@ filtered_dfs <- lapply(cut, function(df) {
 limma_edge <- .run_limma(subnet, filtered_dfs[[1]], covariates = NULL)
 limma_edge <- cbind(sub_edges[, 1:2], limma_edge)
 limma_exp <- .run_limma(expr, filtered_dfs[[1]], covariates = NULL)
-genes <- sub("\\.*", "", rownames(limma_exp))
+genes <- sub("\\..*", "", rownames(limma_exp))
 limma_exp <- cbind(genes, limma_exp)
 
 # save the top 100 most differential edges
@@ -1167,11 +1167,62 @@ top_100 <- limma_edge %>%
   arrange(adj.P.Val) %>%
   slice_head(n = 100)
 
+top_100_exp <- limma_exp[c(unique(top_100$V1), unique(top_100$V2)), ]
 
 write.table(limma_exp, file="liver_exp_limma.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(limma_edge, file="liver_fatty_acid_subnet_limma.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(top_100, file="liver_fatty_acid_subnet_limma_100.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(top_100_exp, file="liver_exp_limma_100.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
+```
+
+```{r make figure legend for cytoscape plot}
+
+limma_exp <- read.table("liver_exp_limma_100.txt", head = TRUE, sep = "\t")
+limma_edge <- read.table("liver_fatty_acid_subnet_limma_100.txt", head = TRUE, sep = "\t")
+
+#get colours
+cols <- palette("Dark2")
+
+# prepare data
+gradient_exp <- data.frame(logFC = seq(min(limma_exp$logFC, na.rm = TRUE), 
+                                        max(limma_exp$logFC, na.rm = TRUE), 
+                                        length.out = 100),
+                            y = 1)
+
+gradient_edge <- data.frame(logFC = seq(min(limma_edge$logFC, na.rm = TRUE), 
+                                        max(limma_edge$logFC, na.rm = TRUE), 
+                                        length.out = 100),
+                            y = 1)
+
+exp_legend <- ggplot(gradient_exp, aes(x = 1, y = logFC, fill = logFC)) +
+              geom_tile() +
+              scale_fill_gradient2(low = cols[2], mid = "white", high = cols[1], midpoint = 0, guide = "none") +
+              scale_y_continuous(expand = c(0, 0)) +  # Ensure x-axis covers the full range of data without extra padding
+              theme_void() +
+              theme(
+                axis.text.y = element_text(size = 10),       # Customize x-axis text size
+                axis.title.y = element_blank(),              # Optionally, remove x-axis title
+                axis.ticks.y = element_line(linewidth = 0.5),     # Customize x-axis ticks
+                plot.margin = unit(c(1, 1, 1, 1), "lines")   # Add margin for better spacing
+              ) +
+              coord_fixed(ratio = 1.5)
+
+edge_legend <- ggplot(gradient_edge, aes(x = 1, y = logFC, fill = logFC)) +
+              geom_tile() +
+              scale_fill_gradient2(low = cols[2], mid = "white", high = cols[1], midpoint = 0, guide = "none") +
+              scale_y_continuous(expand = c(0, 0)) +  # Ensure x-axis covers the full range of data without extra padding
+              theme_void() +
+              theme(
+                axis.text.y = element_text(size = 10),       # Customize x-axis text size
+                axis.title.y = element_blank(),              # Optionally, remove x-axis title
+                axis.ticks.y = element_line(linewidth = 0.5),     # Customize x-axis ticks
+                plot.margin = unit(c(1, 1, 1, 1), "lines")   # Add margin for better spacing
+              ) +
+              coord_fixed(ratio = 3.3)
+
+ggsave(exp_legend, file = "diff_exp_legend.png")
+ggsave(edge_legend, file = "diff_edge_legend.png")
 ```
 
 ```{r TFBS enrichment at fatty acid gene promoters}
