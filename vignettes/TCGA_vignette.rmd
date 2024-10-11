@@ -799,7 +799,7 @@ plots <- Map(function(factor, title) {
 }, Z, titles)
 
 grid_plot <- grid.arrange(grobs = plots, ncol = 3)
-ggsave(grid_plot, file = "gep_liver/figures/km_grid_all_fct_med_test.pdf", width = 27, height = 10)
+ggsave(grid_plot, file = "gep_liver/figures/km_grid_all_fct_med_test2.pdf", width = 27, height = 10)
 
 c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","gray40")
 #c("#1B9E77", "#D95F02", "#67BEA4", "#E59456", "#B3DED1", "#F2C9AA")
@@ -1256,6 +1256,23 @@ contingency_table <- matrix(c(nrow(tf_fatty), nrow(tf_other), nrow(other_fatty),
 
 # perform fisher test
 fisher_result <- fisher.test(contingency_table)
+```
+
+```{r marker gene subnet from Li et al}
+#load data
+load("/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/outdeg_gep_tcga_fisher_result_top20.Rda")
+load("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/liver/net.RData")
+load("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/liver/edges.RData")
+samples <- read.table("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/liver/sampleorder.txt")
+samples <- samples$V1
+
+#load list of genes
+markers <- read.table("41598_2018_29237_MOESM1_ESM.csv", sep = ",", head = TRUE)
+
+#subset to only liver genes
+markers <- markers[which(Tissue.type == "liver"), ]
+
+
 ```
 
 # randomising mofa seeds
