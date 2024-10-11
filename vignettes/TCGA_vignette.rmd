@@ -1122,6 +1122,8 @@ colnames(subnet_plus) <- samples
 rownames(subnet) <- edge_names
 colnames(subnet) <- samples
 
+save(sub_edges, file = "liver_fatty_acid_edges_cyto.Rda")
+save(sub_edges_plus, file = "liver_fatty_acid_edges_cyto_plus.Rda")
 save(subnet, file = "liver_fatty_acid_path_subnet.Rda")
 save(subnet_plus, file = "liver_fatty_acid_path_subnet_plus.Rda")
 ```
@@ -1129,10 +1131,13 @@ save(subnet_plus, file = "liver_fatty_acid_path_subnet_plus.Rda")
 ```{r split_patients}
 load("MOFA_liver_pca_both.Rda")
 load("liver_fatty_acid_path_subnet.Rda")
+load("liver_fatty_acid_path_subnet_plus.Rda")
 load("TCGA_MOFA_surv_df_all_PCA_quant.Rda")
 load("liver_surv.Rda")
 expr <- get(load("liver_omics_no_pca.Rda"))[["expression"]]
 load("liver_fatty_acid_edges_cyto.Rda")
+load("liver_fatty_acid_edges_cyto_plus.Rda")
+
 
 # get sig fct
 sig <- surv_df %>% filter(cancer == "liver", label == "both", padj <= 0.05)
@@ -1167,6 +1172,8 @@ filtered_dfs <- lapply(cut, function(df) {
 
 limma_edge <- .run_limma(subnet, filtered_dfs[[1]], covariates = NULL)
 limma_edge <- cbind(sub_edges[, 1:2], limma_edge)
+limma_edge_plus <- .run_limma(subnet_plus, filtered_dfs[[1]], covariates = NULL)
+limma_edge_plus <- cbind(sub_edges_plus[, 1:2], limma_edge_plus)
 limma_exp <- .run_limma(expr, filtered_dfs[[1]], covariates = NULL)
 genes <- sub("\\..*", "", rownames(limma_exp))
 limma_exp <- cbind(genes, limma_exp)
@@ -1176,12 +1183,18 @@ top_100 <- limma_edge %>%
   arrange(adj.P.Val) %>%
   slice_head(n = 100)
 
+top_100_plus <- limma_edge_plus %>%
+  arrange(adj.P.Val) %>%
+  slice_head(n = 100)
+
 top_100_exp <- limma_exp[c(unique(top_100$V1), unique(top_100$V2)), ]
 
 write.table(limma_exp, file="liver_exp_limma.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(limma_edge, file="liver_fatty_acid_subnet_limma.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(top_100, file="liver_fatty_acid_subnet_limma_100.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(top_100_exp, file="liver_exp_limma_100.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(limma_edge_plus, file="liver_fatty_acid_subnet_limma_plus.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(top_100_plus, file="liver_fatty_acid_subnet_limma_100_plus.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 
 ```
 
