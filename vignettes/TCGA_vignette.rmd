@@ -1149,6 +1149,7 @@ samples <- intersect(surv$sample_id, rownames(Z))
 surv <- surv[which(surv$sample_id %in% samples),]
 Z <- Z[samples, ]
 subnet <- subnet[, samples]
+subnet_plus <- subnet_plus[, samples]
 expr <- expr[, samples]
 
 # get samples that are consistentyly high or low
@@ -1178,6 +1179,9 @@ limma_exp <- .run_limma(expr, filtered_dfs[[1]], covariates = NULL)
 genes <- sub("\\..*", "", rownames(limma_exp))
 limma_exp <- cbind(genes, limma_exp)
 
+# add TF/gene label
+limma_exp$Type <- ifelse(limma_exp$gene %in% common_tfs, "TF", "gene")
+
 # save the top 100 most differential edges
 top_100 <- limma_edge %>%
   arrange(adj.P.Val) %>%
@@ -1195,7 +1199,6 @@ write.table(top_100, file="liver_fatty_acid_subnet_limma_100.txt", sep = "\t", q
 write.table(top_100_exp, file="liver_exp_limma_100.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(limma_edge_plus, file="liver_fatty_acid_subnet_limma_plus.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(top_100_plus, file="liver_fatty_acid_subnet_limma_100_plus.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-
 ```
 
 ```{r make figure legend for cytoscape plot}
