@@ -1098,23 +1098,32 @@ samples <- samples$V1
 # get fatty acid pathway from kegg
 fatty <- kegg$fatty_acid_metabolism
 
+# include the top marker genes found by Li et al in each of their subtypes
+markers <- c("AFP", "SPP1", "PKM2", "THY", "CDK1", "GLUL", "GLYATL1", "CPS1", "GPC3")
+
+fatty_plus <- c(fatty, markers)
+
 # get only edges of the common tfs
 sub_edges <- edges[which(edges$V1 %in% common_tfs),]
 
 # further subset to only fatty acid genes
+sub_edges_plus <- sub_edges[which(sub_edges$V2 %in% fatty_plus), ]
 sub_edges <- sub_edges[which(sub_edges$V2 %in% fatty), ]
 
 # edge names
+edge_names_plus <- paste0(sub_edges_plus$V1, "-", sub_edges_plus$V2)
 edge_names <- paste0(sub_edges$V1, "-", sub_edges$V2)
 
 # get the subnet
+subnet_plus <- net[as.numeric(rownames(sub_edges_plus)), ]
 subnet <- net[as.numeric(rownames(sub_edges)), ]
-for_cyto <- cbind(sub_edges[,1:2], subnet)
+rownames(subnet_plus) <- edge_names_plus
+colnames(subnet_plus) <- samples
 rownames(subnet) <- edge_names
 colnames(subnet) <- samples
 
 save(subnet, file = "liver_fatty_acid_path_subnet.Rda")
-write.table(for_cyto, file = "liver_fatty_acid_subnet_cyto.txt")
+save(subnet_plus, file = "liver_fatty_acid_path_subnet_plus.Rda")
 ```
 
 ```{r split_patients}
@@ -1256,23 +1265,6 @@ contingency_table <- matrix(c(nrow(tf_fatty), nrow(tf_other), nrow(other_fatty),
 
 # perform fisher test
 fisher_result <- fisher.test(contingency_table)
-```
-
-```{r marker gene subnet from Li et al}
-#load data
-load("/storage/kuijjerarea/romana/TCGAmofa/june_2024_run/outdeg_gep_tcga_fisher_result_top20.Rda")
-load("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/liver/net.RData")
-load("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/liver/edges.RData")
-samples <- read.table("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/data/cancer/liver/sampleorder.txt")
-samples <- samples$V1
-
-#load list of genes
-markers <- read.table("41598_2018_29237_MOESM1_ESM.csv", sep = ",", head = TRUE)
-
-#subset to only liver genes
-markers <- markers[which(Tissue.type == "liver"), ]
-
-
 ```
 
 # randomising mofa seeds
