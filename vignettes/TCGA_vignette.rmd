@@ -153,6 +153,21 @@ for (cancer in cancers) {
 }
 ```
 
+```{r testing jive with cantini code and my code}
+for (cancer in cancers) {
+  #source("/storage/kuijjerarea/romana/TCGAmofa/cantini_benchmark/momix-notebook/scripts/runfactorization.R")
+  # load data
+    load(paste0(wd, "/", cancer, "_omics_no_pca.Rda"))
+
+    #factorizations_can <- runfactorization(omics=omics,num.factors = 5, sep = sep)
+    factorizations_me <- run_jive(omic_list = omics, n_fct = 5)
+
+    save(factorizations_me, file = paste0(wd, "/jive_test/", cancer, "_no_PCA_my_code.Rda"))
+    #save(factorizations_can, file = paste0(wd, "/jive_test/", cancer, "_no_PCA_cantini_code.Rda"))
+}
+
+```
+
 ```{r bench_pca}
 for (cancer in cancers) {
      # for now I'm gonna do it with cantini's code until I figure
@@ -191,19 +206,19 @@ for (cancer in cancers) {
                "indegree_quant.RData", "outdegree.RData")))
 
   for (j in r2cum) {
-    # with PCA  # with PCA
-      omics <- prepare_data(omics = files, names = omic_names, pca = TRUE,
-                          logs = TRUE, log_name = "logs/prep_data_pca_log.txt",
-                          file_name = paste0(cancer, "_omics_pca_results_", j, ".Rda"))
-      save(omics, file = paste0(wd, "/", cancer, "_omics_pca_", j, ".Rda"))
-      omics <- prepare_data(omics = files, names = omic_names, pca = TRUE,
-                          logs = TRUE, log_name = "logs/prep_data_pca_log.txt",
+    # with PCA
+      omics <- prepare_data(omics = files, names = omic_names, pca = TRUE, , thresh = j,
+                          logs = TRUE, log_name = paste0("logs/prep_data_pca_",j, "_log.txt"),
                           file_name = paste0(cancer, "_omics_pca_results_", j, ".Rda"))
       save(omics, file = paste0(wd, "/", cancer, "_omics_pca_", j, ".Rda"))
   }
 }
 ```
 
+
+```{r plot r2_cum}
+
+```
 ```{r pca_vs_nopca_data_dim}
 p_list <- list()
 for (cancer in cancers) {
