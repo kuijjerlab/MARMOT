@@ -81,7 +81,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
     }
     svd.o <- svd(J)
     jV <- svd.o$v %*% diag(svd.o$d)
-    colnames(jV) <- rep(paste0("Factor"), ncol(jV))
+    colnames(jV) <- paste0("Factor", ncol(jV))
     rownames(jV) <- colnames(omic_list[[1]])
 
     fct_list$JIVE <- jV[, 1:rankJV]
