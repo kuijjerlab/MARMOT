@@ -104,11 +104,11 @@ plot_data_dim <- function(data, data_labels, which_omics = NULL,
     labs(title = title, y = "Number of features", x = NULL) +
     scale_fill_manual(values = col[seq_len(nrow(df))]) +
     theme_classic() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 20),
-          axis.text.y = element_text(size = 25),
-          axis.title.x = element_text(size = 25),
-          strip.text = element_text(size = 25),
-          plot.title = element_text(size = 25),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 35),
+          axis.text.y = element_text(size = 35),
+          axis.title.x = element_text(size = 40),
+          strip.text = element_text(size = 35),
+          plot.title = element_text(size = 35),
           legend.position = "none") + # Rotate x-axis labels for readability
     coord_flip() +
     facet_wrap(~label, ncol = 2, scales = "free_x")
