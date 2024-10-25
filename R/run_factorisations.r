@@ -49,7 +49,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE,
   # check if file path was provided instead of list and load file if so
   if (is.character(omic_list)) {
     omics <- get(load(omic_list))
-  } else if (is.list(omics_list)) {
+  } else if (is.list(omic_list)) {
     omics <- omic_list
   } else {
     stop("omic_list must be either a list of matrices or a path to an .RData file.")
@@ -66,7 +66,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE,
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
     print("Performing JDR with MOFA2...")
-    mofa_model <- run_mofa2(omic_list, n_fct, seed = seed,
+    mofa_model <- run_mofa2(omics, n_fct, seed = seed,
                             convergence = convergence,
                             use_basilisk = use_basilisk)
 
@@ -76,7 +76,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE,
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
     print("Performing JDR with JIVE...")
-    jive_model <- run_jive(omic_list, n_fct)
+    jive_model <- run_jive(omics, n_fct)
 
     # I don't actually know what this does
     # just copying cantini's code
@@ -88,8 +88,8 @@ run_jdr <- function(omic_list, samples_overlap = TRUE,
     }
     svd.o <- svd(J)
     jV <- svd.o$v %*% diag(svd.o$d)
-    colnames(jV) <- paste0("Factor", ncol(jV))
-    rownames(jV) <- colnames(omic_list[[1]])
+    colnames(jV) <- paste0("Factor", seq_len(ncol(jV)))
+    rownames(jV) <- colnames(omics[[1]])
 
     fct_list$JIVE <- jV[, 1:rankJV]
   }
@@ -103,7 +103,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE,
       fct_list$RGCCA <- rgcca_model
     } else {
       # run with omic_list
-      rgcca_model <- run_rgcca(omic_list, n_fct)
+      rgcca_model <- run_rgcca(omics, n_fct)
       fct_list$RGCCA <- as.matrix(rgcca_model$Y[[1]])
     }
   }
@@ -117,7 +117,7 @@ run_jdr <- function(omic_list, samples_overlap = TRUE,
       fct_list$MCIA <- mcia_model
     } else {
       # run with omic_list
-      mcia_model <- run_mcia(omic_list, n_fct)
+      mcia_model <- run_mcia(omics, n_fct)
       fct_list$MCIA <- as.matrix(mcia_model$mcoa$SynVar)
     }
   }
