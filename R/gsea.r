@@ -44,11 +44,6 @@ perform_gsea <- function(diff_results, differential = FALSE, limma = TRUE,
   # create rank
   rnk <- .create_rank(diff_results, differential, limma)
 
-  # get gene set
-  if (is.character(gene_set)) {
-    gene_set <- fgsea::gmtPathways(gene_set)
-  }
-
   gsea_res <- fgsea::fgsea(pathways = gene_set, rnk, ...)
 
 
