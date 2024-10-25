@@ -727,7 +727,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
 #' @export
 #' @import survminer ggplot2 survival
 surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
-                           minprops, use_median = TRUE) {
+                           prop) {
 
   # overlap samples
   # Define the sets
@@ -747,21 +747,10 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
   df_list <- list()
   fit_list <- list()
  
-
-  if (use_median) {
-    df <- .fct_cutpoint(factor, surv, minprop = minprop, use_median = use_median)
+    df <- .fct_cutpoint(factor, surv, prop = prop)
     df <- df[order(df$FactorValue, decreasing = TRUE), ]
     fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
     list_names <- "med"
-  } else {
-    for (minprop in minprops) {
-      df <- .fct_cutpoint(factor, surv, minprop = minprop, use_median = use_median)
-      df$FactorValue <- paste0(df$FactorValue, "_", minprop)
-      df <- df[order(df$FactorValue, decreasing = TRUE), ]
-      fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
-      list_names <- paste0("minprop_", minprops)
-    }
-  }
 
   df_list <- append(df_list, list(df))
   fit_list <- append(fit_list, list(fit))
