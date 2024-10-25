@@ -17,8 +17,8 @@
 #'  \item{\code{\link{run_mcia}}}
 #' }
 #'
-#' @param omic_list A list of omic matrices.
-#' Should be output of \code{link{prepare_data}}.
+#' @param omic_list A list of omic matrices or path to .RData file containing
+#' said list. Should be output of \code{link{prepare_data}}.
 #' @param samples_overlap Logical. Whether a sample overlap was performed
 #' between the omics during data preparation. See \code{\link{prepare_data}}.
 #' If FALSE, omics will be filtered to only common samples for JDR methods that
@@ -48,9 +48,18 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
                     n_fct = 5, seed = 42, convergence = "slow",
                     use_basilisk = TRUE) {
 
+  # check if file path was provided instead of list and load file if so
+  if (is.character(omic_list)) {
+    omics <- get(load(omic_list))
+  } else if (is.list(omics_list)) {
+    omics <- omic_list
+  } else {
+    stop("omic_list must be either a list of matrices or a path to an .RData file.")
+  }
+
   # overlap samples if not already done
   if (!samples_overlap) {
-    omic_fil <- .filter_omics(omic_list)
+    omic_fil <- .filter_omics(omics)
   }
 
   # initialise factorisation list
