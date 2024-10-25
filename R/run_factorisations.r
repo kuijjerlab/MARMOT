@@ -24,8 +24,6 @@
 #' If FALSE, omics will be filtered to only common samples for JDR methods that
 #' require it. This may result in different sample sets being used with
 #' different methods.
-#' @param pca Logiacal. Whether PCA was performed on the data.
-#' See \code{\link{prepare_data}}.
 #' @param jdr_methods Character vector specifying one more more JDR methods
 #' to be used. Should be from \code{c("MOFA", "JIVE", "RGCCA", "MCIA")}.
 #' @param n_fct Integer. Number of factors for the factorisations.
@@ -43,7 +41,7 @@
 #' @export
 #'
 
-run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
+run_jdr <- function(omic_list, samples_overlap = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
                     n_fct = 5, seed = 42, convergence = "slow",
                     use_basilisk = TRUE) {
