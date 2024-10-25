@@ -215,9 +215,19 @@ for (cancer in cancers) {
 }
 ```
 
-
 ```{r plot r2_cum}
+r2cum <- c(0.8, 0.85, 0.9, 0.95)
 
+for (cancer in cancers) {
+  p_list <- list()
+  for (j in r2cum) {
+    lab <- paste0("R2cum_", j)
+    p <- plot_data_dim(paste0(cancer, "_omics_pca_", j, ".Rda"), data_labels = paste0("R^2 cum = ", j), title = cancer, compare = FALSE)
+    p_list[[lab]] <- p
+  }
+  grid_plot <- grid.arrange(grobs = p_list, ncol = 2)
+  ggsave(grid_plot, file = paste0("figures/data_r2cum_compare_", cancer, ".pdf"), height = 35, width = 35)
+}
 ```
 ```{r pca_vs_nopca_data_dim}
 p_list <- list()
@@ -234,7 +244,7 @@ for (cancer in cancers) {
 }
 
 grid_plot <- grid.arrange(grobs = p_list, ncol = 3)
-ggsave(grid_plot, file = "figures/data_dim_compare_all_can.pdf", height = 35, width = 35)
+ggsave(grid_plot, file = "figures/data_dim_compare_all_can.pdf", height = 45, width = 40)
 ```
 
 ```{r pca_vs_no_pca_data_distr}
