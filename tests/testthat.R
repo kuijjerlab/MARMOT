@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(JDRnet)
+library(MARMOT)
 
-test_check("JDRnet")
+test_check("MARMOT")
