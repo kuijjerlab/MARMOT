@@ -12,7 +12,7 @@ MARMOT is available as a GitHub package and can be installed using `devtools`.
 ```
 install.packages("devtools") # if not already installed
 library(devtools)
-install.github("rtpop/MARMOT")
+install_github("rtpop/MARMOT")
 ```
 
 ## References
