@@ -15,7 +15,7 @@ test_that("list of correct length is made", {
 test_that("no overlapping samples throws an error", {
   test_files <- c("test_file2.tsv", "test_file4.txt")
   expect_error(suppressWarnings(.create_omics_list(test_files)),
-    "No common samples between the omics. Please ensure omics share at least some samples.")
+    "Fewer than three common samples between the omics. Please ensure omics share at least three samples.")
 })
 
 test_that("too few samples gives a warning", {
