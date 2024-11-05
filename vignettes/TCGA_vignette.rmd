@@ -312,12 +312,12 @@ ggsave(grid_plot, file = "figures/data_dis_compare_all_can.pdf", height = 20, wi
 #run survival for each cancer for each method
 surv_df <- data.frame()
 for(i in cancers){
-  PCA <- get(load(paste0(wd, "/benchmark/", i,"_factorisation_PCA_cantini_code.Rda")))
-  noPCA <- get(load(paste0(wd, "/benchmark/", i,"_no_PCA_cantini_code.Rda")))
+  PCA <- get(load(paste0(wd, "/benchmark-new/", i,"_factorisations_pca.Rda")))
+  noPCA <- get(load(paste0(wd, "/benchmark-new/", i,"_factorisations_no_pca.Rda")))
   surv <- get(load(paste0(wd, "/", i, "_surv.Rda"))) # again, this requires the MOFA analysis to have been run first, but for now it works
   
-  names(PCA$factorizations) <- PCA$method
-  names(noPCA$factorizations) <- noPCA$method
+  #names(PCA$factorizations) <- PCA$method
+  #names(noPCA$factorizations) <- noPCA$method
   
   #if(is.null(methods)){
     methods <- names(PCA[[1]])
@@ -350,10 +350,10 @@ for(i in cancers){
     cox_all <- list(PCA_cox, noPCA_cox)
     names(cox_all) <- c("PCA", "no_PCA")
     
-    save(cox_all, file=paste0("benchmark/",i,"_cox_models_", j,"_5fct_cantini_code.Rda"))
+    save(cox_all, file=paste0("benchmark-new/",i,"_cox_models_", j,".Rda"))
   }
 }
-save(surv_df, file=paste0(wd, "/benchmark/TCGA_surv_all_bench_5fct_cantini_code.Rda"))
+save(surv_df, file=paste0(wd, "/benchmark-new/TCGA_surv_all_bench.Rda"))
 
 # extract the factors
 
