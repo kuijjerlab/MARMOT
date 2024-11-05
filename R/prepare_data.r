@@ -117,7 +117,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # check and load file
   if (grepl(x = file, pattern = "\\.RData$|\\.Rda$", ignore.case = TRUE)) {
     return(as.matrix(get(load(file))))
-  } else {
+  } else if (grepl(x = file, pattern = "\\.txt$|\\.csv$|\\.tsv$", ignore.case = TRUE)) {
     # reading the data without the first column
     dat <- as.matrix(data.table::fread(file, drop = 1))
 
@@ -126,6 +126,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     rownames(dat) <- rows
 
     return(dat)
+  } else {
+    stop(paste0("Invalid file format: ", file, ". Please make sure you provide a supported file format."))
   }
 }
 
@@ -140,8 +142,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics matrices for JDR.
 #' @noRd
 
-.create_omics_list <- function(omics, names = NULL, overlap_samples,
-                               filter_features) {
+.create_omics_list <- function(omics, names = NULL, overlap_samples = TRUE,
+                               filter_features = TRUE) {
   # read in omics and create a list
   omic <- lapply(omics, .load_data)
 
@@ -159,10 +161,10 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # set everything to lowercase
   # test if sample names are unique after lowercase
 
-  # check if omics share at least one sample with each-other
+  # check if omics share at least three samples with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames)))
-  if (smpl_overlap == 0) {
-    stop("No common samples between the omics. Please ensure omics share at least some samples.") #nolint
+  if (smpl_overlap < 3) {
+    stop("Fewer than three common samples between the omics. Please ensure omics share at least three samples.") #nolint
   }
 
   # warning if too few samples
@@ -202,7 +204,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics that are filtered to only common samples.
 #' @noRd
 
-.filter_omics <- function(omic_list, samples, features) {
+.filter_omics <- function(omic_list, samples = TRUE, features = TRUE) {
   if (samples) {
     # Get all sample names
     all_samples <- lapply(omic_list, colnames)
@@ -211,7 +213,9 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     common_samples <- Reduce(intersect, all_samples)
 
     # Filter to only common samples
-    omic_fil <- lapply(omic_list, function(x) x[, common_samples])
+    omic_fil <- lapply(omic_list, function(x) x[, common_samples, drop = FALSE])
+  } else {
+    omic_fil <- omic_list
   }
 
   if (features) {

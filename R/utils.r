@@ -220,10 +220,6 @@
 #'         If the input is `NA` or an unrecognized format, it returns `NA`.
 #'
 #' @examples
-#' convert_interval_to_median(">=70") # Returns 70
-#' convert_interval_to_median("50-69") # Returns 59.5
-#' convert_interval_to_median(NA) # Returns NA
-#' convert_interval_to_median("1-17") # Returns 9
 
 .convert_interval_to_median <- function(interval) {
   if (is.na(interval)) {
@@ -265,14 +261,6 @@
 #' single value from one of the matrices.
 #'
 #' @examples
-#' list1 <- list(
-#'   matrix1 = matrix(1:4, nrow = 2, ncol = 2),
-#'   matrix2 = matrix(5:8, nrow = 2, ncol = 2)
-#' )
-#'
-#' label <- "list1"
-#' df <- convert_list_to_df(list1, list_label)
-#' print(df)
 #'
 #' @importFrom dplyr mutate
 #' @importFrom purrr imap_dfr

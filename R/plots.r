@@ -511,7 +511,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
 #'
 #' @returns A ggplot object.
 #' @export
-#' @import dplyr ggplot2, tidyr
+#' @import dplyr ggplot2 tidyr
 #' @importFrom magrittr %>%
 
 plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
