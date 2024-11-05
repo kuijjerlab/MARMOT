@@ -204,7 +204,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics that are filtered to only common samples.
 #' @noRd
 
-.filter_omics <- function(omic_list, samples, features) {
+.filter_omics <- function(omic_list, samples = TRUE, features = TRUE) {
   if (samples) {
     # Get all sample names
     all_samples <- lapply(omic_list, colnames)
@@ -214,6 +214,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 
     # Filter to only common samples
     omic_fil <- lapply(omic_list, function(x) x[, common_samples, drop = FALSE])
+  } else {
+    omic_fil <- omic_list
   }
 
   if (features) {
