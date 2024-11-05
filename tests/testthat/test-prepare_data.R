@@ -1,4 +1,4 @@
-library(JDRnet)
+library(MARMOT)
 
 test_that("incorrect file format throws error", {
   test_files <- c("test_file.fastq")
