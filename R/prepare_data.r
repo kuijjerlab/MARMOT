@@ -142,8 +142,8 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
 #' @returns A list of omics matrices for JDR.
 #' @noRd
 
-.create_omics_list <- function(omics, names = NULL, overlap_samples,
-                               filter_features) {
+.create_omics_list <- function(omics, names = NULL, overlap_samples = TRUE,
+                               filter_features = TRUE) {
   # read in omics and create a list
   omic <- lapply(omics, .load_data)
 
@@ -161,10 +161,10 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
   # set everything to lowercase
   # test if sample names are unique after lowercase
 
-  # check if omics share at least one sample with each-other
+  # check if omics share at least three samples with each-other
   smpl_overlap <- length(Reduce(intersect, lapply(omic, colnames)))
-  if (smpl_overlap == 0) {
-    stop("No common samples between the omics. Please ensure omics share at least some samples.") #nolint
+  if (smpl_overlap < 3) {
+    stop("Fewer than three common samples between the omics. Please ensure omics share at least three samples.") #nolint
   }
 
   # warning if too few samples
@@ -213,7 +213,7 @@ prepare_data <- function(omics, names = NULL, overlap_samples = TRUE,
     common_samples <- Reduce(intersect, all_samples)
 
     # Filter to only common samples
-    omic_fil <- lapply(omic_list, function(x) x[, common_samples])
+    omic_fil <- lapply(omic_list, function(x) x[, common_samples, drop = FALSE])
   }
 
   if (features) {
