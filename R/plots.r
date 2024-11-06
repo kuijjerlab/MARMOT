@@ -712,7 +712,7 @@ plot_feat_wts <- function(feat_wts, fct = NULL, n_feat = 10, manual_lab = NULL,
   return(df)
 }
 
-#' @name top_surv_factors_km
+#' @name surv_factor_km
 #' @description Plots Kaplan-Meier curves for the significantly associated
 #' survival factors (identified in surv_compare)
 #' @inheritParams differential_analysis
@@ -747,29 +747,17 @@ surv_factor_km <- function(surv, factor, title, conf_int = FALSE,
   df_list <- list()
   fit_list <- list()
  
-    df <- .fct_cutpoint(factor, surv, prop = prop)
-    df <- df[order(df$FactorValue, decreasing = TRUE), ]
-    fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
-    list_names <- "med"
-
-  df_list <- append(df_list, list(df))
-  fit_list <- append(fit_list, list(fit))
-  legend_labels <- c(legend_labels, unique(df$FactorValue))
-
-  names(df_list) <- list_names
-  names(fit_list) <- list_names
+  df <- .fct_cutpoint(factor, surv, prop = prop)
+  df <- df[order(df$FactorValue, decreasing = TRUE), ]
+  fit <- survival::survfit(survival::Surv(time, event) ~ FactorValue, df)
 
   #colours to use
   col <- palette("Dark2")
-  high_cols <- colorRampPalette(c(col[1], "white"))(length(fit_list) + 1)
-  low_cols <- colorRampPalette(c(col[2], "white"))(length(fit_list) + 1)
-  cols <- unlist(mapply(c, low_cols, high_cols, SIMPLIFY = FALSE))
-  cols <- head(cols, -2)
-  cols <- rev(cols)
+  cols <- col[1:2]
   names(cols) <- NULL
 
 
-  km <- survminer::ggsurvplot_combine(fit_list, data = df_list,
+  km <- survminer::ggsurvplot(fit, data = df,
     conf.int = conf_int,
     pval = TRUE,
     pval.method = TRUE,
