@@ -356,7 +356,7 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
   alphas <- c("up" = 1, "down" = 1, "ns" = 0.5)
 
   #pdf(file="volcano_test.pdf")
-  p <- ggplot(data=limma, aes(x = logFC,y = -log10(adj.P.Val), fill = gene_type,    
+  p <- ggplot(data = limma, aes(x = logFC, y = -log10(adj.P.Val), fill = gene_type,    
                          size = gene_type, alpha = gene_type)) + 
     geom_point(shape = 21, colour = "black")+
     geom_hline(yintercept = -log10(signif_thresh),
