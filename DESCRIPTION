@@ -1,4 +1,4 @@
-Package: JDRnet
+Package: MARMOT
 Title: Running Joint Dimensionality Reduction With Gene Regulatory Networks
 Version: 0.0.0.9000
 Authors@R: 
@@ -8,11 +8,30 @@ Description: Running joint dimensionality reduction (JDR) on multi-omics data wi
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.2.0
 Imports:
-    survival, survminer, pcaMethods, ggbeeswarm, MOFA2, RGCCA, omicade4, r.jive, fgsea, limma,
-    RColorBrewer, dplyr, magrittr, tidyr, ggplot2, purrr, preprocessCore, data.table, GSVA,
-    reshape2
+    data.table,
+    dplyr,
+    fgsea,
+    ggbeeswarm,
+    ggplot2,
+    GSVA,
+    limma,
+    magrittr,
+    MOFA2,
+    omicade4,
+    pcaMethods,
+    preprocessCore,
+    purrr,
+    RColorBrewer,
+    reshape2,
+    RGCCA,
+    r.jive,
+    rlang,
+    survival,
+    survminer,
+    tidyr
+VignetteBuilder: knitr
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0), BiocStyle, knitr, rmarkdown
 Config/testthat/edition: 3

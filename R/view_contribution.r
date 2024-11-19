@@ -14,12 +14,14 @@
 #' @param labels Option character vector with labels for the two sets of factors.
 #' @param as_data_frame Logical, indicating whether the output should be a
 #' data frame instead of a list of matrices.
+#' @param abs Logical. Whether absolute correlation should be reported.
 #'
 #' @returns A list containing the factor correlation matrices.
 #'
 #' @export
 
-fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
+fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE,
+                     abs = TRUE) {
   # sanity checks
   # check that the number of features is the same in the two sets
   if (nrow(set1) != nrow(set2)) {
@@ -28,8 +30,8 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
 
   # add labels
   if (!is.null(labels)) {
-    colnames(set1) <- paste(colnames(set1), labels[1], sep = "_")
-    colnames(set2) <- paste(colnames(set2), labels[2], sep = "_")
+    colnames(set1) <- paste(colnames(set1), labels[1], sep = " ")
+    colnames(set2) <- paste(colnames(set2), labels[2], sep = " ")
   }
 
   # perform pairwise correlations of each factor in one set with the others
@@ -47,6 +49,33 @@ fct_corr <- function(set1, set2, labels = NULL, as_data_frame = TRUE) {
 
   # concatenate the two matrices into a list
   corr_res <- list(corr_pears, corr_spear)
+
+  # take absolute value
+  if (abs) {
+    corr_res <- lapply(corr_res, abs)
+  }
+
+  # ensure outputs are matrices
+  if (!is.matrix(corr_pears)) {
+    corr_res <- lapply(corr_res, as.matrix)
+    # transpose matrices in the edge case of one of the sets
+    # only having one column
+    if (ncol(corr_res[[1]]) == 1) {
+      corr_res <- lapply(corr_res, t)
+    }
+  }
+
+  # ensure labels are correct
+  corr_res <- lapply(corr_res, function(x) {
+    rownames(x) <- colnames(set2)
+    return(x)
+  })
+
+  corr_res <- lapply(corr_res, function(x) {
+    colnames(x) <- colnames(set1)
+    return(x)
+  })
+
   names(corr_res) <- c("pearson", "spearman")
 
   return(corr_res)
@@ -80,51 +109,18 @@ format_fct_corr <- function(corr_res) {
   # concatenate the two methods
   corr <- rbind(corr1, corr2)
 
+
+  #rename columns
+  model1 <- as.character(corr[, 1])
+  model2 <- as.character(corr[, 2])
+  colnames(corr)[1] <- sapply(strsplit(model1[1], " ", fixed = TRUE), function(x) paste(x[-1], collapse = " "))
+
+  colnames(corr)[2] <- sapply(strsplit(model2[1], " ", fixed = TRUE), function(x) paste(x[-1], collapse = " "))
+
+  # remove labels from factor names
+ 
+  corr[, 1] <- as.factor(sapply(strsplit(model1, " ", fixed = TRUE), `[`, 1))
+  corr[, 2] <- as.factor(sapply(strsplit(model2, " ", fixed = TRUE), `[`, 1))
+
   return(corr)
-}
-
-#' @name plot_fct_corr
-#'
-#' @description Plots heatmaps of factor correlations.
-#'
-#' @inheritParams plot_data_dim
-#' @param corr_df A data frame with the correlation values.
-#' Expects output of \code{\link{format_fct_corr}}.
-#' @param method One of c("pearson", "spearman") indicating which correlation
-#' method should be plotted.
-#' @param ... Any other ggplot parameters.
-#'
-#' @returns A list of two ggplots. One for pearson and one for spearman.
-#'
-#' @export
-#' @import ggplot2
-
-plot_fct_corr <- function(corr_df, method = "pearson", colours = NULL, ...) {
-  # set colours
-  if (is.null(colours)) {
-    col <- RColorBrewer::brewer.pal(name = "Dark2", n = 8)
-    col <- col[c(3, 4)]
-  } else {
-    if (length(colours) != 1) {
-      stop(paste0(length(colours), " colours were specified, when 2 were expected. ",
-                  "Please make sure you specify the correct number of colours."))
-    }
-    col <- colours
-  }
-
-  corr_df <- corr_df[which(corr_df$method == method),]
-
-  # Plot heatmap
- p <- ggplot(data = corr_df, aes(x = Var1, y = Var2, fill = value, label = round(value, 2))) +
-    geom_tile() +
-    #facet_grid(cancer ~ method) +
-    geom_text(color = "black") +
-    facet_wrap(~cancer, nrow = 3) +
-    labs(x = "Var1", y = "Var2", fill = "Value") +
-    scale_fill_gradient2(low = col[1], mid = "white", high = col[2], midpoint = 0) +
-    labs(x = NULL, y = NULL, fill = paste0(method, " r")) +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-  return(p)
 }

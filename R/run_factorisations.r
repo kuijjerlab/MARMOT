@@ -17,15 +17,13 @@
 #'  \item{\code{\link{run_mcia}}}
 #' }
 #'
-#' @param omic_list A list of omic matrices.
-#' Should be output of \code{link{prepare_data}}.
+#' @param omic_list A list of omic matrices or path to .RData file containing
+#' said list. Should be output of \code{link{prepare_data}}.
 #' @param samples_overlap Logical. Whether a sample overlap was performed
 #' between the omics during data preparation. See \code{\link{prepare_data}}.
 #' If FALSE, omics will be filtered to only common samples for JDR methods that
 #' require it. This may result in different sample sets being used with
 #' different methods.
-#' @param pca Logiacal. Whether PCA was performed on the data.
-#' See \code{\link{prepare_data}}.
 #' @param jdr_methods Character vector specifying one more more JDR methods
 #' to be used. Should be from \code{c("MOFA", "JIVE", "RGCCA", "MCIA")}.
 #' @param n_fct Integer. Number of factors for the factorisations.
@@ -34,8 +32,6 @@
 #' mode. Can be one of c("slow", "medium", "fast").
 #' @param use_basilisk Logical. Whether basilisk should be used to automatically
 #' set up conda environment. Only needed when MOFA2 is used.
-#' @param ... Any other parameters that can be passed to any used functions
-#' from the JDR packages. See respective package documentation for further details. #nolint
 #'
 #' @return A list of factorisations. Each element is the factorisation
 #' based on one JDR method.
@@ -45,13 +41,23 @@
 #' @export
 #'
 
-run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
+run_jdr <- function(omic_list, samples_overlap = TRUE,
                     jdr_methods = c("MOFA", "JIVE", "RGCCA", "MCIA"),
                     n_fct = 5, seed = 42, convergence = "slow",
                     use_basilisk = TRUE) {
+
+  # check if file path was provided instead of list and load file if so
+  if (is.character(omic_list)) {
+    omics <- get(load(omic_list))
+  } else if (is.list(omic_list)) {
+    omics <- omic_list
+  } else {
+    stop("omic_list must be either a list of matrices or a path to an .RData file.")
+  }
+
   # overlap samples if not already done
   if (!samples_overlap) {
-    omic_fil <- .filter_omics(omic_list)
+    omic_fil <- .filter_omics(omics)
   }
 
   # initialise factorisation list
@@ -59,39 +65,60 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 
   # run MOFA
   if (is.element("MOFA", jdr_methods)) {
-    mofa_model <- .run_mofa2(omic_list, n_fct)
-    fct_list$MOFA <- mofa_model
-  }
+    print("Performing JDR with MOFA2...")
+    mofa_model <- run_mofa2(omics, n_fct, seed = seed,
+                            convergence = convergence,
+                            use_basilisk = use_basilisk)
+
+    fct_list$MOFA <- MOFA2::get_factors(mofa_model)
+    }
 
   # run JIVE
   if (is.element("JIVE", jdr_methods)) {
-    jive_model <- .run_jive(omic_list, n_fct)
-    fct_list$JIVE <- jive_model
+    print("Performing JDR with JIVE...")
+    jive_model <- run_jive(omics, n_fct)
+
+    # I don't actually know what this does
+    # just copying cantini's code
+    # will have to look into it more
+    rankJV <- jive_model$rankJ
+    J <- numeric(0)
+    for(j in 1:length(omics)){
+      J <- rbind(J, jive_model$joint[[j]])
+    }
+    svd.o <- svd(J)
+    jV <- svd.o$v %*% diag(svd.o$d)
+    colnames(jV) <- paste0("Factor", seq_len(ncol(jV)))
+    rownames(jV) <- colnames(omics[[1]])
+
+    fct_list$JIVE <- jV[, 1:rankJV]
   }
 
   # run RGCCA
   if (is.element("RGCCA", jdr_methods)) {
+    print("Performing JDR with RGCCA...")
     if (!samples_overlap) {
       # run with omic_fil
       rgcca_model <- run_rgcca(omic_fil, n_fct)
       fct_list$RGCCA <- rgcca_model
     } else {
       # run with omic_list
-      rgcca_model <- run_rgcca(omic_list, n_fct)
-      fct_list$RGCCA <- rgcca_model
+      rgcca_model <- run_rgcca(omics, n_fct)
+      fct_list$RGCCA <- as.matrix(rgcca_model$Y[[1]])
     }
   }
 
   # run MCIA
   if (is.element("MCIA", jdr_methods)) {
+    print("Performing JDR with MCIA...")
     if (!samples_overlap) {
       # run with omic_fil
       mcia_model <- run_mcia(omic_fil, n_fct)
       fct_list$MCIA <- mcia_model
     } else {
       # run with omic_list
-      mcia_model <- run_mcia(omic_list, n_fct)
-      fct_list$MCIA <- mcia_model
+      mcia_model <- run_mcia(omics, n_fct)
+      fct_list$MCIA <- as.matrix(mcia_model$mcoa$SynVar)
     }
   }
 
@@ -105,8 +132,6 @@ run_jdr <- function(omic_list, samples_overlap = TRUE, pca = TRUE,
 #' @description Performs JDR on a list of omic matrices with MOFA2.
 #'
 #' @inheritParams run_jdr
-#' @param ... Any other parameters that can be passed to MOFA2 functions.
-#' See documentation of the MOFA2 package for details.
 #'
 #' @return A trained MOFA2 model.
 #'
@@ -145,8 +170,10 @@ run_mofa2 <- function(omic_list, n_fct, seed, convergence, use_basilisk) {
 run_jive <- function(omic_list, n_fct) {
   # run jive
   # look a little more into JIVE options and what they mean
-  jive_model <- jive(omic_list, rankJ = n_fct, 
-                     rankA = rep(n_fct, length(omic_list)))
+  jive_model <- jive(omic_list, rankJ = n_fct,
+                     rankA = rep(n_fct, length(omic_list)),
+                     method = "given", conv = "default",
+                     maxiter = 100)
 
   return(jive_model)
 }
@@ -185,8 +212,26 @@ run_rgcca <- function(omic_list, n_fct) {
 #' @return A trained MCIA model.
 #'
 #' @export
-#' @import omicade4
+#' @importFrom omicade4 mcia
 
 run_mcia <- function(omic_list, n_fct) {
+  # make omics positive & scale between (0,1)
+  # not sure why this is required specifically for this method
+  # but that it what cantini did (but not for the other methods)
+  # as far as I can tell, there is no specification anywhere in the docu
+  # saying positive input is needed
+  # so I dunno
+  omics_pos <- lapply(omic_list, .pos_omics)
 
+  # removing any features with uniform values across all samples
+  # because MCIA has a stroke otherwise
+  # actually, it only has a stroke if the uniform value is also the minimum value
+  # i.e. 0
+  for (i in seq_along(omic_list)) {
+
+  }
+
+  mcia_model <- mcia(omics_pos, cia.nf = n_fct)
+
+  return(mcia_model)
 }
