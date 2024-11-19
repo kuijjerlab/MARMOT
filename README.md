@@ -1,4 +1,5 @@
-# MARMOT
+# MARMOT <img src="logo/MARMOT.png" style="height: 1em; vertical-align: middle;">
+
 
 ## Introduction
 
