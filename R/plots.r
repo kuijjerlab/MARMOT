@@ -456,13 +456,8 @@ volcano_plot <- function(limma, labels = FALSE, round_to = 10, signif_thresh = 0
   alphas <- c("up" = 1, "down" = 1, "ns" = 0.5)
 
   #pdf(file="volcano_test.pdf")
-<<<<<<< HEAD
-  p <- ggplot(data = limma, aes(x = logFC, y = -log10(adj.P.Val), fill = gene_type,    
-                         size = gene_type, alpha = gene_type)) + 
-=======
   p <- ggplot(data=limma, aes(x = logFC, y = -log10(adj.P.Val), fill = gene_type,
                          size = gene_type, alpha = gene_type)) +
->>>>>>> 9b8981be051b3abbe53c0a6e2b95d711fe0dd939
     geom_point(shape = 21, colour = "black")+
     geom_hline(yintercept = -log10(signif_thresh),
                linetype = "dashed") +
