@@ -15,7 +15,7 @@
 #' output of \code{link{differential_analysis}}.
 #' @param gene_set A .gmt file containing gene sets of interest or a list of
 #' gene sets to test.
-#' @param differential Logiacal. Whether differential analysis has been
+#' @param differential Logical. Whether differential analysis has been
 #' performed on the data or this is just being run on weights. I will probably
 #' eventually remove the differential options entirely, but for now.
 #' @param limma Logical. Whether limma was used for differential. Only needed
